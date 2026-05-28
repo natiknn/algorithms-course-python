@@ -1,0 +1,525 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Структуры данных — Очередь с приоритетом (heapq)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #ffa657, #f78166); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 44px 64px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #ffa657; margin-bottom: 12px; }
+  h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.2; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.85rem; font-weight: 700; color: #f0f6fc; margin-bottom: 18px; }
+  h3 { font-size: 1.1rem; font-weight: 600; color: #ffa657; margin-bottom: 10px; margin-top: 18px; }
+  p { line-height: 1.8; margin-bottom: 12px; color: #c9d1d9; }
+  .subtitle { font-size: 1.15rem; color: #8b949e; margin-bottom: 32px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 18px 22px; margin-bottom: 14px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #ffa657; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 14px 0; }
+  .highlight-box.blue { border-left-color: #58a6ff; }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.purple { border-left-color: #bc8cff; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.9em; color: #79c0ff; }
+  pre { margin: 12px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.87rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.85rem; }
+  .trace-table th { background: #1c2128; color: #ffa657; padding: 7px 12px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 6px 12px; text-align: center; border: 1px solid #21262d; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .task-img { max-width: 100%; max-height: 220px; border-radius: 8px; border: 1px solid #30363d; object-fit: contain; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 14px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 8px 22px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #ffa657; color: #ffa657; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 24px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; color: #8b949e; }
+  .queue-visual { display: flex; gap: 4px; align-items: center; }
+  .queue-item { padding: 10px 14px; border-radius: 8px; font-family: monospace; font-size: 1rem; font-weight: 700; border: 1px solid #30363d; background: #1c2128; }
+  .queue-front { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .queue-back { background: #3a1c1c; border-color: #f78166; }
+  .heap-tree { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .heap-level { display: flex; gap: 16px; justify-content: center; }
+  .heap-node { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: monospace; font-size: 0.9rem; border: 2px solid #30363d; }
+  .heap-min { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .heap-node-norm { background: #1c2128; color: #c9d1d9; }
+  .op-card { display: flex; gap: 14px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid #30363d; background: #161b22; margin-bottom: 10px; }
+  .op-badge { background: #1f6feb22; border: 1px solid #1f6feb; color: #58a6ff; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; white-space: nowrap; font-family: monospace; flex-shrink: 0; }
+  .greedy-step { padding: 12px 16px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 8px; display: flex; gap: 12px; align-items: center; }
+  .step-icon { font-size: 1.4rem; flex-shrink: 0; }
+  .track-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 12px 0; }
+  .track-box { padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #30363d; background: #1c2128; }
+  .track-free { border-color: #3fb950; background: #1c3a1c; }
+  .track-busy { border-color: #f78166; background: #3a1c1c; }
+  .track-num { font-weight: 700; font-size: 1.1rem; }
+  .track-dep { font-size: 0.75rem; color: #8b949e; margin-top: 4px; }
+  /* Отключаем лигатуры шрифта — чтобы != отображалось как != а не как ≠ */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- Slide 1: Title -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">🗂️</div>
+  <div class="slide-tag">Тема 5</div>
+  <h1>Структуры данных:<br>Очередь с приоритетом</h1>
+  <p class="subtitle">heapq в Python и жадные алгоритмы</p>
+  <div class="topic-chips">
+    <span class="chip">Очередь (Queue)</span>
+    <span class="chip">Priority Queue</span>
+    <span class="chip">heapq</span>
+    <span class="chip">Жадный алгоритм</span>
+  </div>
+</div>
+
+<!-- Slide 2: Regular queue -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Структуры данных</div>
+  <h2>Обычная очередь</h2>
+  <p>Очередь работает по принципу <strong>FIFO</strong> (First In — First Out): кто первым встал в очередь, тот первым выйдет.</p>
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="margin-top:0">Очередь в магазине:</h3>
+    <div class="queue-visual" style="margin: 14px 0;">
+      <div class="queue-front">👤 Анна</div>
+      <div style="color:#8b949e;font-size:0.8rem">прибыла 9:00</div>
+      <div class="queue-item">👤 Борис</div>
+      <div style="color:#8b949e;font-size:0.8rem">прибыл 9:05</div>
+      <div class="queue-item">👤 Вера</div>
+      <div style="color:#8b949e;font-size:0.8rem">прибыла 9:10</div>
+      <span style="color:#3fb950;margin-left:12px;font-size:0.9rem">← обслуживается первой</span>
+    </div>
+    <p style="font-size:0.85rem;color:#8b949e">Анна пришла первой → её обслуживают первой. Всё справедливо!</p>
+  </div>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">from collections import deque
+
+queue = deque()
+# Добавить в конец
+queue.append("Анна")   # [Анна]
+queue.append("Борис")  # [Анна, Борис]
+queue.append("Вера")   # [Анна, Борис, Вера]
+
+# Забрать из начала
+first = queue.popleft()  # Анна
+print(first)  # Анна
+# Очередь: [Борис, Вера]</code></pre>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Проблема обычной очереди</h3>
+        <p style="font-size:0.9rem;color:#8b949e">Что если у пациентов в больнице разная срочность? Или у задач в ОС разный приоритет?</p>
+        <p style="font-size:0.9rem;color:#8b949e;margin-top:8px">Очередь FIFO <em>не учитывает приоритет</em> — она просто берёт тех, кто пришёл раньше.</p>
+        <div style="margin-top:12px;padding:10px;background:#3a1c1c;border-radius:6px;font-size:0.85rem;color:#f78166">
+          ⚠ «Скорая помощь» должна объехать всех, кто позвонил раньше, даже если впереди стоит человек с простудой!
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 3: Priority Queue -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Структуры данных</div>
+  <h2>Очередь с приоритетом</h2>
+  <p>Очередь с приоритетом всегда выдаёт <strong>элемент с наименьшим (или наибольшим) приоритетом</strong>, независимо от порядка добавления.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Порядок обслуживания:</h3>
+        <table class="trace-table">
+          <tr><th>Пациент</th><th>Время</th><th>Приоритет</th></tr>
+          <tr><td>Анна</td><td>9:00</td><td style="color:#8b949e">3 (низкий)</td></tr>
+          <tr><td>Борис</td><td>9:05</td><td style="color:#f78166">1 (критично)</td></tr>
+          <tr><td>Вера</td><td>9:10</td><td style="color:#d29922">2 (средний)</td></tr>
+        </table>
+        <p style="margin-top:10px;font-size:0.85rem;color:#8b949e">Обслуживаются: Борис → Вера → Анна</p>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Как это устроено внутри?</h3>
+        <p style="font-size:0.85rem;color:#8b949e">Используется специальная структура данных — <strong>бинарная куча (Binary Heap)</strong>. Это дерево, в котором каждый родитель меньше своих детей.</p>
+        <div class="heap-tree" style="margin-top:12px">
+          <div class="heap-level">
+            <div class="heap-node heap-min">1</div>
+          </div>
+          <div class="heap-level">
+            <div class="heap-node heap-node-norm">3</div>
+            <div class="heap-node heap-node-norm">2</div>
+          </div>
+          <div class="heap-level">
+            <div class="heap-node heap-node-norm">5</div>
+            <div class="heap-node heap-node-norm">4</div>
+            <div class="heap-node heap-node-norm">7</div>
+            <div class="heap-node heap-node-norm">6</div>
+          </div>
+        </div>
+        <p style="font-size:0.75rem;color:#8b949e;text-align:center;margin-top:6px">Минимальный элемент всегда наверху</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 4: heapq basics -->
+<div class="slide" id="s4">
+  <div class="slide-tag">heapq</div>
+  <h2>Модуль <code class="inline">heapq</code> в Python</h2>
+  <p><code class="inline">heapq</code> реализует <strong>min-кучу</strong> (min-heap): <code class="inline">heappop()</code> всегда извлекает наименьший элемент за O(log n).</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">import heapq
+
+# Создаём кучу из списка
+heap = [5, 3, 8, 1, 4]
+heapq.heapify(heap)
+print(heap)  # [1, 3, 8, 5, 4] (куча)
+
+# Добавить элемент
+heapq.heappush(heap, 2)
+# heap теперь содержит 2 на правильном месте
+
+# Извлечь минимум
+min_val = heapq.heappop(heap)
+print(min_val)  # 1
+
+# Посмотреть минимум без извлечения
+print(heap[0])  # текущий минимум</code></pre>
+    </div>
+    <div>
+      <div class="op-card">
+        <div class="op-badge">heapify(lst)</div>
+        <div>Превратить список в кучу за O(n). Изменяет список на месте.</div>
+      </div>
+      <div class="op-card">
+        <div class="op-badge">heappush(h, x)</div>
+        <div>Добавить x в кучу за O(log n). Куча остаётся упорядоченной.</div>
+      </div>
+      <div class="op-card">
+        <div class="op-badge">heappop(h)</div>
+        <div>Извлечь и вернуть минимальный элемент за O(log n).</div>
+      </div>
+      <div class="op-card">
+        <div class="op-badge">h[0]</div>
+        <div>Посмотреть минимум без удаления за O(1).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 5: heapq with tuples -->
+<div class="slide" id="s5">
+  <div class="slide-tag">heapq</div>
+  <h2>heapq с кортежами — мощный приём</h2>
+  <p>Если в кучу класть кортежи <code class="inline">(приоритет, данные)</code>, то Python автоматически сортирует их по первому элементу (приоритету).</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">import heapq
+
+# Очередь задач с приоритетом
+tasks = []
+
+# Добавляем (приоритет, название)
+heapq.heappush(tasks, (3, "Написать отчёт"))
+heapq.heappush(tasks, (1, "Починить сервер"))
+heapq.heappush(tasks, (2, "Ответить на письма"))
+
+# Извлекаем в порядке приоритета
+while tasks:
+    priority, name = heapq.heappop(tasks)
+    print(f"[{priority}] {name}")
+
+# [1] Починить сервер
+# [2] Ответить на письма
+# [3] Написать отчёт</code></pre>
+    </div>
+    <div>
+<pre><code class="language-python">import heapq
+
+# Для max-heap: храним отрицательные числа
+# (heapq — только min-heap!)
+
+nums = [3, 1, 4, 1, 5, 9]
+max_heap = []
+
+for n in nums:
+    heapq.heappush(max_heap, -n)  # минус!
+
+max_val = -heapq.heappop(max_heap)
+print(max_val)  # 9 (наибольший)
+
+# Для "тупиков" (путей):
+# (время_отправления, номер_тупика)
+# → при равном времени: меньший номер
+occupied = []
+heapq.heappush(occupied, (15, 3))
+heapq.heappush(occupied, (12, 1))
+print(occupied[0])  # (12, 1)</code></pre>
+    </div>
+  </div>
+  <div class="highlight-box blue">
+    <strong>Трюк с max-heap:</strong> heapq всегда min-куча. Чтобы получить max-кучу, храни отрицательные числа: <code class="inline">heappush(h, -x)</code>, <code class="inline">max = -heappop(h)</code>.
+  </div>
+</div>
+
+<!-- Slide 6: Greedy algorithms -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Жадные алгоритмы</div>
+  <h2>Жадный алгоритм</h2>
+  <p>Жадный алгоритм на каждом шаге выбирает <strong>локально оптимальное решение</strong>, надеясь, что это приведёт к глобально оптимальному результату.</p>
+  <div class="three-col" style="margin: 16px 0;">
+    <div class="card" style="text-align:center">
+      <div style="font-size:2rem;margin-bottom:8px">🏃</div>
+      <h3 style="margin-top:0;text-align:center">Принцип</h3>
+      <p style="font-size:0.85rem;color:#8b949e">На каждом шаге делаем лучший из доступных выборов, не пересматривая прошлые решения.</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:2rem;margin-bottom:8px">✅</div>
+      <h3 style="margin-top:0;text-align:center">Когда работает</h3>
+      <p style="font-size:0.85rem;color:#8b949e">Когда задача обладает «жадным свойством»: локально оптимальный выбор никогда не хуже любого другого.</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:2rem;margin-bottom:8px">📌</div>
+      <h3 style="margin-top:0;text-align:center">Примеры</h3>
+      <p style="font-size:0.85rem;color:#8b949e">Сдача монетами, расписание задач, алгоритм Дейкстры, сжатие Хаффмана.</p>
+    </div>
+  </div>
+  <div class="highlight-box green">
+    <strong>В нашей задаче:</strong> Жадный выбор — всегда брать свободный тупик с <em>наименьшим номером</em>. Это гарантирует оптимальное распределение, потому что нам не важно какой конкретно тупик занять — главное что он свободен.
+  </div>
+</div>
+
+<!-- Slide 7: Why task is greedy -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Жадные алгоритмы</div>
+  <h2>Почему задача о поездах — жадная?</h2>
+  <p>Поезда отсортированы по времени прибытия. Для каждого поезда нам нужно найти свободный тупик. Жадный выбор — взять тупик с наименьшим номером.</p>
+  <div class="card">
+    <h3 style="margin-top:0">Стратегия на каждом шаге:</h3>
+    <div class="greedy-step" style="background:#1c3a1c;border-color:#3fb950">
+      <div class="step-icon">1️⃣</div>
+      <div><strong style="color:#3fb950">Освободить тупики</strong>, поезда из которых уже уехали до прибытия нового поезда (departed &lt; arrived).</div>
+    </div>
+    <div class="greedy-step" style="background:#1c2a3a;border-color:#58a6ff">
+      <div class="step-icon">2️⃣</div>
+      <div><strong style="color:#58a6ff">Взять свободный тупик</strong> с наименьшим номером (жадный выбор).</div>
+    </div>
+    <div class="greedy-step" style="background:#2a1c3a;border-color:#bc8cff">
+      <div class="step-icon">3️⃣</div>
+      <div><strong style="color:#bc8cff">Поместить тупик в "занятые"</strong> с временем отправления нового поезда.</div>
+    </div>
+    <div class="greedy-step" style="background:#3a1c1c;border-color:#f78166">
+      <div class="step-icon">4️⃣</div>
+      <div><strong style="color:#f78166">Если свободных нет</strong> — ответить: «невозможно» и вывести, сколько поездов успели разместить.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 8: Task V3_E -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Задача V3</div>
+  <h2>Задача: Распределение поездов по тупикам</h2>
+  <div class="two-col">
+    <div>
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;font-size:0.87rem;line-height:1.7;">
+        <div style="font-weight:700;color:#f0f6fc;font-size:0.95rem;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #30363d;">E. Тупики</div>
+        <p style="color:#c9d1d9;margin-bottom:6px;">На вокзале K тупиков. Когда электричка прибывает, её ставят в свободный тупик с <strong style="color:#f0f6fc;">минимальным номером</strong>. Тупик освобождается после отправления электрички (если уехала в момент X, то с момента X+1 тупик свободен).</p>
+        <p style="color:#c9d1d9;margin-bottom:8px;">По расписанию (время прибытия и отправления, упорядочены по прибытию) определите, в какой тупик прибудет каждая электричка.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#ffa657;margin-bottom:4px;">Формат ввода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Числа K и N (1 ≤ K, N ≤ 100000). Далее N строк: время прибытия и отправления каждой электрички.</p>
+          </div>
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#ffa657;margin-bottom:4px;">Формат вывода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">N номеров тупиков. Если тупиков не хватит — «0 номер_первой_проблемной_электрички».</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод</div><div style="color:#3fb950;font-weight:700;">1 1<br>1 2<br>5</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод</div><div style="color:#3fb950;font-weight:700;">1</div></div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:14px">
+        <strong>Две кучи:</strong>
+        <ul style="margin-left:16px;line-height:2;font-size:0.9rem">
+          <li><code class="inline">free</code> — min-куча свободных тупиков (по номеру)</li>
+          <li><code class="inline">occupied</code> — min-куча занятых тупиков (по времени отправления)</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">import heapq
+
+k, n = map(int, input().split())
+trains = []
+for _ in range(n):
+    arr, dep = map(int, input().split())
+    trains.append((arr, dep))
+
+# Свободные тупики: 1, 2, ..., k
+free = list(range(1, k + 1))
+heapq.heapify(free)
+
+# Занятые: (время_отправления, номер_тупика)
+occupied = []
+result = []
+
+for arr, dep in trains:
+    # Освобождаем тупики, поезда ушли до arr
+    while occupied and occupied[0][0] < arr:
+        _, track = heapq.heappop(occupied)
+        heapq.heappush(free, track)
+
+    if free:
+        track = heapq.heappop(free)
+        heapq.heappush(occupied, (dep, track))
+        result.append(track)
+    else:
+        print(0, len(result) + 1)
+        exit()
+
+for r in result:
+    print(r)</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 9: Code walkthrough -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Задача V3</div>
+  <h2>Пример работы алгоритма</h2>
+  <p>k=3 тупика, 4 поезда: (1,5), (2,4), (3,6), (6,8)</p>
+  <div style="overflow-x:auto">
+    <table class="trace-table">
+      <tr>
+        <th>Поезд</th>
+        <th>Прибыл</th>
+        <th>Уедет</th>
+        <th>Освобождаем</th>
+        <th>free (куча)</th>
+        <th>Тупик</th>
+        <th>occupied</th>
+      </tr>
+      <tr>
+        <td>1</td><td>1</td><td>5</td>
+        <td style="color:#8b949e">—</td>
+        <td>[1,2,3] → [2,3]</td>
+        <td style="color:#3fb950">1</td>
+        <td>[(5,1)]</td>
+      </tr>
+      <tr>
+        <td>2</td><td>2</td><td>4</td>
+        <td style="color:#8b949e">—</td>
+        <td>[2,3] → [3]</td>
+        <td style="color:#3fb950">2</td>
+        <td>[(4,2),(5,1)]</td>
+      </tr>
+      <tr>
+        <td>3</td><td>3</td><td>6</td>
+        <td style="color:#8b949e">—</td>
+        <td>[3] → []</td>
+        <td style="color:#3fb950">3</td>
+        <td>[(4,2),(5,1),(6,3)]</td>
+      </tr>
+      <tr>
+        <td>4</td><td>6</td><td>8</td>
+        <td style="color:#ffa657">dep 4 &lt; 6 → тупик 2<br>dep 5 &lt; 6 → тупик 1</td>
+        <td>[1,2]</td>
+        <td style="color:#3fb950">1</td>
+        <td>[(6,3),(8,1)]</td>
+      </tr>
+    </table>
+  </div>
+  <div class="highlight-box green" style="margin-top:14px">
+    <strong>Результат:</strong> Поезда 1→т1, 2→т2, 3→т3, 4→т1. Всё разместились! Ответ: 1 2 3 1
+  </div>
+</div>
+
+<!-- Slide 10: Summary -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Итоги</div>
+  <h2>Что мы изучили?</h2>
+  <div class="three-col">
+    <div class="card">
+      <h3 style="margin-top:0">heapq</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.85rem;color:#8b949e">
+        <li>Min-куча: pop = минимум</li>
+        <li><code class="inline">heappush(h, x)</code></li>
+        <li><code class="inline">heappop(h)</code></li>
+        <li><code class="inline">heapify(lst)</code></li>
+        <li>Кортеж = (приоритет, данные)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Жадный алгоритм</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.85rem;color:#8b949e">
+        <li>Локально лучший выбор</li>
+        <li>Не пересматривает прошлые</li>
+        <li>Работает когда есть «жадное свойство»</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Задача о поездах</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.85rem;color:#8b949e">
+        <li>Две кучи: free и occupied</li>
+        <li>Освобождаем ушедшие тупики</li>
+        <li>Берём наименьший номер</li>
+        <li>Жадно → оптимально</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top:20px">
+    <strong>Главный инсайт:</strong> heapq позволяет эффективно находить минимум из динамически изменяющегося набора — O(log n) на каждую операцию. Это идеальный инструмент для жадных алгоритмов, где на каждом шаге нужен «лучший» свободный ресурс.
+  </div>
+</div>
+
+</div>
+
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 10</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+
+<script>
+  hljs.highlightAll();
+  let cur = 1;
+  const total = 10;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s' + prev).classList.remove('active');
+    document.getElementById('s' + cur).classList.add('active');
+    document.getElementById('counter').textContent = cur + ' / ' + total;
+    document.getElementById('prevBtn').disabled = cur === 1;
+    document.getElementById('nextBtn').disabled = cur === total;
+    document.getElementById('progress').style.width = ((cur / total) * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+    if (e.key === 'ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = ((1 / total) * 100) + '%';
+</script>
+</body>
+</html>

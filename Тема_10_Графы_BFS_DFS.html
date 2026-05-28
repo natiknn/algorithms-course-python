@@ -1,0 +1,1141 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Графы — BFS и DFS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0d1117;color:#c9d1d9;font-family:'Segoe UI',system-ui,sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+  .progress-bar{height:3px;background:#21262d;flex-shrink:0}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#3fb950,#58a6ff);transition:width .4s ease}
+  .slide-area{flex:1;overflow:hidden;position:relative}
+  .slide{position:absolute;inset:0;padding:38px 56px;display:none;flex-direction:column;overflow-y:auto}
+  .slide.active{display:flex}
+  .tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#3fb950;margin-bottom:10px}
+  h1{font-size:2.6rem;font-weight:700;line-height:1.15;color:#f0f6fc;margin-bottom:14px}
+  h2{font-size:1.7rem;font-weight:700;color:#f0f6fc;margin-bottom:14px}
+  h3{font-size:1rem;font-weight:600;color:#3fb950;margin-bottom:7px;margin-top:12px}
+  h3 a,h2 a{color:inherit;text-decoration:none}
+  h3 a:hover,h2 a:hover{text-decoration:underline}
+  p{line-height:1.8;margin-bottom:9px;color:#c9d1d9;font-size:.93rem}
+  strong{color:#f0f6fc} em{color:#3fb950;font-style:normal}
+  .sub{font-size:1.05rem;color:#8b949e;margin-bottom:24px;line-height:1.6}
+  .card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:15px 19px;margin-bottom:11px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}
+  .hl{background:#1c2128;border-left:3px solid #3fb950;border-radius:0 8px 8px 0;padding:11px 15px;margin:10px 0;font-size:.88rem;line-height:1.7}
+  .hl.blue{border-left-color:#58a6ff} .hl.red{border-left-color:#f78166} .hl.orange{border-left-color:#ffa657} .hl.purple{border-left-color:#bc8cff}
+  code.i{background:#1c2128;border:1px solid #30363d;border-radius:4px;padding:2px 6px;font-family:'Cascadia Code','Fira Code',monospace;font-size:.87em;color:#79c0ff}
+  pre{margin:9px 0;border-radius:10px;overflow:hidden;border:1px solid #30363d}
+  pre code{font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:.83rem;line-height:1.7}
+  .tt{width:100%;border-collapse:collapse;font-family:monospace;font-size:.86rem}
+  .tt th{background:#1c2128;color:#3fb950;padding:6px 10px;text-align:center;border:1px solid #30363d}
+  .tt td{padding:5px 10px;text-align:center;border:1px solid #21262d;color:#c9d1d9}
+  .tt tr:nth-child(even){background:#161b22}
+  .tt tr.ok td{background:#1c3a1c;color:#3fb950}
+  .nav{display:flex;align-items:center;justify-content:center;gap:20px;padding:11px;background:#0d1117;border-top:1px solid #21262d;flex-shrink:0}
+  .nb{background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:6px 18px;border-radius:8px;cursor:pointer;font-size:.88rem;transition:all .2s}
+  .nb:hover{background:#30363d;border-color:#3fb950;color:#3fb950}
+  .nb:disabled{opacity:.3;cursor:not-allowed}
+  .nc{color:#8b949e;font-size:.88rem;min-width:72px;text-align:center}
+  .kh{color:#444;font-size:.73rem;margin-top:3px}
+  .title-slide{justify-content:center;align-items:center;text-align:center}
+  .ti{font-size:4rem;margin-bottom:18px}
+  .chips{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:18px}
+  .chip{background:#161b22;border:1px solid #30363d;border-radius:20px;padding:4px 13px;font-size:.83rem;color:#8b949e}
+  .st{display:flex;gap:11px;align-items:flex-start;background:#161b22;border:1px solid #30363d;border-radius:9px;padding:9px 13px;margin-bottom:6px}
+  .sn{min-width:22px;height:22px;border-radius:50%;background:#1c2a3a;border:1px solid #58a6ff;color:#58a6ff;font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .sb{flex:1;font-size:.88rem;line-height:1.55;color:#c9d1d9}
+  .cx{display:flex;gap:9px;margin:7px 0;flex-wrap:wrap}
+  .cb{background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:6px 12px}
+  .cb .cl{font-size:.7rem;color:#8b949e} .cb .cv{font-size:.95rem;color:#3fb950;font-weight:700;font-family:monospace}
+  .lc{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:2px 11px;font-size:.78rem;font-weight:600;margin-right:5px}
+  .easy{background:rgba(63,185,80,.12);color:#3fb950;border:1px solid rgba(63,185,80,.3)}
+  .med{background:rgba(210,153,34,.12);color:#d29922;border:1px solid rgba(210,153,34,.3)}
+  .hw{display:flex;align-items:flex-start;gap:9px;background:#161b22;border:1px solid #30363d;border-radius:9px;padding:10px 14px;margin-bottom:6px}
+  .hw a{color:#58a6ff;font-weight:600;font-size:.88rem;text-decoration:none}
+  .hw a:hover{text-decoration:underline}
+  .hd{font-size:.8rem;color:#8b949e;margin-top:2px}
+  details summary{cursor:pointer;font-size:.82rem;color:#3fb950;padding:3px 0;list-style:none}
+  details[open] summary{margin-bottom:5px}
+  .qc{background:#161b22;border:1px solid #30363d;border-radius:11px;padding:13px 17px;margin-bottom:9px}
+  .qq{font-weight:600;color:#f0f6fc;margin-bottom:8px;font-size:.91rem}
+  .qo{display:flex;flex-direction:column;gap:5px}
+  .qb{padding:7px 12px;border-radius:8px;border:1px solid #30363d;font-size:.86rem;cursor:pointer;transition:all .15s;background:none;color:#c9d1d9;text-align:left}
+  .qb:hover{border-color:#3fb950;color:#3fb950;background:rgba(63,185,80,.07)}
+  .qb.correct{border-color:#3fb950;color:#3fb950;background:rgba(63,185,80,.1);pointer-events:none}
+  .qb.wrong{border-color:#f78166;color:#f78166;background:rgba(247,129,102,.1)}
+  .qr{font-size:.83rem;margin-top:5px;display:none}
+  /* Graph visuals */
+  .gv{display:flex;flex-direction:column;align-items:center;gap:6px;margin:10px 0}
+  .gv svg{overflow:visible}
+  .gnode{fill:#1c2a3a;stroke:#58a6ff;stroke-width:1.5}
+  .gnode-vis{fill:#1c3a1c;stroke:#3fb950;stroke-width:2}
+  .gnode-queue{fill:#3a2a1c;stroke:#ffa657;stroke-width:2}
+  .glabel{fill:#f0f6fc;font-family:monospace;font-size:13px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+  .gedge{stroke:#30363d;stroke-width:1.5;fill:none}
+  .gedge-vis{stroke:#3fb950;stroke-width:2;fill:none}
+  /* Grid */
+  .grid-vis{display:inline-grid;gap:3px;margin:10px 0}
+  .gc{width:38px;height:38px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:monospace;font-weight:700;font-size:.95rem;border:1px solid #30363d}
+  .gc.land{background:#1c3a1c;border-color:#3fb950;color:#3fb950}
+  .gc.water{background:#1c2a3a;border-color:#30363d;color:#444}
+  .gc.vis{background:#2a1c3a;border-color:#bc8cff;color:#bc8cff}
+  .gc.start{background:#3a2a1c;border-color:#ffa657;color:#ffa657}
+  ul{padding-left:17px}
+  li{line-height:1.75;color:#c9d1d9;font-size:.88rem;margin-bottom:2px}
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- 1 — Титул -->
+<div class="slide title-slide active" id="s1">
+  <div class="ti">🌐</div>
+  <div class="tag">Тема 10</div>
+  <h1>Графы<br>BFS и DFS</h1>
+  <p class="sub">Обход в ширину, обход в глубину,<br>компоненты связности и путь в графе</p>
+  <div class="chips">
+    <span class="chip">Граф</span><span class="chip">BFS</span><span class="chip">DFS</span>
+    <span class="chip">Очередь / Стек</span><span class="chip">Компоненты связности</span>
+    <span class="chip">Flood Fill</span><span class="chip">Number of Islands</span>
+    <span class="chip">E. Военный поход</span>
+  </div>
+</div>
+
+<!-- 2 — Что такое граф -->
+<div class="slide" id="s2">
+  <div class="tag">Теория — Граф</div>
+  <h2>Что такое граф?</h2>
+  <div class="two">
+    <div>
+      <p>Граф — это набор <strong>вершин</strong> (узлов) и <strong>рёбер</strong> (связей между ними). Практически любая сеть — это граф.</p>
+      <div class="hl blue">🗺️ <strong>Примеры графов в жизни:</strong><br>
+        • Города и дороги между ними<br>
+        • Страницы интернета и ссылки<br>
+        • Друзья в социальной сети<br>
+        • Клетки на сетке (матрица)
+      </div>
+      <h3>Виды графов</h3>
+      <div class="st"><div class="sn">→</div><div class="sb"><strong>Ориентированный</strong> — рёбра имеют направление (A→B != B→A)</div></div>
+      <div class="st"><div class="sn">↔</div><div class="sb"><strong>Неориентированный</strong> — рёбра двусторонние (A-B = B-A)</div></div>
+      <div class="st"><div class="sn">W</div><div class="sb"><strong>Взвешенный</strong> — у рёбер есть вес (расстояние, стоимость)</div></div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Представление в коде</h3>
+        <p style="font-size:.85rem">Список смежности — самый удобный способ:</p>
+<pre><code class="language-python"># Неориентированный граф
+graph = {
+    0: [1, 2],
+    1: [0, 3],
+    2: [0, 4],
+    3: [1],
+    4: [2]
+}
+
+# Матрица — граф на сетке
+grid = [
+    [1, 1, 0],
+    [0, 1, 1],
+    [0, 0, 1]
+]
+# Соседи клетки (r,c): вверх, вниз, лево, право
+dirs = [(-1,0),(1,0),(0,-1),(0,1)]</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 — BFS теория -->
+<div class="slide" id="s3">
+  <div class="tag">Теория — BFS</div>
+  <h2>BFS — обход в ширину</h2>
+  <div class="two">
+    <div>
+      <p>BFS (Breadth-First Search) обходит граф <strong>слой за слоем</strong> — сначала все вершины на расстоянии 1, потом на 2, потом на 3...</p>
+      <div class="hl blue">🔑 <strong>Ключевая структура: очередь (deque)</strong><br>Добавляем сзади, берём спереди — FIFO.</div>
+      <h3>Шаблон BFS</h3>
+      <div class="st"><div class="sn">1</div><div class="sb">Кладём стартовую вершину в очередь, помечаем как посещённую</div></div>
+      <div class="st"><div class="sn">2</div><div class="sb">Пока очередь не пуста: берём вершину из начала</div></div>
+      <div class="st"><div class="sn">3</div><div class="sb">Добавляем всех непосещённых соседей в конец очереди</div></div>
+      <div class="st"><div class="sn">4</div><div class="sb">Повторяем</div></div>
+      <div class="hl orange">⚠️ <strong>Когда BFS?</strong> Когда нужен <em>кратчайший путь</em> в невзвешенном графе, или обход по слоям.</div>
+    </div>
+    <div>
+<pre><code class="language-python">from collections import deque
+
+def bfs(graph, start):
+    visited = set([start])
+    queue = deque([start])
+
+    while queue:
+        node = queue.popleft()  # FIFO
+        print(node)  # обрабатываем
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+# Порядок обхода графа:
+# 0: [1,2], 1:[0,3], 2:[0,4]
+# Start=0 → 0,1,2,3,4
+# (сначала соседи 0, потом их соседи)</code></pre>
+      <div class="cx">
+        <div class="cb"><div class="cl">Время</div><div class="cv">O(V+E)</div></div>
+        <div class="cb"><div class="cl">Память</div><div class="cv">O(V)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — DFS теория -->
+<div class="slide" id="s4">
+  <div class="tag">Теория — DFS</div>
+  <h2>DFS — обход в глубину</h2>
+  <div class="two">
+    <div>
+      <p>DFS (Depth-First Search) идёт <strong>как можно глубже</strong> по одной ветке, потом возвращается и идёт по следующей.</p>
+      <div class="hl blue">🔑 <strong>Ключевая структура: стек (или рекурсия)</strong><br>Рекурсия неявно использует стек вызовов.</div>
+      <h3>DFS через рекурсию (проще)</h3>
+<pre><code class="language-python">def dfs(graph, node, visited=None):
+    if visited is None:
+        visited = set()
+    visited.add(node)
+    print(node)
+
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            dfs(graph, neighbor, visited)
+    return visited</code></pre>
+      <div class="hl orange">⚠️ <strong>Когда DFS?</strong> Компоненты связности, обнаружение циклов, топологическая сортировка, заливка (flood fill).</div>
+    </div>
+    <div>
+      <h3>DFS итеративно (через стек)</h3>
+<pre><code class="language-python">def dfs_iter(graph, start):
+    visited = set()
+    stack = [start]
+
+    while stack:
+        node = stack.pop()  # LIFO!
+        if node in visited:
+            continue
+        visited.add(node)
+        print(node)
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                stack.append(neighbor)
+    return visited</code></pre>
+      <div class="hl">
+        <strong>BFS vs DFS — запоминалка:</strong><br>
+        BFS = очередь = <em>широко</em> (в стороны)<br>
+        DFS = стек = <em>глубоко</em> (вниз)
+      </div>
+      <div class="cx">
+        <div class="cb"><div class="cl">Время</div><div class="cv">O(V+E)</div></div>
+        <div class="cb"><div class="cl">Память</div><div class="cv">O(V)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — BFS vs DFS визуально -->
+<div class="slide" id="s5">
+  <div class="tag">Визуализация</div>
+  <h2>BFS vs DFS — порядок обхода</h2>
+  <p>Граф: 1 соединён с 2 и 3; 2 соединён с 4 и 5; 3 соединён с 6. Старт — вершина 1.</p>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#58a6ff">BFS — слой за слоем</h3>
+        <svg width="280" height="160" viewBox="0 0 280 160">
+          <line x1="140" y1="30" x2="70" y2="80" class="gedge"/>
+          <line x1="140" y1="30" x2="210" y2="80" class="gedge"/>
+          <line x1="70" y1="80" x2="35" y2="135" class="gedge"/>
+          <line x1="70" y1="80" x2="105" y2="135" class="gedge"/>
+          <line x1="210" y1="80" x2="245" y2="135" class="gedge"/>
+          <circle cx="140" cy="30" r="18" class="gnode-vis"/>
+          <circle cx="70" cy="80" r="18" class="gnode-vis"/>
+          <circle cx="210" cy="80" r="18" class="gnode-vis"/>
+          <circle cx="35" cy="135" r="18" class="gnode-vis"/>
+          <circle cx="105" cy="135" r="18" class="gnode-vis"/>
+          <circle cx="245" cy="135" r="18" class="gnode-vis"/>
+          <text x="140" y="30" class="glabel">1</text>
+          <text x="70" y="80" class="glabel">2</text>
+          <text x="210" y="80" class="glabel">3</text>
+          <text x="35" y="135" class="glabel">4</text>
+          <text x="105" y="135" class="glabel">5</text>
+          <text x="245" y="135" class="glabel">6</text>
+          <text x="140" y="13" fill="#ffa657" font-size="9" text-anchor="middle">уровень 0</text>
+          <text x="140" y="68" fill="#ffa657" font-size="9" text-anchor="middle">уровень 1</text>
+          <text x="128" y="155" fill="#ffa657" font-size="9" text-anchor="middle">уровень 2</text>
+        </svg>
+        <div class="hl blue" style="margin-top:4px">Порядок: <strong>1 → 2 → 3 → 4 → 5 → 6</strong><br>Сначала весь уровень, потом следующий</div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#3fb950">DFS — в глубину</h3>
+        <svg width="280" height="160" viewBox="0 0 280 160">
+          <line x1="140" y1="30" x2="70" y2="80" class="gedge-vis"/>
+          <line x1="140" y1="30" x2="210" y2="80" class="gedge"/>
+          <line x1="70" y1="80" x2="35" y2="135" class="gedge-vis"/>
+          <line x1="70" y1="80" x2="105" y2="135" class="gedge"/>
+          <line x1="210" y1="80" x2="245" y2="135" class="gedge"/>
+          <circle cx="140" cy="30" r="18" class="gnode-vis"/>
+          <circle cx="70" cy="80" r="18" class="gnode-vis"/>
+          <circle cx="210" cy="80" r="18" class="gnode"/>
+          <circle cx="35" cy="135" r="18" class="gnode-vis"/>
+          <circle cx="105" cy="135" r="18" class="gnode"/>
+          <circle cx="245" cy="135" r="18" class="gnode"/>
+          <text x="140" y="30" class="glabel">1</text>
+          <text x="70" y="80" class="glabel">2</text>
+          <text x="210" y="80" class="glabel" fill="#8b949e">3</text>
+          <text x="35" y="135" class="glabel">4</text>
+          <text x="105" y="135" class="glabel" fill="#8b949e">5</text>
+          <text x="245" y="135" class="glabel" fill="#8b949e">6</text>
+        </svg>
+        <div class="hl" style="margin-top:4px">Порядок: <strong>1 → 2 → 4 → (назад) → 5 → (назад) → 3 → 6</strong><br>Идём до упора, потом возвращаемся</div>
+      </div>
+      <div class="hl orange" style="margin-top:8px">
+        💡 <strong>BFS гарантирует кратчайший путь</strong> в невзвешенном графе. DFS — нет, но он экономнее по памяти при глубоких графах.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 — Устные вопросы -->
+<div class="slide" id="s6">
+  <div class="tag">Разминка — устные вопросы</div>
+  <h2>🗣️ Проверь себя</h2>
+  <div class="two" style="align-items:start">
+    <div>
+      <div class="qc">
+        <div class="qq">1. Какую структуру данных использует BFS?</div>
+        <div class="qo">
+          <button class="qb" onclick="Q(this,false)">Стек (LIFO)</button>
+          <button class="qb" onclick="Q(this,true)">Очередь (FIFO)</button>
+          <button class="qb" onclick="Q(this,false)">Рекурсию</button>
+        </div><div class="qr"></div>
+      </div>
+      <div class="qc">
+        <div class="qq">2. DFS на графе из 5 вершин. Максимальная глубина рекурсии?</div>
+        <div class="qo">
+          <button class="qb" onclick="Q(this,false)">2</button>
+          <button class="qb" onclick="Q(this,true)">5 — в худшем случае линейная цепочка</button>
+          <button class="qb" onclick="Q(this,false)">log₂(5) ≈ 2.3</button>
+        </div><div class="qr"></div>
+      </div>
+      <div class="qc">
+        <div class="qq">3. Что такое компонента связности?</div>
+        <div class="qo">
+          <button class="qb" onclick="Q(this,false)">Ребро между двумя вершинами</button>
+          <button class="qb" onclick="Q(this,true)">Максимальный подграф, где каждые две вершины связаны путём</button>
+          <button class="qb" onclick="Q(this,false)">Центральная вершина графа</button>
+        </div><div class="qr"></div>
+      </div>
+    </div>
+    <div>
+      <div class="qc">
+        <div class="qq">4. Зачем нужен массив visited при обходе графа?</div>
+        <div class="qo">
+          <button class="qb" onclick="Q(this,false)">Для хранения расстояний</button>
+          <button class="qb" onclick="Q(this,true)">Чтобы не попасть в бесконечный цикл при наличии циклов в графе</button>
+          <button class="qb" onclick="Q(this,false)">Для ускорения работы</button>
+        </div><div class="qr"></div>
+      </div>
+      <div class="qc">
+        <div class="qq">5. Какой алгоритм гарантирует кратчайший путь в невзвешенном графе?</div>
+        <div class="qo">
+          <button class="qb" onclick="Q(this,true)">BFS — он обходит по слоям, первый найденный путь — кратчайший</button>
+          <button class="qb" onclick="Q(this,false)">DFS</button>
+          <button class="qb" onclick="Q(this,false)">Оба одинаково</button>
+        </div><div class="qr"></div>
+      </div>
+      <div class="qc">
+        <div class="qq">6. Граф на сетке 3×3. Сколько рёбер у центральной клетки?</div>
+        <div class="qo">
+          <button class="qb" onclick="Q(this,false)">2</button>
+          <button class="qb" onclick="Q(this,false)">3</button>
+          <button class="qb" onclick="Q(this,true)">4 — вверх, вниз, лево, право</button>
+        </div><div class="qr"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 — #733 Flood Fill -->
+<div class="slide" id="s7">
+  <div class="tag">Простая задача — разгон</div>
+  <span class="lc easy">#733 · Easy</span>
+  <h2><a href="https://leetcode.com/problems/flood-fill/" target="_blank">Flood Fill ↗</a></h2>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:.87rem">Дана сетка пикселей. Нужно перекрасить все связанные пиксели того же цвета, что и стартовый, в новый цвет. Связность — 4 направления.</p>
+        <div class="hl green">Вход: image=[[1,1,1],[1,1,0],[1,0,1]], sr=1,sc=1, color=2<br>Выход: [[2,2,2],[2,2,0],[2,0,1]]</div>
+        <h3>Визуализация</h3>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          <div>
+            <p style="font-size:.75rem;color:#8b949e;margin-bottom:4px">До (старт в центре)</p>
+            <div class="grid-vis" style="grid-template-columns:repeat(3,38px)">
+              <div class="gc land">1</div><div class="gc land">1</div><div class="gc land">1</div>
+              <div class="gc land">1</div><div class="gc start">1</div><div class="gc water">0</div>
+              <div class="gc land">1</div><div class="gc water">0</div><div class="gc land">1</div>
+            </div>
+          </div>
+          <div style="font-size:1.5rem;color:#8b949e">→</div>
+          <div>
+            <p style="font-size:.75rem;color:#8b949e;margin-bottom:4px">После (color=2)</p>
+            <div class="grid-vis" style="grid-template-columns:repeat(3,38px)">
+              <div class="gc vis">2</div><div class="gc vis">2</div><div class="gc vis">2</div>
+              <div class="gc vis">2</div><div class="gc vis">2</div><div class="gc water">0</div>
+              <div class="gc vis">2</div><div class="gc water">0</div><div class="gc land">1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def floodFill(image, sr, sc, color):
+    orig = image[sr][sc]
+    if orig == color:
+        return image  # уже нужный цвет
+
+    rows, cols = len(image), len(image[0])
+    dirs = [(-1,0),(1,0),(0,-1),(0,1)]
+
+    def dfs(r, c):
+        if r < 0 or r >= rows: return
+        if c < 0 or c >= cols: return
+        if image[r][c] != orig: return
+
+        image[r][c] = color  # красим
+        for dr, dc in dirs:
+            dfs(r + dr, c + dc)
+
+    dfs(sr, sc)
+    return image</code></pre>
+      <div class="hl blue" style="margin-top:8px">
+        💡 <strong>Идея:</strong> DFS от стартовой клетки. Красим и сразу идём к соседям того же цвета. Visited не нужен — мы сразу меняем цвет!
+      </div>
+      <div class="cx">
+        <div class="cb"><div class="cl">Время</div><div class="cv">O(R·C)</div></div>
+        <div class="cb"><div class="cl">Память</div><div class="cv">O(R·C)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 — #200 Number of Islands -->
+<div class="slide" id="s8">
+  <div class="tag">Основная задача</div>
+  <span class="lc med">#200 · Medium</span>
+  <h2><a href="https://leetcode.com/problems/number-of-islands/" target="_blank">Number of Islands ↗</a></h2>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:.87rem">Сетка из '1' (суша) и '0' (вода). Найти количество островов. Остров — группа связанных '1' (4 направления).</p>
+        <div class="hl green">Вход: [["1","1","0"],["0","1","0"],["0","0","1"]]<br>Выход: <strong>2</strong></div>
+        <h3>Алгоритм</h3>
+        <div class="st"><div class="sn">1</div><div class="sb">Идём по всем клеткам</div></div>
+        <div class="st"><div class="sn">2</div><div class="sb">Нашли '1' и не посещена → новый остров! count++</div></div>
+        <div class="st"><div class="sn">3</div><div class="sb">Запускаем DFS/BFS от этой клетки — «топим» весь остров (помечаем посещённым)</div></div>
+        <div class="st"><div class="sn">4</div><div class="sb">Повторяем</div></div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def numIslands(grid):
+    rows, cols = len(grid), len(grid[0])
+    count = 0
+    dirs = [(-1,0),(1,0),(0,-1),(0,1)]
+
+    def dfs(r, c):
+        if r < 0 or r >= rows: return
+        if c < 0 or c >= cols: return
+        if grid[r][c] != '1': return
+        grid[r][c] = '0'  # помечаем посещённой
+        for dr, dc in dirs:
+            dfs(r + dr, c + dc)
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                count += 1
+                dfs(r, c)  # «топим» остров
+
+    return count</code></pre>
+      <div class="hl orange" style="margin-top:8px">
+        ⚠️ Мы <strong>изменяем исходный grid</strong> (меняем '1' на '0'). Если нельзя — используй отдельный visited массив.
+      </div>
+      <div class="cx">
+        <div class="cb"><div class="cl">Время</div><div class="cv">O(R·C)</div></div>
+        <div class="cb"><div class="cl">Память</div><div class="cv">O(R·C)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 — Компоненты связности -->
+<div class="slide" id="s9">
+  <div class="tag">Паттерн — Компоненты связности</div>
+  <h2>Компоненты связности</h2>
+  <p>Одна из самых частых задач на графах — найти количество компонент или принадлежность вершин. Это обобщение задачи «Number of Islands».</p>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Шаблон для любого графа</h3>
+<pre><code class="language-python">def count_components(n, edges):
+    # Строим граф
+    graph = {i: [] for i in range(n)}
+    for a, b in edges:
+        graph[a].append(b)
+        graph[b].append(a)
+
+    visited = set()
+    count = 0
+
+    def dfs(node):
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                dfs(neighbor)
+
+    for node in range(n):
+        if node not in visited:
+            count += 1   # новая компонента
+            dfs(node)
+
+    return count</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Пример: 5 вершин, рёбра [(0,1),(1,2),(3,4)]</h3>
+        <svg width="260" height="130" viewBox="0 0 260 130">
+          <line x1="50" y1="65" x2="110" y2="65" stroke="#3fb950" stroke-width="2"/>
+          <line x1="110" y1="65" x2="80" y2="115" stroke="#3fb950" stroke-width="2"/>
+          <line x1="170" y1="65" x2="230" y2="65" stroke="#58a6ff" stroke-width="2"/>
+          <circle cx="50" cy="65" r="18" fill="#1c3a1c" stroke="#3fb950" stroke-width="2"/>
+          <circle cx="110" cy="65" r="18" fill="#1c3a1c" stroke="#3fb950" stroke-width="2"/>
+          <circle cx="80" cy="115" r="18" fill="#1c3a1c" stroke="#3fb950" stroke-width="2"/>
+          <circle cx="170" cy="65" r="18" fill="#1c2a3a" stroke="#58a6ff" stroke-width="2"/>
+          <circle cx="230" cy="65" r="18" fill="#1c2a3a" stroke="#58a6ff" stroke-width="2"/>
+          <text x="50" y="65" class="glabel">0</text>
+          <text x="110" y="65" class="glabel">1</text>
+          <text x="80" y="115" class="glabel">2</text>
+          <text x="170" y="65" class="glabel">3</text>
+          <text x="230" y="65" class="glabel">4</text>
+          <text x="80" y="20" fill="#3fb950" font-size="11" text-anchor="middle" font-family="monospace">Компонента 1</text>
+          <text x="200" y="20" fill="#58a6ff" font-size="11" text-anchor="middle" font-family="monospace">Компонента 2</text>
+        </svg>
+        <div class="hl green" style="margin-top:8px">Ответ: <strong>2 компоненты</strong> ({0,1,2} и {3,4})</div>
+        <div class="hl blue" style="margin-top:4px">
+          💡 <strong>Number of Islands — это то же самое!</strong> Каждый остров — это компонента связности в графе, где клетки с '1' — вершины, а смежные клетки — рёбра.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 — BFS кратчайший путь -->
+<div class="slide" id="s10">
+  <div class="tag">BFS — Кратчайший путь</div>
+  <h2>BFS: кратчайший путь</h2>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Почему BFS = кратчайший путь?</h3>
+        <p style="font-size:.87rem">BFS обходит вершины по уровням. Первый раз когда мы добрались до цели — это <strong>кратчайший путь</strong>: мы не могли добраться раньше, потому что все более короткие пути уже проверены.</p>
+        <h3>Шаблон BFS с расстояниями</h3>
+<pre><code class="language-python">from collections import deque
+
+def bfs_distance(graph, start, end):
+    visited = {start}
+    queue = deque([(start, 0)])  # (вершина, расстояние)
+
+    while queue:
+        node, dist = queue.popleft()
+
+        if node == end:
+            return dist  # нашли!
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, dist + 1))
+
+    return -1  # пути нет</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">BFS на сетке — шаблон</h3>
+<pre><code class="language-python">from collections import deque
+
+def bfs_grid(grid, start, end):
+    rows, cols = len(grid), len(grid[0])
+    dirs = [(-1,0),(1,0),(0,-1),(0,1)]
+    sr, sc = start
+    er, ec = end
+
+    visited = [[False]*cols for _ in range(rows)]
+    visited[sr][sc] = True
+    queue = deque([(sr, sc, 0)])
+
+    while queue:
+        r, c, dist = queue.popleft()
+
+        if (r, c) == (er, ec):
+            return dist
+
+        for dr, dc in dirs:
+            nr, nc = r+dr, c+dc
+            if (0 <= nr < rows and
+                0 <= nc < cols and
+                not visited[nr][nc] and
+                grid[nr][nc] != '#'):  # не стена
+                visited[nr][nc] = True
+                queue.append((nr, nc, dist+1))
+
+    return -1</code></pre>
+      </div>
+      <div class="hl orange" style="margin-top:6px">
+        💡 Этот шаблон применяется в сотнях задач: лабиринты, кратчайший путь в городе, распространение огня...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 11 — E. Военный поход -->
+<div class="slide" id="s11">
+  <div class="tag">Задача — Вариант 1</div>
+  <h2>E. Военный поход — разбор</h2>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие (упрощённо)</h3>
+        <p style="font-size:.87rem">n городов (2<=n<=2000), m дорог (1<=m<=50000). Правитель S=1 хочет добраться до T=n. Может ходить только по <strong>своим</strong> дорогам. Может <strong>продавать</strong> свои дороги и <strong>покупать</strong> чужие. Плата за проход через каждый город. Найти какие дороги продать/купить и маршрут.</p>
+        <div class="hl orange">⚠️ Это задача уровня E (самая сложная). Требует: BFS/DFS + понимание структуры графа с продажей/покупкой рёбер.</div>
+        <h3>Ключевые идеи</h3>
+        <div class="st"><div class="sn">1</div><div class="sb">Сначала находим все города <strong>достижимые по своим дорогам</strong> от S (DFS/BFS)</div></div>
+        <div class="st"><div class="sn">2</div><div class="sb">Смотрим какие чужие дороги соединяют достижимые с недостижимыми</div></div>
+        <div class="st"><div class="sn">3</div><div class="sb">Ищем кратчайший путь с учётом стоимости покупки/продажи (BFS/Dijkstra)</div></div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">from collections import deque, defaultdict
+
+def solve():
+    n, m = map(int, input().split())
+    toll = [int(input()) for _ in range(n)]
+
+    own = defaultdict(list)   # свои дороги
+    other = defaultdict(list) # чужие дороги
+    roads = []
+
+    for i in range(m):
+        a, b, p, c = map(int, input().split())
+        a -= 1; b -= 1; p -= 1
+        roads.append((a, b, p, c))
+        if p == 0:  # дорога правителя S
+            own[a].append((b, i))
+            own[b].append((a, i))
+        else:
+            other[a].append((b, i, p, c))
+            other[b].append((a, i, p, c))
+
+    # BFS по своим дорогам от вершины 0
+    reachable = set([0])
+    queue = deque([0])
+    while queue:
+        v = queue.popleft()
+        for u, _ in own[v]:
+            if u not in reachable:
+                reachable.add(u)
+                queue.append(u)
+
+    # Проверяем достижимость цели
+    if n-1 in reachable:
+        # Найти маршрут (BFS с восстановлением пути)
+        pass  # упрощение для презентации
+
+solve()</code></pre>
+      <div class="hl blue" style="margin-top:6px;font-size:.82rem">
+        💡 Полное решение сложнее — нужен Dijkstra или модифицированный BFS учитывающий стоимость покупки дорог. Это задача олимпиадного уровня.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 — Итог -->
+<div class="slide" id="s12">
+  <div class="tag">Итог</div>
+  <h2>Что запомнить</h2>
+  <div class="three" style="align-items:start">
+    <div class="card">
+      <h3 style="margin-top:0">🔵 BFS — очередь</h3>
+      <ul style="font-size:.84rem">
+        <li>Структура: <code class="i">deque</code>, FIFO</li>
+        <li>Обход по <strong>слоям</strong></li>
+        <li><strong>Кратчайший путь</strong> в невзвешенном графе</li>
+        <li>Сложность: O(V+E)</li>
+      </ul>
+      <div class="hl blue" style="margin-top:9px;font-size:.81rem">
+        Когда: кратчайший путь, уровни обхода
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🟢 DFS — стек/рекурсия</h3>
+      <ul style="font-size:.84rem">
+        <li>Структура: рекурсия или явный стек</li>
+        <li>Идёт <strong>в глубину</strong></li>
+        <li>Компоненты, циклы, заливка</li>
+        <li>Сложность: O(V+E)</li>
+      </ul>
+      <div class="hl" style="margin-top:9px;font-size:.81rem">
+        Когда: компоненты, flood fill, топосортировка
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🎯 Паттерны задач</h3>
+      <ul style="font-size:.84rem">
+        <li>Граф на сетке → 4 направления</li>
+        <li>Кол-во компонент → DFS по всем</li>
+        <li>Кратчайший путь → BFS</li>
+        <li>Заливка → DFS рекурсивно</li>
+        <li><strong>visited</strong> обязателен!</li>
+      </ul>
+      <div class="hl orange" style="margin-top:9px;font-size:.81rem">
+        Сигнал: «граф», «сеть», «матрица», «соединены», «достижимо»
+      </div>
+    </div>
+  </div>
+  <div class="hl blue" style="margin-top:12px">
+    📋 <strong>Шаблон на память:</strong> для обоих алгоритмов структура одинакова — отличается только используемая структура данных (очередь vs стек) и порядок обхода.
+  </div>
+</div>
+
+<!-- 13 — Домашнее задание -->
+<div class="slide" id="s13">
+  <div class="tag">Домашнее задание</div>
+  <h2>🏠 Задачи для самостоятельной практики</h2>
+  <p style="font-size:.86rem;color:#8b949e;margin-bottom:12px">Разборы с подсказками — на следующих слайдах 👉</p>
+  <div class="two" style="align-items:start">
+    <div>
+      <p style="font-size:.86rem;color:#3fb950;font-weight:600;margin-bottom:7px">🟢 Лёгкие — начни с них</p>
+      <div class="hw">
+        <span class="lc easy" style="white-space:nowrap">#733</span>
+        <div><a href="https://leetcode.com/problems/flood-fill/" target="_blank">Flood Fill</a>
+        <div class="hd">DFS на сетке. Разбор — слайд 7. Первая задача на графы!</div></div>
+      </div>
+      <div class="hw">
+        <span class="lc easy" style="white-space:nowrap">#617</span>
+        <div><a href="https://leetcode.com/problems/merge-two-binary-trees/" target="_blank">Merge Two Binary Trees</a>
+        <div class="hd">DFS на деревьях. Простой разогрев перед графами.</div></div>
+      </div>
+      <div class="hw">
+        <span class="lc easy" style="white-space:nowrap">#1971</span>
+        <div><a href="https://leetcode.com/problems/find-if-path-exists-in-graph/" target="_blank">Find if Path Exists in Graph</a>
+        <div class="hd">Есть ли путь между двумя вершинами? Разбор — слайд 14.</div></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:.86rem;color:#d29922;font-weight:600;margin-bottom:7px">🟡 Следующий уровень</p>
+      <div class="hw">
+        <span class="lc med" style="white-space:nowrap">#200</span>
+        <div><a href="https://leetcode.com/problems/number-of-islands/" target="_blank">Number of Islands</a>
+        <div class="hd">Компоненты связности на сетке. Разбор — слайд 8 + 15.</div></div>
+      </div>
+      <div class="hw">
+        <span class="lc med" style="white-space:nowrap">#994</span>
+        <div><a href="https://leetcode.com/problems/rotting-oranges/" target="_blank">Rotting Oranges</a>
+        <div class="hd">BFS по уровням — распространение гнили. Разбор — слайд 16.</div></div>
+      </div>
+      <div class="hw">
+        <span class="lc med" style="white-space:nowrap">#207</span>
+        <div><a href="https://leetcode.com/problems/course-schedule/" target="_blank">Course Schedule</a>
+        <div class="hd">Обнаружение цикла в ориентированном графе. Разбор — слайд 17.</div></div>
+      </div>
+      <div class="hl orange" style="margin-top:11px">
+        💡 <strong>Порядок:</strong> #733 → #1971 → #200 → #994 → #207<br><br>
+        После #200 попробуй решить <strong>«E. Военный поход»</strong> — это сложно, но теперь понятна структура задачи!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14 — Разбор #1971 -->
+<div class="slide" id="s14">
+  <div class="tag">Разбор с подсказками</div>
+  <span class="lc easy">#1971 · Easy</span>
+  <h2><a href="https://leetcode.com/problems/find-if-path-exists-in-graph/" target="_blank">Find if Path Exists in Graph ↗</a></h2>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:.87rem">n вершин (0..n-1), список рёбер. Есть ли путь от source до destination?</p>
+        <div class="hl green">n=3, edges=[[0,1],[1,2],[2,0]], src=0, dst=2 → <strong>True</strong></div>
+        <div class="hl red">n=6, edges=[[0,1],[0,2],[3,5],[5,4],[4,3]], src=0, dst=5 → <strong>False</strong></div>
+        <h3>Подсказки</h3>
+        <details style="margin-bottom:7px">
+          <summary>💡 Подсказка 1: как построить граф?</summary>
+          <div class="hl" style="margin-top:5px">Список смежности: словарь или defaultdict(list). Для каждого ребра [a,b] добавляем b в adj[a] и a в adj[b].</div>
+        </details>
+        <details style="margin-bottom:7px">
+          <summary>💡 Подсказка 2: BFS или DFS?</summary>
+          <div class="hl" style="margin-top:5px">Оба подходят! Нам нужно просто проверить достижимость — не кратчайший путь. Выбирай что удобнее.</div>
+        </details>
+        <details>
+          <summary>💡 Подсказка 3: как проверить достижимость?</summary>
+          <div class="hl" style="margin-top:5px">Запусти BFS/DFS от source. Если destination попал в visited — вернуть True, иначе False.</div>
+        </details>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">🔑 Решение</h3>
+        <details>
+          <summary style="color:#3fb950;font-size:.87rem;font-weight:600">Показать полное решение</summary>
+<pre style="margin-top:9px"><code class="language-python">from collections import deque, defaultdict
+
+def validPath(n, edges, source, destination):
+    if source == destination:
+        return True
+
+    graph = defaultdict(list)
+    for a, b in edges:
+        graph[a].append(b)
+        graph[b].append(a)
+
+    visited = {source}
+    queue = deque([source])
+
+    while queue:
+        node = queue.popleft()
+        if node == destination:
+            return True
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+    return False</code></pre>
+        </details>
+      </div>
+      <div class="cx" style="margin-top:8px">
+        <div class="cb"><div class="cl">Время</div><div class="cv">O(V+E)</div></div>
+        <div class="cb"><div class="cl">Память</div><div class="cv">O(V+E)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 15 — Разбор #200 -->
+<div class="slide" id="s15">
+  <div class="tag">Разбор с подсказками</div>
+  <span class="lc med">#200 · Medium</span>
+  <h2><a href="https://leetcode.com/problems/number-of-islands/" target="_blank">Number of Islands ↗</a></h2>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:.87rem">Сетка из '1' и '0'. Посчитать количество островов (связных компонент из '1').</p>
+        <div class="hl green">[["1","1","0","0"],["1","1","0","0"],["0","0","1","0"],["0","0","0","1"]] → <strong>3</strong></div>
+        <h3>Подсказки</h3>
+        <details style="margin-bottom:7px">
+          <summary>💡 Подсказка 1: как найти начало острова?</summary>
+          <div class="hl" style="margin-top:5px">Перебираем все клетки. Если grid[r][c] == '1' и клетка не посещена — нашли новый остров!</div>
+        </details>
+        <details style="margin-bottom:7px">
+          <summary>💡 Подсказка 2: как «потопить» остров?</summary>
+          <div class="hl" style="margin-top:5px">DFS от найденной клетки. Меняем '1' на '0' (или помечаем visited). Рекурсивно идём во все 4 стороны.</div>
+        </details>
+        <details>
+          <summary>💡 Подсказка 3: граничные условия?</summary>
+          <div class="hl" style="margin-top:5px">Проверяй выход за границы сетки: r &lt; 0, r >= rows, c &lt; 0, c >= cols. И что клетка == '1'.</div>
+        </details>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">🔑 Решение</h3>
+        <details>
+          <summary style="color:#3fb950;font-size:.87rem;font-weight:600">Показать полное решение</summary>
+<pre style="margin-top:9px"><code class="language-python">def numIslands(grid):
+    rows, cols = len(grid), len(grid[0])
+    count = 0
+
+    def dfs(r, c):
+        if r < 0 or r >= rows: return
+        if c < 0 or c >= cols: return
+        if grid[r][c] != '1': return
+        grid[r][c] = '0'  # помечаем
+        dfs(r+1, c); dfs(r-1, c)
+        dfs(r, c+1); dfs(r, c-1)
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                count += 1
+                dfs(r, c)
+
+    return count
+
+# Трассировка для [[1,1,0],[0,1,0],[0,0,1]]:
+# (0,0)='1' → count=1, топим {(0,0),(0,1),(1,1)}
+# (2,2)='1' → count=2, топим {(2,2)}
+# Ответ: 2 ✓</code></pre>
+        </details>
+      </div>
+      <div class="cx" style="margin-top:8px">
+        <div class="cb"><div class="cl">Время</div><div class="cv">O(R·C)</div></div>
+        <div class="cb"><div class="cl">Память</div><div class="cv">O(R·C)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 16 — Разбор #994 -->
+<div class="slide" id="s16">
+  <div class="tag">Разбор с подсказками</div>
+  <span class="lc med">#994 · Medium</span>
+  <h2><a href="https://leetcode.com/problems/rotting-oranges/" target="_blank">Rotting Oranges ↗</a></h2>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:.87rem">Сетка: 0=пусто, 1=свежий апельсин, 2=гнилой. Каждую минуту гниль распространяется на всех соседних свежих. Минимум минут до полного сгнивания, или -1.</p>
+        <div class="hl green">[[2,1,1],[1,1,0],[0,1,1]] → <strong>4</strong></div>
+        <div class="hl red">[[2,1,1],[0,1,1],[1,0,1]] → <strong>-1</strong> (изолированный)</div>
+        <h3>Подсказки</h3>
+        <details style="margin-bottom:7px">
+          <summary>💡 Подсказка 1: BFS или DFS?</summary>
+          <div class="hl" style="margin-top:5px"><strong>BFS!</strong> Гниль распространяется одновременно от всех гнилых апельсинов. Это классический «multi-source BFS» — кладём всех гнилых в очередь сразу.</div>
+        </details>
+        <details style="margin-bottom:7px">
+          <summary>💡 Подсказка 2: как отслеживать время?</summary>
+          <div class="hl" style="margin-top:5px">Храни в очереди пары (r, c, time). Или обрабатывай слоями — каждый слой BFS = 1 минута.</div>
+        </details>
+        <details>
+          <summary>💡 Подсказка 3: как проверить -1?</summary>
+          <div class="hl" style="margin-top:5px">После BFS проверь — остались ли в сетке клетки со значением 1. Если да → -1.</div>
+        </details>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">🔑 Решение</h3>
+        <details>
+          <summary style="color:#3fb950;font-size:.87rem;font-weight:600">Показать полное решение</summary>
+<pre style="margin-top:9px"><code class="language-python">from collections import deque
+
+def orangesRotting(grid):
+    rows, cols = len(grid), len(grid[0])
+    dirs = [(-1,0),(1,0),(0,-1),(0,1)]
+    queue = deque()
+    fresh = 0
+
+    # Найти всех гнилых и посчитать свежих
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == 2:
+                queue.append((r, c, 0))
+            elif grid[r][c] == 1:
+                fresh += 1
+
+    time = 0
+    while queue:
+        r, c, t = queue.popleft()
+        for dr, dc in dirs:
+            nr, nc = r+dr, c+dc
+            if (0 <= nr < rows and
+                0 <= nc < cols and
+                grid[nr][nc] == 1):
+                grid[nr][nc] = 2
+                fresh -= 1
+                time = t + 1
+                queue.append((nr, nc, t+1))
+
+    return time if fresh == 0 else -1</code></pre>
+        </details>
+      </div>
+      <div class="cx" style="margin-top:8px">
+        <div class="cb"><div class="cl">Время</div><div class="cv">O(R·C)</div></div>
+        <div class="cb"><div class="cl">Память</div><div class="cv">O(R·C)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 17 — Разбор #207 -->
+<div class="slide" id="s17">
+  <div class="tag">Разбор с подсказками</div>
+  <span class="lc med">#207 · Medium</span>
+  <h2><a href="https://leetcode.com/problems/course-schedule/" target="_blank">Course Schedule ↗</a></h2>
+  <div class="two">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:.87rem">n курсов (0..n-1). Список предпосылок [a,b] = сначала надо пройти b, потом a. Можно ли пройти все курсы?</p>
+        <div class="hl green">n=2, prerequisites=[[1,0]] → <strong>True</strong> (0→1)</div>
+        <div class="hl red">n=2, prerequisites=[[1,0],[0,1]] → <strong>False</strong> (цикл!)</div>
+        <h3>Ключевая идея</h3>
+        <p style="font-size:.87rem">Задача = <strong>обнаружение цикла</strong> в ориентированном графе. Если цикл есть — невозможно пройти все курсы.</p>
+        <h3>Подсказки</h3>
+        <details style="margin-bottom:7px">
+          <summary>💡 Подсказка 1: как построить граф?</summary>
+          <div class="hl" style="margin-top:5px">Ориентированный граф: prerequisites [a,b] → ребро b→a (b нужно пройти до a).</div>
+        </details>
+        <details>
+          <summary>💡 Подсказка 2: как найти цикл через DFS?</summary>
+          <div class="hl" style="margin-top:5px">Три состояния вершины: 0=не посещена, 1=в текущем пути DFS, 2=полностью обработана. Цикл = попали в вершину со статусом 1.</div>
+        </details>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">🔑 Решение (DFS + обнаружение цикла)</h3>
+        <details>
+          <summary style="color:#3fb950;font-size:.87rem;font-weight:600">Показать полное решение</summary>
+<pre style="margin-top:9px"><code class="language-python">from collections import defaultdict
+
+def canFinish(numCourses, prerequisites):
+    graph = defaultdict(list)
+    for a, b in prerequisites:
+        graph[b].append(a)
+
+    # 0=не посещён, 1=в пути, 2=готов
+    state = [0] * numCourses
+
+    def dfs(node):
+        if state[node] == 1:
+            return False  # цикл!
+        if state[node] == 2:
+            return True   # уже обработан
+
+        state[node] = 1  # входим в путь
+        for neighbor in graph[node]:
+            if not dfs(neighbor):
+                return False
+        state[node] = 2  # выходим из пути
+        return True
+
+    for course in range(numCourses):
+        if not dfs(course):
+            return False
+    return True</code></pre>
+        </details>
+      </div>
+      <div class="cx" style="margin-top:8px">
+        <div class="cb"><div class="cl">Время</div><div class="cv">O(V+E)</div></div>
+        <div class="cb"><div class="cl">Память</div><div class="cv">O(V+E)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 18 — Итоговая шпаргалка -->
+<div class="slide" id="s18">
+  <div class="tag">Шпаргалка</div>
+  <h2>📋 Всё что нужно помнить</h2>
+  <div class="two" style="align-items:start">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Шаблон BFS</h3>
+<pre><code class="language-python">from collections import deque
+visited = {start}
+queue = deque([start])
+while queue:
+    node = queue.popleft()
+    # обработка node
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            visited.add(neighbor)
+            queue.append(neighbor)</code></pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Шаблон DFS (рекурсия)</h3>
+<pre><code class="language-python">def dfs(node, visited):
+    visited.add(node)
+    # обработка node
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            dfs(neighbor, visited)</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Шаблон для сетки</h3>
+<pre><code class="language-python">dirs = [(-1,0),(1,0),(0,-1),(0,1)]
+
+def dfs(r, c):
+    if r < 0 or r >= rows: return
+    if c < 0 or c >= cols: return
+    if visited[r][c]: return
+    visited[r][c] = True
+    for dr, dc in dirs:
+        dfs(r+dr, c+dc)</code></pre>
+      </div>
+      <div class="hl green" style="margin-top:8px">
+        <strong>🎯 Задачи:</strong><br>
+        #733 Flood Fill (DFS) ✓<br>
+        #1971 Path Exists (BFS) ✓<br>
+        #200 Number of Islands (DFS) ✓<br>
+        #994 Rotting Oranges (Multi-source BFS) ✓<br>
+        #207 Course Schedule (DFS + цикл) ✓<br>
+        E. Военный поход (BFS + граф) ✓
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<div class="nav">
+  <button class="nb" id="pb" onclick="go(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nc" id="counter">1 / 18</div>
+    <div class="kh">← → для навигации</div>
+  </div>
+  <button class="nb" id="nb" onclick="go(1)">Вперёд →</button>
+</div>
+<script>
+  hljs.highlightAll();
+  let cur=1,total=18;
+  function go(d){
+    const p=cur; cur=Math.max(1,Math.min(total,cur+d));
+    if(cur===p)return;
+    document.getElementById('s'+p).classList.remove('active');
+    document.getElementById('s'+cur).classList.add('active');
+    document.getElementById('counter').textContent=cur+' / '+total;
+    document.getElementById('pb').disabled=cur===1;
+    document.getElementById('nb').disabled=cur===total;
+    document.getElementById('progress').style.width=(cur/total*100)+'%';
+  }
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' ')go(1);
+    if(e.key==='ArrowLeft')go(-1);
+  });
+  document.getElementById('progress').style.width=(1/total*100)+'%';
+  function Q(el,correct){
+    const opts=el.parentElement.querySelectorAll('.qb');
+    opts.forEach(o=>o.style.pointerEvents='none');
+    el.classList.add(correct?'correct':'wrong');
+    const res=el.closest('.qc').querySelector('.qr');
+    res.style.display='block';
+    res.style.color=correct?'#3fb950':'#f78166';
+    if(!res.textContent.trim())res.textContent=correct?'✅ Верно!':'❌ Неверно — попробуй ещё раз.';
+  }
+</script>
+</body>
+</html>

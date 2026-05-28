@@ -1,0 +1,683 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Множества и словари — Python</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #bc8cff, #58a6ff); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 40px 60px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #bc8cff; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.15; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.75rem; font-weight: 700; color: #f0f6fc; margin-bottom: 16px; }
+  h3 { font-size: 1.05rem; font-weight: 600; color: #bc8cff; margin-bottom: 8px; margin-top: 14px; }
+  p { line-height: 1.8; margin-bottom: 10px; color: #c9d1d9; font-size: 0.95rem; }
+  strong { color: #f0f6fc; }
+  em { color: #bc8cff; font-style: normal; }
+  .subtitle { font-size: 1.1rem; color: #8b949e; margin-bottom: 28px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #bc8cff; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; line-height: 1.7; }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.blue  { border-left-color: #58a6ff; }
+  .highlight-box.red   { border-left-color: #f78166; }
+  .highlight-box.orange{ border-left-color: #ffa657; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88em; color: #79c0ff; }
+  pre { margin: 10px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 0.85rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.88rem; }
+  .trace-table th { background: #1c2128; color: #bc8cff; padding: 7px 12px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 6px 12px; text-align: center; border: 1px solid #21262d; color: #c9d1d9; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .trace-table tr.ok td { background: #1c3a1c; color: #3fb950; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 7px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #bc8cff; color: #bc8cff; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 20px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; color: #8b949e; }
+  .step-card { display: flex; gap: 12px; align-items: flex-start; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 10px 14px; margin-bottom: 7px; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: #2a1c3a; border: 1px solid #bc8cff; color: #bc8cff; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-body { flex: 1; font-size: 0.9rem; line-height: 1.6; color: #c9d1d9; }
+  .complex-row { display: flex; gap: 10px; margin: 10px 0; }
+  .complex-badge { background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 8px 14px; }
+  .complex-badge .lbl { font-size: 0.72rem; color: #8b949e; }
+  .complex-badge .val { font-size: 1rem; color: #bc8cff; font-weight: 700; font-family: monospace; }
+  .lc-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600; margin-right: 6px; }
+  .lc-easy   { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+  .lc-medium { background: rgba(210,153,34,.12); color: #d29922; border: 1px solid rgba(210,153,34,.3); }
+  .arr-vis { display: flex; gap: 4px; align-items: flex-end; flex-wrap: wrap; margin: 12px 0; }
+  .arr-cell { min-width: 40px; height: 40px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; font-weight: 700; font-size: 0.95rem; border: 1px solid #30363d; background: #1c2128; color: #c9d1d9; position: relative; }
+  .arr-cell.hl  { background: #2a1c3a; border-color: #bc8cff; color: #bc8cff; }
+  .arr-cell.grn { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .arr-cell.org { background: #3a2a1c; border-color: #ffa657; color: #ffa657; }
+  .arr-cell.blue { background: #1c2a3a; border-color: #58a6ff; color: #58a6ff; }
+  .arr-cell.red  { background: #3a1c1c; border-color: #f78166; color: #f78166; }
+  .quiz-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+  .quiz-q { font-weight: 600; color: #f0f6fc; margin-bottom: 10px; font-size: 0.95rem; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 6px; }
+  .quiz-opt { padding: 8px 14px; border-radius: 8px; border: 1px solid #30363d; font-size: 0.88rem; cursor: pointer; transition: all .15s; background: none; color: #c9d1d9; text-align: left; }
+  .quiz-opt:hover { border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,.07); }
+  .quiz-opt.correct { border-color: #3fb950; color: #3fb950; background: rgba(63,185,80,.1); pointer-events: none; }
+  .quiz-opt.wrong   { border-color: #f78166; color: #f78166; background: rgba(247,129,102,.1); }
+  .quiz-result { font-size: 0.85rem; margin-top: 8px; display: none; }
+  .hw-item { display: flex; align-items: flex-start; gap: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 11px 15px; margin-bottom: 7px; }
+  .hw-item a { color: #58a6ff; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+  .hw-item a:hover { text-decoration: underline; }
+  .hw-desc { font-size: 0.82rem; color: #8b949e; margin-top: 2px; }
+  ul { padding-left: 18px; }
+  li { line-height: 1.8; color: #c9d1d9; font-size: 0.9rem; margin-bottom: 2px; }
+  details summary { cursor: pointer; font-size: 0.83rem; color: #3fb950; padding: 4px 0; list-style: none; }
+  details[open] summary { margin-bottom: 6px; }
+  .formula { font-family: 'Cascadia Code','Fira Code',monospace; background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 12px 18px; font-size: 1rem; color: #bc8cff; margin: 12px 0; text-align: center; }
+  /* Отключаем лигатуры шрифта — чтобы != отображалось как != а не как ≠ */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- 1 — Титул -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">🗂️</div>
+  <div class="slide-tag">Тема 2</div>
+  <h1>Множества и словари</h1>
+  <p class="subtitle">set и dict — хэш-таблицы за O(1)<br>— самые мощные инструменты для оптимизации алгоритмов</p>
+  <div class="topic-chips">
+    <span class="chip">set</span>
+    <span class="chip">dict</span>
+    <span class="chip">O(1) поиск</span>
+    <span class="chip">Counter</span>
+    <span class="chip">defaultdict</span>
+    <span class="chip">Two Sum</span>
+  </div>
+</div>
+
+<!-- 2 — Зачем нужны -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Мотивация</div>
+  <h2>Зачем нужны dict и set?</h2>
+  <p>Представь: есть список из миллиона чисел. Нужно быстро проверять — есть ли число в списке?</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#f78166">❌ Список — O(n) поиск</h3>
+<pre><code class="language-python">nums = [1, 5, 3, 8, 2, ...]  # 1 000 000 чисел
+
+# Каждая проверка — пробегаем весь список
+if 999999 in nums:  # O(n) — медленно!
+    print("есть")
+
+# 10⁶ проверок × 10⁶ элементов = 10¹² операций 😱</code></pre>
+        <div class="highlight-box red">
+          При n=10⁶ каждый <code class="inline">in</code> сравнивает до 10⁶ элементов. Это катастрофически медленно!
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#3fb950">✅ Множество/словарь — O(1) поиск</h3>
+<pre><code class="language-python">nums_set = set(nums)  # O(n) один раз
+
+# Каждая проверка — мгновенно!
+if 999999 in nums_set:  # O(1) — хэш!
+    print("есть")
+
+# 10⁶ проверок × O(1) = 10⁶ операций 🚀</code></pre>
+        <div class="highlight-box green">
+          Хэш-таблица вычисляет hash(x) и сразу знает, где искать элемент — независимо от размера коллекции!
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box blue" style="margin-top:8px">
+    💡 <strong>Ключевой сигнал для использования set/dict:</strong> если нужно «проверить принадлежность», «посчитать частоты», «дедупликация» — сразу думай о хэш-таблице!
+  </div>
+</div>
+
+<!-- 3 — set -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Теория — set</div>
+  <h2>Множество: set</h2>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python"># Создание
+s = {1, 2, 3}
+s = set([1, 2, 2, 3])  # {1, 2, 3} — дубли убраны
+s = set()              # пустое множество (не {}!)
+
+# Добавление и удаление
+s.add(4)               # {1, 2, 3, 4}
+s.remove(2)            # {1, 3, 4}  — ошибка если нет
+s.discard(99)          # ничего, даже если нет 99
+s.pop()                # удалить случайный элемент
+
+# Проверка
+3 in s                 # True — O(1)
+len(s)                 # количество элементов</code></pre>
+      <div class="highlight-box orange">
+        ⚠️ <code class="inline">remove(x)</code> бросает KeyError если x нет.<br>
+        <code class="inline">discard(x)</code> — безопасный вариант.
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python"># Операции над множествами
+a = {1, 2, 3, 4}
+b = {3, 4, 5, 6}
+
+a | b   # объединение    → {1,2,3,4,5,6}
+a & b   # пересечение    → {3, 4}
+a - b   # разность       → {1, 2}
+a ^ b   # симм. разность → {1,2,5,6}
+
+# Проверка подмножества
+{1,2}.issubset({1,2,3})    # True
+{1,2,3}.issuperset({1,2})  # True
+{1,2}.isdisjoint({3,4})    # True (нет общих)
+
+# Преобразования
+list(s)   # в список
+sorted(s) # отсортированный список</code></pre>
+      <div class="highlight-box green">
+        ✅ <strong>Типичный паттерн:</strong> дедупликация<br>
+        <code class="inline">unique = list(set(arr))</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — frozenset и визуализация -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Теория — frozenset и Диаграмма Венна</div>
+  <h2>frozenset и операции над множествами</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">frozenset — неизменяемое множество</h3>
+<pre><code class="language-python"># frozenset можно использовать как ключ словаря
+fs = frozenset([1, 2, 3])
+
+d = {}
+d[frozenset([1,2])] = "пара"
+d[frozenset([1,2])]   # → "пара"
+
+# Зачем: когда нужно хранить множество
+# как ключ в dict или положить в set
+pairs = set()
+pairs.add(frozenset([1, 2]))
+pairs.add(frozenset([2, 1]))  # та же пара!
+# pairs = {frozenset({1, 2})}  — дубль не добавился</code></pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Set comprehension</h3>
+<pre><code class="language-python"># Аналог list comprehension, но для set
+squares = {x**2 for x in range(10)}
+# {0, 1, 4, 9, 16, 25, 36, 49, 64, 81}
+
+# Только чётные квадраты
+even_sq = {x**2 for x in range(10) if x % 2 == 0}
+# {0, 4, 16, 36, 64}</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Визуализация операций: A={1,2,3,4}, B={3,4,5,6}</h3>
+        <div style="font-size:0.88rem;line-height:2">
+          <div style="margin-bottom:8px">
+            <span style="color:#58a6ff">A | B (объединение):</span><br>
+            <div class="arr-vis">
+              <div class="arr-cell blue">1</div><div class="arr-cell blue">2</div><div class="arr-cell hl">3</div><div class="arr-cell hl">4</div><div class="arr-cell blue">5</div><div class="arr-cell blue">6</div>
+            </div>
+          </div>
+          <div style="margin-bottom:8px">
+            <span style="color:#bc8cff">A &amp; B (пересечение):</span><br>
+            <div class="arr-vis">
+              <div class="arr-cell">1</div><div class="arr-cell">2</div><div class="arr-cell hl">3</div><div class="arr-cell hl">4</div><div class="arr-cell">5</div><div class="arr-cell">6</div>
+            </div>
+          </div>
+          <div>
+            <span style="color:#3fb950">A - B (только в A):</span><br>
+            <div class="arr-vis">
+              <div class="arr-cell grn">1</div><div class="arr-cell grn">2</div><div class="arr-cell">3</div><div class="arr-cell">4</div><div class="arr-cell">5</div><div class="arr-cell">6</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — dict -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Теория — dict</div>
+  <h2>Словарь: dict</h2>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python"># Создание
+d = {"apple": 5, "banana": 3}
+d = dict(apple=5, banana=3)
+d = {}  # пустой словарь
+
+# Чтение и запись
+d["apple"]           # 5 — KeyError если нет
+d.get("cherry")      # None — безопасно
+d.get("cherry", 0)   # 0 — значение по умолчанию
+
+d["cherry"] = 10     # добавить/обновить
+del d["apple"]       # удалить ключ
+
+# Проверка
+"banana" in d        # True — O(1)
+"grape" not in d     # True
+
+# Обход
+for key in d:                      # ключи
+    print(key)
+for key, val in d.items():         # пары
+    print(key, val)
+for val in d.values():             # значения
+    print(val)</code></pre>
+    </div>
+    <div>
+<pre><code class="language-python"># Полезные методы
+d.keys()        # dict_keys(['banana','cherry'])
+d.values()      # dict_values([3, 10])
+d.items()       # dict_items([('banana',3),...])
+
+d.update({"grape": 7})  # добавить из другого dict
+d.pop("banana")         # удалить и вернуть значение
+d.setdefault("mango",0) # вернуть или установить дефолт
+
+# Dict comprehension
+squares = {x: x**2 for x in range(5)}
+# {0:0, 1:1, 2:4, 3:9, 4:16}
+
+# Частоты (классический паттерн)
+freq = {}
+for ch in "mississippi":
+    freq[ch] = freq.get(ch, 0) + 1
+# {'m':1, 'i':4, 's':4, 'p':2}</code></pre>
+      <div class="highlight-box green">
+        ✅ Ключи словаря должны быть <strong>неизменяемыми</strong>: str, int, tuple, frozenset — да. list, dict, set — нет!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 — collections -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Теория — collections</div>
+  <h2>collections: Counter, defaultdict, OrderedDict</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Counter — счётчик частот</h3>
+<pre><code class="language-python">from collections import Counter
+
+c = Counter("abracadabra")
+# Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
+
+c["a"]           # 5
+c["z"]           # 0 (не KeyError!)
+c.most_common(2) # [('a',5), ('b',2)]
+c.total()        # 11 (сумма всех)
+
+# Арифметика счётчиков
+c1 = Counter("aab")
+c2 = Counter("abc")
+c1 + c2   # Counter({'a':3,'b':2,'c':1})
+c1 - c2   # Counter({'a':1}) (только положит.)
+c1 & c2   # Counter({'a':1,'b':1}) (минимум)</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">defaultdict — словарь с дефолтом</h3>
+<pre><code class="language-python">from collections import defaultdict
+
+# Список по умолчанию
+graph = defaultdict(list)
+graph[1].append(2)  # не нужно проверять
+graph[1].append(3)
+# defaultdict(list, {1: [2, 3]})
+
+# Счётчик по умолчанию
+freq = defaultdict(int)
+for ch in "hello":
+    freq[ch] += 1
+# defaultdict(int, {'h':1,'e':1,'l':2,'o':1})</code></pre>
+      </div>
+      <div class="highlight-box blue">
+        💡 <strong>defaultdict(list)</strong> — идеален для построения графов и группировки.<br>
+        <strong>defaultdict(int)</strong> — замена паттерну <code class="inline">d.get(k,0)+1</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 — Паттерны -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Паттерны применения</div>
+  <h2>Типовые паттерны с dict и set</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">1. Подсчёт частот</h3>
+<pre><code class="language-python">from collections import Counter
+
+# Наиболее частые k элементов
+def top_k(nums, k):
+    return Counter(nums).most_common(k)
+
+# Анаграммы — одинаковые ли символы?
+def is_anagram(s, t):
+    return Counter(s) == Counter(t)</code></pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">2. Группировка</h3>
+<pre><code class="language-python">from collections import defaultdict
+
+def group_anagrams(words):
+    groups = defaultdict(list)
+    for w in words:
+        key = tuple(sorted(w))  # ключ = сорт. кортеж
+        groups[key].append(w)
+    return list(groups.values())
+
+group_anagrams(["eat","tea","tan","ate","nat","bat"])
+# [['eat','tea','ate'], ['tan','nat'], ['bat']]</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">3. Дедупликация с сохранением порядка</h3>
+<pre><code class="language-python">def unique_ordered(lst):
+    seen = set()
+    result = []
+    for x in lst:
+        if x not in seen:
+            seen.add(x)
+            result.append(x)
+    return result
+
+unique_ordered([3,1,4,1,5,9,2,6,5,3])
+# [3, 1, 4, 5, 9, 2, 6]</code></pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">4. Мемоизация (кэш результатов)</h3>
+<pre><code class="language-python">def fib(n, memo={}):
+    if n in memo:
+        return memo[n]
+    if n <= 1:
+        return n
+    memo[n] = fib(n-1, memo) + fib(n-2, memo)
+    return memo[n]</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 — Two Sum -->
+<div class="slide" id="s8">
+  <div class="slide-tag">LeetCode — Easy</div>
+  <span class="lc-badge lc-easy">#1 · Easy</span>
+  <h2>Two Sum — разбор через хэш-таблицу</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">Дан массив <code class="inline">nums</code> и число <code class="inline">target</code>. Найти индексы двух чисел, которые в сумме дают target.</p>
+        <div class="highlight-box green">
+          <strong>Вход:</strong> nums=[2,7,11,15], target=9<br>
+          <strong>Выход:</strong> [0,1] (2+7=9)
+        </div>
+        <h3>Алгоритм через dict</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Храним в словаре: <code class="inline">seen[число] = индекс</code></div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Для каждого <code class="inline">nums[i]</code> ищем <code class="inline">target - nums[i]</code> в словаре</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">Если нашли — вернуть [seen[complement], i]</div></div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def twoSum(nums, target):
+    seen = {}  # число → индекс
+
+    for i, num in enumerate(nums):
+        complement = target - num
+
+        if complement in seen:  # O(1)!
+            return [seen[complement], i]
+
+        seen[num] = i
+
+    return []
+
+# Трассировка: nums=[2,7,11,15], target=9
+# i=0, num=2: complement=7, seen={}     → нет, seen={2:0}
+# i=1, num=7: complement=2, seen={2:0}  → есть! → [0,1] ✓</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(n)</div></div>
+      </div>
+      <div class="highlight-box green">
+        ✅ vs наивный O(n²) с двумя циклами — dict даёт O(n)!
+      </div>
+      <div class="highlight-box blue" style="margin-top:4px">
+        💡 <strong>Этот паттерн повсюду:</strong> «найти два элемента с нужным свойством» → словарь для O(1) поиска.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 — Квиз -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Проверь себя</div>
+  <h2>🗣️ Квиз по set и dict</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">1. Что вернёт <code class="inline">set([1,2,2,3,3,3])</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">[1, 2, 3]</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">{1, 2, 3}</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">{1, 2, 2, 3}</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">2. Сложность <code class="inline">x in my_set</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">O(1) среднее</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(log n)</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">3. Что лучше использовать для создания пустого set?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">{}</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">set()</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">set({})</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">4. Что вернёт <code class="inline">Counter("aab")["z"]</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">KeyError</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">None</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">0</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">5. Что делает <code class="inline">d.get("key", -1)</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">Бросает ошибку если "key" нет</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Возвращает -1 если "key" нет</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Устанавливает значение -1</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">6. Какой тип НЕ может быть ключом словаря?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">tuple</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">list</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">str</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 — Итог -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Итог</div>
+  <h2>Что запомнить</h2>
+  <div class="three-col" style="align-items:start">
+    <div class="card">
+      <h3 style="margin-top:0">🔢 set</h3>
+      <ul style="font-size:0.85rem">
+        <li><strong>O(1)</strong> — add, remove, in</li>
+        <li>Уникальные элементы</li>
+        <li>| &amp; - ^ — операции над множествами</li>
+        <li>frozenset — неизменяемый</li>
+        <li>Дедупликация: <code class="inline">set(lst)</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">📖 dict</h3>
+      <ul style="font-size:0.85rem">
+        <li><strong>O(1)</strong> — get, set, in</li>
+        <li><code class="inline">d.get(k, default)</code> — безопасно</li>
+        <li><code class="inline">d.items()</code> — итерация пар</li>
+        <li>defaultdict — автоматический дефолт</li>
+        <li>Counter — подсчёт частот</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🎯 Паттерны</h3>
+      <ul style="font-size:0.85rem">
+        <li>Частоты → Counter</li>
+        <li>Группировка → defaultdict(list)</li>
+        <li>Дедупликация → set</li>
+        <li>Two Sum → dict дополнений</li>
+        <li>Кэш → dict результатов</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box blue" style="margin-top:12px">
+    🎯 <strong>На экзамене:</strong> если видишь «найти дубликаты», «подсчитать частоты», «проверить принадлежность», «найти пару с нужной суммой» — сразу используй set/dict!
+  </div>
+</div>
+
+<!-- 11 — Домашнее задание -->
+<div class="slide" id="s11">
+  <div class="slide-tag">Домашнее задание</div>
+  <h2>🏠 Задачи для самостоятельной практики</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <p style="font-size:0.88rem;color:#3fb950;font-weight:600;margin-bottom:8px">🟢 Лёгкие — начни с них</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">#1</span>
+        <div><a href="https://leetcode.com/problems/two-sum/" target="_blank">Two Sum</a>
+        <div class="hw-desc">Классический dict дополнений. Разбор — слайд 8.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">#217</span>
+        <div><a href="https://leetcode.com/problems/contains-duplicate/" target="_blank">Contains Duplicate</a>
+        <div class="hw-desc">Есть ли дубликаты? set за 1 строку.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">#242</span>
+        <div><a href="https://leetcode.com/problems/valid-anagram/" target="_blank">Valid Anagram</a>
+        <div class="hw-desc">Counter(s) == Counter(t)? Или sorted(s) == sorted(t).</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">#349</span>
+        <div><a href="https://leetcode.com/problems/intersection-of-two-arrays/" target="_blank">Intersection of Two Arrays</a>
+        <div class="hw-desc">set(a) &amp; set(b) — одна строка!</div></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:0.88rem;color:#d29922;font-weight:600;margin-bottom:8px">🟡 Следующий уровень</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">#49</span>
+        <div><a href="https://leetcode.com/problems/group-anagrams/" target="_blank">Group Anagrams</a>
+        <div class="hw-desc">defaultdict(list) + sorted ключ.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">#347</span>
+        <div><a href="https://leetcode.com/problems/top-k-frequent-elements/" target="_blank">Top K Frequent Elements</a>
+        <div class="hw-desc">Counter.most_common(k).</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">#128</span>
+        <div><a href="https://leetcode.com/problems/longest-consecutive-sequence/" target="_blank">Longest Consecutive Sequence</a>
+        <div class="hw-desc">set для O(1) проверки соседей.</div></div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:14px">
+        💡 Порядок: #217 → #242 → #349 → #1 → #49 → #347 → #128
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slide-area -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 11</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+<script>
+  hljs.highlightAll();
+  let cur = 1, total = 11;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s'+prev).classList.remove('active');
+    document.getElementById('s'+cur).classList.add('active');
+    document.getElementById('counter').textContent = cur+' / '+total;
+    document.getElementById('prevBtn').disabled = cur===1;
+    document.getElementById('nextBtn').disabled = cur===total;
+    document.getElementById('progress').style.width = (cur/total*100)+'%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key===' ') navigate(1);
+    if (e.key==='ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = (1/total*100)+'%';
+
+  function checkQ(el, correct) {
+    const opts = el.parentElement.querySelectorAll('.quiz-opt');
+    opts.forEach(o => o.style.pointerEvents = 'none');
+    el.classList.add(correct ? 'correct' : 'wrong');
+    const res = el.closest('.quiz-card').querySelector('.quiz-result');
+    res.style.display = 'block';
+    res.style.color = correct ? '#3fb950' : '#f78166';
+    if (!res.textContent.trim()) res.textContent = correct ? '✅ Верно!' : '❌ Неверно — попробуй ещё раз.';
+  }
+</script>
+</body>
+</html>

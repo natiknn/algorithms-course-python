@@ -1,0 +1,778 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Целочисленное деление, системы счисления и единицы измерения</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .progress-bar {
+    height: 3px;
+    background: #21262d;
+    flex-shrink: 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #58a6ff, #3fb950);
+    transition: width 0.4s ease;
+  }
+  .slide-area {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 48px 64px;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  .slide-tag {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #58a6ff;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #f0f6fc;
+    margin-bottom: 16px;
+  }
+  h2 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #f0f6fc;
+    margin-bottom: 20px;
+  }
+  h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #58a6ff;
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+  .subtitle {
+    font-size: 1.2rem;
+    color: #8b949e;
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+  p { line-height: 1.8; margin-bottom: 12px; color: #c9d1d9; }
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .highlight-box {
+    background: #1c2128;
+    border-left: 3px solid #58a6ff;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+  }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.yellow { border-left-color: #d29922; }
+  code.inline {
+    background: #1c2128;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.9em;
+    color: #79c0ff;
+  }
+  pre {
+    margin: 12px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #30363d;
+  }
+  pre code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .op-box {
+    background: #1c2128;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .op-symbol {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f78166;
+    font-family: monospace;
+  }
+  .op-name { font-size: 0.85rem; color: #8b949e; margin-top: 4px; }
+  .op-result { font-size: 1.1rem; color: #3fb950; margin-top: 8px; }
+  .step-list { list-style: none; }
+  .step-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid #21262d;
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num {
+    background: #1f6feb;
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .trace-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: monospace;
+    font-size: 0.9rem;
+  }
+  .trace-table th {
+    background: #1c2128;
+    color: #58a6ff;
+    padding: 8px 14px;
+    text-align: center;
+    border: 1px solid #30363d;
+  }
+  .trace-table td {
+    padding: 7px 14px;
+    text-align: center;
+    border: 1px solid #21262d;
+  }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .task-img {
+    max-width: 100%;
+    max-height: 220px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    object-fit: contain;
+  }
+  .badge {
+    display: inline-block;
+    background: #1f6feb22;
+    border: 1px solid #1f6feb;
+    color: #58a6ff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-right: 8px;
+  }
+  .badge.green { background: #3fb95022; border-color: #3fb950; color: #3fb950; }
+  .badge.orange { background: #d2992222; border-color: #d29922; color: #d29922; }
+  .title-slide {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .title-slide h1 { font-size: 2.8rem; }
+  .title-icon { font-size: 4rem; margin-bottom: 24px; }
+  .topic-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+  }
+  .chip {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    color: #8b949e;
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 14px;
+    background: #0d1117;
+    border-top: 1px solid #21262d;
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    padding: 8px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { background: #30363d; border-color: #58a6ff; color: #58a6ff; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .bit-visual {
+    display: flex;
+    gap: 6px;
+    font-family: monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 12px 0;
+  }
+  .bit-0 { color: #8b949e; }
+  .bit-1 { color: #3fb950; }
+  .formula {
+    font-family: monospace;
+    font-size: 1.1rem;
+    color: #ffa657;
+    background: #1c2128;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin: 10px 0;
+    display: inline-block;
+  }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<div class="slide-area">
+
+<!-- Slide 1: Title -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">🔢</div>
+  <div class="slide-tag">Тема 1</div>
+  <h1>Целочисленное деление,<br>системы счисления<br>и единицы измерения</h1>
+  <p class="subtitle">Учимся считать по-другому: делить без остатка,<br>переводить числа и единицы измерения</p>
+  <div class="topic-chips">
+    <span class="chip">Оператор //</span>
+    <span class="chip">Оператор %</span>
+    <span class="chip">Двоичная система</span>
+    <span class="chip">Цифры числа</span>
+    <span class="chip">Единицы измерения</span>
+  </div>
+</div>
+
+<!-- Slide 2: // and % -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Основы</div>
+  <h2>Операторы <code class="inline">//</code> и <code class="inline">%</code></h2>
+  <p>Два самых важных оператора в этой теме. Они работают с целыми числами и часто используются вместе.</p>
+  <div class="three-col" style="margin: 20px 0;">
+    <div class="op-box">
+      <div class="op-symbol">//</div>
+      <div class="op-name">Целочисленное деление</div>
+      <div class="op-result">17 // 5 = 3</div>
+      <p style="font-size:0.8rem;color:#8b949e;margin-top:8px;">Сколько раз 5 помещается в 17?</p>
+    </div>
+    <div class="op-box">
+      <div class="op-symbol">%</div>
+      <div class="op-name">Остаток от деления</div>
+      <div class="op-result">17 % 5 = 2</div>
+      <p style="font-size:0.8rem;color:#8b949e;margin-top:8px;">Что осталось после деления?</p>
+    </div>
+    <div class="op-box">
+      <div class="op-symbol">✓</div>
+      <div class="op-name">Проверка</div>
+      <div class="op-result">3 × 5 + 2 = 17</div>
+      <p style="font-size:0.8rem;color:#8b949e;margin-top:8px;">(a//b)×b + (a%b) = a</p>
+    </div>
+  </div>
+  <pre><code class="language-python">a = 17
+b = 5
+
+print(a // b)   # 3  — целая часть от деления
+print(a % b)    # 2  — остаток
+
+# Проверка: всегда выполняется
+print((a // b) * b + (a % b) == a)  # True
+
+# Ещё примеры
+print(100 // 60)   # 1  (1 час из 100 минут)
+print(100 % 60)    # 40 (осталось 40 минут)
+print(7 % 2)       # 1  (нечётное число → остаток 1)
+print(8 % 2)       # 0  (чётное число → остаток 0)</code></pre>
+  <div class="highlight-box green">
+    <strong>Запомни:</strong> <code class="inline">n % 2 == 0</code> — число чётное, <code class="inline">n % 2 == 1</code> — нечётное. Это очень частая проверка!
+  </div>
+</div>
+
+<!-- Slide 3: Извлечение цифр -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Основы</div>
+  <h2>Как извлечь цифры числа?</h2>
+  <p>Идея: используем <code class="inline">% 10</code> для получения последней цифры и <code class="inline">// 10</code> для её удаления.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Шаг за шагом: число 3547</h3>
+        <table class="trace-table">
+          <tr><th>Число</th><th>n % 10</th><th>n // 10</th></tr>
+          <tr><td>3547</td><td style="color:#3fb950">7</td><td>354</td></tr>
+          <tr><td>354</td><td style="color:#3fb950">4</td><td>35</td></tr>
+          <tr><td>35</td><td style="color:#3fb950">5</td><td>3</td></tr>
+          <tr><td>3</td><td style="color:#3fb950">3</td><td>0</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">n = 3547
+
+# Последняя цифра
+last = n % 10      # 7
+
+# Убрать последнюю цифру
+n = n // 10        # 354
+
+# Цикл: перебрать все цифры
+n = 3547
+while n > 0:
+    digit = n % 10  # берём цифру
+    print(digit)    # 7, 4, 5, 3
+    n //= 10        # убираем её
+
+# Сумма цифр числа
+n = 3547
+total = 0
+while n > 0:
+    total += n % 10
+    n //= 10
+print(total)  # 19</code></pre>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <strong>Аналогия:</strong> точно так же работает и с другими основаниями. Чтобы извлечь цифру в двоичной системе — делим на 2. Чтобы в восьмеричной — делим на 8.
+  </div>
+</div>
+
+<!-- Slide 4: Что такое двоичная система -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Системы счисления</div>
+  <h2>Двоичная система счисления</h2>
+  <p>В обычной (десятичной) системе 10 цифр: 0–9. В двоичной — всего 2 цифры: <strong style="color:#3fb950">0</strong> и <strong style="color:#3fb950">1</strong>. Каждая позиция — степень числа 2.</p>
+  <div class="card">
+    <h3 style="margin-top:0">Как устроено число 13 в двоичной системе?</h3>
+    <div style="display:flex; gap:8px; align-items:flex-end; margin: 14px 0;">
+      <div style="text-align:center">
+        <div style="color:#8b949e;font-size:0.75rem;margin-bottom:4px">2³=8</div>
+        <div style="background:#1f6feb;color:white;width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;border-radius:8px">1</div>
+      </div>
+      <div style="text-align:center">
+        <div style="color:#8b949e;font-size:0.75rem;margin-bottom:4px">2²=4</div>
+        <div style="background:#1f6feb;color:white;width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;border-radius:8px">1</div>
+      </div>
+      <div style="text-align:center">
+        <div style="color:#8b949e;font-size:0.75rem;margin-bottom:4px">2¹=2</div>
+        <div style="background:#30363d;color:#8b949e;width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;border-radius:8px">0</div>
+      </div>
+      <div style="text-align:center">
+        <div style="color:#8b949e;font-size:0.75rem;margin-bottom:4px">2⁰=1</div>
+        <div style="background:#1f6feb;color:white;width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;border-radius:8px">1</div>
+      </div>
+      <div style="font-size:1.4rem;font-weight:700;color:#8b949e;padding:0 8px">=</div>
+      <div style="font-size:1.6rem;font-weight:700;color:#3fb950">8 + 4 + 0 + 1 = 13</div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <h3 style="margin-top:0">Перевод: двоичная → десятичная</h3>
+      <p style="font-size:0.9rem">Умножаем каждый бит на соответствующую степень 2 и складываем.</p>
+      <div class="formula">1×8 + 1×4 + 0×2 + 1×1 = 13</div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Python: встроенные функции</h3>
+<pre><code class="language-python">print(bin(13))   # '0b1101'
+print(int('1101', 2))  # 13
+# Но можно и без них!</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 5: Алгоритм перевода в двоичную -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Системы счисления</div>
+  <h2>Алгоритм перевода в двоичную систему</h2>
+  <p>Делим число на 2 и записываем остатки снизу вверх — это и есть двоичная запись.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Трассировка: n = 13</h3>
+        <table class="trace-table">
+          <tr><th>n</th><th>n // 2</th><th>n % 2 (бит)</th></tr>
+          <tr><td>13</td><td>6</td><td style="color:#3fb950">1</td></tr>
+          <tr><td>6</td><td>3</td><td style="color:#8b949e">0</td></tr>
+          <tr><td>3</td><td>1</td><td style="color:#3fb950">1</td></tr>
+          <tr><td>1</td><td>0</td><td style="color:#3fb950">1</td></tr>
+        </table>
+        <p style="margin-top:10px;font-size:0.85rem;color:#8b949e">Читаем остатки снизу вверх: <strong style="color:#3fb950">1101</strong></p>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def to_binary(n):
+    if n == 0:
+        return '0'
+    bits = []
+    while n > 0:
+        bits.append(n % 2)  # берём бит
+        n //= 2             # убираем его
+    # Развернуть, т.к. биты в обратном порядке
+    bits.reverse()
+    return ''.join(map(str, bits))
+
+print(to_binary(13))  # '1101'
+print(to_binary(5))   # '101'
+print(to_binary(8))   # '1000'</code></pre>
+    </div>
+  </div>
+  <div class="highlight-box yellow">
+    <strong>Важно:</strong> Биты накапливаются от младшего к старшему, поэтому в конце нужно перевернуть список. Последний остаток = старший бит (левый).
+  </div>
+  <div class="highlight-box">
+    <strong>Тот же принцип работает для любого основания!</strong> Замените 2 на 8 — получите восьмеричную систему. На 16 — шестнадцатеричную.
+  </div>
+</div>
+
+<!-- Slide 6: Единицы измерения -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Единицы измерения</div>
+  <h2>Перевод единиц измерения</h2>
+  <p>Задача: дано значение в мелких единицах — нужно разложить по крупным. Это делается через <code class="inline">%</code> и <code class="inline">//</code>.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Пример: секунды → ч:мин:сек</h3>
+<pre><code class="language-python">total = 3723  # секунды
+
+sec = total % 60      # 3
+total //= 60
+minutes = total % 60  # 2
+hours = total // 60   # 1
+
+print(hours, minutes, sec)
+# 1 2 3  →  1:02:03</code></pre>
+      </div>
+      <div class="highlight-box" style="margin-top:12px">
+        <strong>Паттерн:</strong> для каждой единицы берём <code class="inline">% коэффициент</code>, затем <code class="inline">// коэффициент</code>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Старинные меры длины</h3>
+        <table class="trace-table">
+          <tr><th>Мера</th><th>Равна</th></tr>
+          <tr><td>1 пядь</td><td>4 вершка</td></tr>
+          <tr><td>1 аршин</td><td>4 пяди</td></tr>
+          <tr><td>1 сажень</td><td>3 аршина</td></tr>
+        </table>
+<pre style="margin-top:12px"><code class="language-python">n = int(input())  # вершки
+v = n % 4     # вершки
+n //= 4
+p = n % 4     # пяди
+n //= 4
+a = n % 3     # аршины
+n //= 3
+s = n         # сажени
+print(s, a, p, v)</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 7: Task DEMO_V_A -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Задача DEMO</div>
+  <h2>Задача: Старинные меры длины</h2>
+  <div class="two-col">
+    <div>
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;font-size:0.87rem;line-height:1.7;">
+        <div style="font-weight:700;color:#f0f6fc;font-size:0.95rem;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #30363d;">А. Сажени, аршины, пяди, вершки</div>
+        <p style="color:#c9d1d9;margin-bottom:6px;">Древнерусская мера длины сажень состояла из трёх аршин. Один аршин делился на четыре пяди. Одна пядь состояла из 4 вершков.</p>
+        <p style="color:#c9d1d9;margin-bottom:8px;">Купец привёз на рынок рулон сукна длиной N вершков. Помогите ему переведите длину из вершков в сажени, аршины, пяди и вершки.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#58a6ff;margin-bottom:4px;">Формат ввода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Одно натуральное число N, не превосходящее 2×10⁸ — длина сукна в вершках.</p>
+          </div>
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#58a6ff;margin-bottom:4px;">Формат вывода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">4 числа S A P V — сажени, аршины, пяди, вершки. A &lt; 3, P &lt; 4, V &lt; 4.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод</div><div style="color:#3fb950;font-weight:700;">30</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод</div><div style="color:#3fb950;font-weight:700;">0 1 3 2</div></div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:14px">
+        <strong>Идея решения:</strong> Последовательно извлекаем каждую меру через <code class="inline">%</code> и уменьшаем число через <code class="inline">//</code>.
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">n = int(input())  # общее число вершков
+
+# Вершки — остаток от деления на 4
+v = n % 4
+n //= 4  # теперь n в пядях
+
+# Пяди — остаток от деления на 4
+p = n % 4
+n //= 4  # теперь n в аршинах
+
+# Аршины — остаток от деления на 3
+a = n % 3
+n //= 3  # теперь n в саженях
+
+s = n    # целых саженей
+
+print(s, a, p, v)</code></pre>
+      <div class="card">
+        <h3 style="margin-top:0">Пример</h3>
+        <p>Входные данные: <code class="inline">100</code> вершков</p>
+        <ul style="line-height:2;color:#8b949e;margin-left:20px;font-size:0.9rem">
+          <li>100 % 4 = 0 вершков, 100 // 4 = 25 пядей</li>
+          <li>25 % 4 = 1 пядь, 25 // 4 = 6 аршин</li>
+          <li>6 % 3 = 0 аршин, 6 // 3 = 2 сажени</li>
+        </ul>
+        <p>Ответ: <strong style="color:#3fb950">2 0 1 0</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 8: Task V1_A -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Задача V1</div>
+  <h2>Задача: Шаги к нулю в двоичной записи</h2>
+  <div class="two-col">
+    <div>
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;font-size:0.87rem;line-height:1.7;">
+        <div style="font-weight:700;color:#f0f6fc;font-size:0.95rem;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #30363d;">А. Преврати число в ноль</div>
+        <p style="color:#c9d1d9;margin-bottom:6px;">Над двоичной записью числа N выполняются операции:</p>
+        <p style="color:#c9d1d9;margin-bottom:4px;">1) Если число заканчивается на <strong style="color:#f0f6fc;">ноль</strong> — этот ноль удаляется.</p>
+        <p style="color:#c9d1d9;margin-bottom:8px;">2) Если число заканчивается на <strong style="color:#f0f6fc;">единицу</strong> — из него вычитается единица.</p>
+        <p style="color:#c9d1d9;margin-bottom:8px;">Определите, сколько операций потребуется, чтобы превратить N в ноль.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#58a6ff;margin-bottom:4px;">Формат ввода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Число N (1 <= N <= 2³¹−1) в десятичной системе.</p>
+          </div>
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#58a6ff;margin-bottom:4px;">Формат вывода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Выведите количество операций.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод</div><div style="color:#3fb950;font-weight:700;">6</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод</div><div style="color:#3fb950;font-weight:700;">4</div></div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:14px">
+        <strong>Правила:</strong>
+        <ul style="margin-left:16px;margin-top:8px;line-height:2">
+          <li>Если n чётное → <code class="inline">n = n // 2</code> (убираем бит 0)</li>
+          <li>Если n нечётное → <code class="inline">n = n - 1</code> (убираем бит 1)</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">n = int(input())
+count = 0
+
+while n > 0:
+    if n % 2 == 0:  # чётное → бит 0
+        n = n // 2  # убираем 0
+    else:           # нечётное → бит 1
+        n -= 1      # убираем 1
+    count += 1
+
+print(count)</code></pre>
+      <div class="card">
+        <h3 style="margin-top:0">Трассировка n = 13 = 1101₂</h3>
+        <table class="trace-table">
+          <tr><th>n</th><th>bin</th><th>действие</th></tr>
+          <tr><td>13</td><td>1101</td><td>нечётное → -1</td></tr>
+          <tr><td>12</td><td>1100</td><td>чётное → //2</td></tr>
+          <tr><td>6</td><td>110</td><td>чётное → //2</td></tr>
+          <tr><td>3</td><td>11</td><td>нечётное → -1</td></tr>
+          <tr><td>2</td><td>10</td><td>чётное → //2</td></tr>
+          <tr><td>1</td><td>1</td><td>нечётное → -1</td></tr>
+          <tr><td>0</td><td>0</td><td>стоп</td></tr>
+        </table>
+        <p style="margin-top:8px">Ответ: <strong style="color:#3fb950">6</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 9: Task V2_C -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Задача V2</div>
+  <h2>Задача: Цифровой корень</h2>
+  <div class="two-col">
+    <div>
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;font-size:0.87rem;line-height:1.7;">
+        <div style="font-weight:700;color:#f0f6fc;font-size:0.95rem;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #30363d;">С. Сумма цифр</div>
+        <p style="color:#c9d1d9;margin-bottom:6px;">Для числа x вычислим его сумму цифр. Если результат многозначный — снова берём сумму цифр. Повторяем до тех пор, пока не получим однозначное число.</p>
+        <p style="color:#c9d1d9;margin-bottom:8px;">Дано начальное число x — найдите цифру, которая получится в результате этого процесса.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#58a6ff;margin-bottom:4px;">Формат ввода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Одно целое число x (0 <= x <= 2³¹−1).</p>
+          </div>
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#58a6ff;margin-bottom:4px;">Формат вывода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Выведите одну цифру — ответ на задачу.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод 1</div><div style="color:#3fb950;font-weight:700;">2</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод 1</div><div style="color:#3fb950;font-weight:700;">2</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод 2</div><div style="color:#3fb950;font-weight:700;">789</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод 2</div><div style="color:#3fb950;font-weight:700;">6</div></div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:14px">
+        <strong>Идея:</strong> Пока число больше или равно 10, заменяем его суммой его цифр. Цифры извлекаем через <code class="inline">% 10</code> и <code class="inline">// 10</code>.
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def get_digits_sum(number):
+    """Сумма цифр числа"""
+    total = 0
+    while number > 0:
+        total += number % 10  # берём последнюю цифру
+        number //= 10         # убираем её
+    return total
+
+x = int(input())
+
+# Продолжаем, пока x — многозначное
+while x >= 10:
+    x = get_digits_sum(x)
+
+print(x)</code></pre>
+      <div class="card">
+        <h3 style="margin-top:0">Пример: x = 9875</h3>
+        <ul style="line-height:2;color:#8b949e;margin-left:20px;font-size:0.9rem">
+          <li>9+8+7+5 = <strong style="color:#c9d1d9">29</strong></li>
+          <li>2+9 = <strong style="color:#c9d1d9">11</strong></li>
+          <li>1+1 = <strong style="color:#3fb950">2</strong> ← однозначное, стоп</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 10: Summary -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Итоги</div>
+  <h2>Что мы изучили?</h2>
+  <div class="three-col">
+    <div class="card">
+      <h3 style="margin-top:0">// и %</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.9rem;color:#8b949e">
+        <li><code class="inline">a // b</code> — целая часть</li>
+        <li><code class="inline">a % b</code> — остаток</li>
+        <li>Проверка чётности: <code class="inline">n % 2</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Цифры числа</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.9rem;color:#8b949e">
+        <li><code class="inline">n % 10</code> — последняя цифра</li>
+        <li><code class="inline">n // 10</code> — убрать цифру</li>
+        <li>Цикл <code class="inline">while n > 0</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Системы и единицы</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.9rem;color:#8b949e">
+        <li>% основание → бит/цифра</li>
+        <li>// основание → уменьшить</li>
+        <li>Тот же приём для мер</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box green" style="margin-top:20px">
+    <strong>Главный инсайт:</strong> Операторы <code class="inline">//</code> и <code class="inline">%</code> — универсальный инструмент для работы с позиционными системами. Меняй основание (2, 8, 10, 16) — принцип один и тот же!
+  </div>
+</div>
+
+</div><!-- end slide-area -->
+
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 10</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+
+<script>
+  hljs.highlightAll();
+  let cur = 1;
+  const total = 10;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s' + prev).classList.remove('active');
+    document.getElementById('s' + cur).classList.add('active');
+    document.getElementById('counter').textContent = cur + ' / ' + total;
+    document.getElementById('prevBtn').disabled = cur === 1;
+    document.getElementById('nextBtn').disabled = cur === total;
+    document.getElementById('progress').style.width = ((cur / total) * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+    if (e.key === 'ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = ((1 / total) * 100) + '%';
+</script>
+</body>
+</html>

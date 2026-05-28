@@ -1,0 +1,487 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divide & Conquer — Рекурсия и разделяй-властвуй</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #bc8cff, #f78166); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 44px 64px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #bc8cff; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.85rem; font-weight: 700; color: #f0f6fc; margin-bottom: 18px; }
+  h3 { font-size: 1.1rem; font-weight: 600; color: #bc8cff; margin-bottom: 10px; margin-top: 18px; }
+  p { line-height: 1.8; margin-bottom: 12px; color: #c9d1d9; }
+  .subtitle { font-size: 1.15rem; color: #8b949e; margin-bottom: 32px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 18px 22px; margin-bottom: 14px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #bc8cff; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 14px 0; }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.yellow { border-left-color: #d29922; }
+  .highlight-box.red { border-left-color: #f78166; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.9em; color: #79c0ff; }
+  pre { margin: 12px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.87rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.9rem; }
+  .trace-table th { background: #1c2128; color: #bc8cff; padding: 8px 14px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 7px 14px; text-align: center; border: 1px solid #21262d; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .task-img { max-width: 100%; max-height: 220px; border-radius: 8px; border: 1px solid #30363d; object-fit: contain; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 14px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 8px 22px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #bc8cff; color: #bc8cff; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 24px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; color: #8b949e; }
+  .call-stack { display: flex; flex-direction: column; gap: 6px; }
+  .stack-frame { padding: 10px 16px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; border: 1px solid #30363d; position: relative; }
+  .stack-frame::before { content: attr(data-depth); position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.7rem; color: #8b949e; }
+  .sf-base { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .sf-rec { background: #2a1c3a; border-color: #bc8cff; }
+  .sf-result { background: #3a2a1c; border-color: #ffa657; color: #ffa657; }
+  .dc-diagram { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .dc-level { display: flex; gap: 16px; justify-content: center; }
+  .dc-box { padding: 8px 16px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; text-align: center; border: 1px solid #30363d; background: #1c2128; }
+  .dc-box.root { background: #2a1c3a; border-color: #bc8cff; color: #bc8cff; }
+  .dc-box.mid { background: #1c2a3a; border-color: #58a6ff; color: #58a6ff; }
+  .dc-box.leaf { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .dc-box.bad { background: #3a1c1c; border-color: #f78166; color: #f78166; }
+  .dc-arrow { color: #8b949e; font-size: 1.2rem; }
+  .split-visual { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .sv-char { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 1rem; font-weight: 700; border: 1px solid #30363d; }
+  .sv-good { background: #1c2a3a; border-color: #58a6ff; color: #58a6ff; }
+  .sv-bad { background: #3a1c1c; border-color: #f78166; color: #f78166; }
+  .sv-sep { color: #f78166; font-size: 0.7rem; margin: 0 2px; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- Slide 1: Title -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">⚡</div>
+  <div class="slide-tag">Тема 4</div>
+  <h1>Divide & Conquer</h1>
+  <p class="subtitle">Рекурсия, базовый и рекурсивный случай,<br>стратегия «разделяй и властвуй»</p>
+  <div class="topic-chips">
+    <span class="chip">Рекурсия</span>
+    <span class="chip">Базовый случай</span>
+    <span class="chip">Стек вызовов</span>
+    <span class="chip">Divide & Conquer</span>
+    <span class="chip">Плохие символы</span>
+  </div>
+</div>
+
+<!-- Slide 2: What is recursion -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Рекурсия</div>
+  <h2>Что такое рекурсия?</h2>
+  <p>Рекурсия — это когда функция вызывает <strong>саму себя</strong>. Звучит странно, но это мощный инструмент!</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python"># Факториал: n! = n × (n-1)!
+# 5! = 5 × 4! = 5 × 4 × 3! = ...
+
+def factorial(n):
+    if n == 0:       # базовый случай
+        return 1
+    return n * factorial(n - 1)  # рекурсия
+
+print(factorial(5))  # 120
+# 5 × 4 × 3 × 2 × 1 = 120</code></pre>
+      <div class="highlight-box" style="margin-top:10px">
+        <strong>Аналогия:</strong> Матрёшка! Чтобы достать последнюю куклу, открываешь текущую, а внутри снова «та же задача» — открыть следующую.
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Трассировка factorial(4)</h3>
+        <div class="call-stack">
+          <div class="stack-frame sf-rec" data-depth="вызов 1">factorial(4) → 4 × factorial(3)</div>
+          <div class="stack-frame sf-rec" data-depth="вызов 2">factorial(3) → 3 × factorial(2)</div>
+          <div class="stack-frame sf-rec" data-depth="вызов 3">factorial(2) → 2 × factorial(1)</div>
+          <div class="stack-frame sf-rec" data-depth="вызов 4">factorial(1) → 1 × factorial(0)</div>
+          <div class="stack-frame sf-base" data-depth="базовый">factorial(0) → 1 ✓</div>
+          <div class="stack-frame sf-result" data-depth="результат">← 1×1×2×3×4 = 24</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 3: Base case -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Рекурсия</div>
+  <h2>Базовый случай — это критически важно!</h2>
+  <p>Каждая рекурсивная функция <em>должна</em> иметь базовый случай — условие, при котором она останавливается и возвращает результат напрямую, без нового вызова себя.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0" style="color:#3fb950">✓ С базовым случаем</h3>
+<pre><code class="language-python">def count_down(n):
+    if n == 0:          # базовый случай
+        print("Пуск!")
+        return
+    print(n)
+    count_down(n - 1)   # рекурсия
+
+count_down(3)
+# 3
+# 2
+# 1
+# Пуск!</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0" style="color:#f78166">✗ Без базового случая</h3>
+<pre><code class="language-python">def infinite(n):
+    print(n)
+    infinite(n - 1)  # НИКОГДА не стопнется!
+
+# infinite(5)
+# → Ошибка: RecursionError:
+#   maximum recursion depth exceeded</code></pre>
+        <div style="background:#3a1c1c;border:1px solid #f78166;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:0.85rem;color:#f78166">
+          ⚠ Без базового случая программа уйдёт в бесконечную рекурсию и упадёт с ошибкой!
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box green">
+    <strong>Правило:</strong> При написании рекурсивной функции <em>всегда начинай с базового случая</em>. Только убедившись, что функция умеет остановиться, добавляй рекурсивный вызов.
+  </div>
+</div>
+
+<!-- Slide 4: Recursive case -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Рекурсия</div>
+  <h2>Рекурсивный случай</h2>
+  <p>Рекурсивный случай — это когда задача <em>слишком большая</em> для прямого решения. Тогда мы разбиваем её на меньшую версию той же задачи и вызываем себя.</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">def sum_list(lst):
+    # Базовый случай: пустой список
+    if len(lst) == 0:
+        return 0
+    # Рекурсивный случай:
+    # сумма = первый элемент + сумма остальных
+    return lst[0] + sum_list(lst[1:])
+
+print(sum_list([1, 2, 3, 4]))
+# 1 + sum([2, 3, 4])
+# 1 + 2 + sum([3, 4])
+# 1 + 2 + 3 + sum([4])
+# 1 + 2 + 3 + 4 + sum([])
+# 1 + 2 + 3 + 4 + 0 = 10</code></pre>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Структура рекурсивной функции</h3>
+<pre><code class="language-python">def solve(problem):
+    # 1. Базовый случай:
+    #    задача уже решена без рекурсии
+    if problem is small enough:
+        return direct_answer
+
+    # 2. Рекурсивный случай:
+    #    разбиваем на меньшую задачу
+    smaller = make_smaller(problem)
+    result = solve(smaller)  # вызов себя
+
+    # 3. Собираем ответ из результата
+    return combine(result)</code></pre>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box yellow">
+    <strong>Важно:</strong> Каждый рекурсивный вызов должен получать <em>меньшую</em> версию задачи. Иначе мы никогда не придём к базовому случаю!
+  </div>
+</div>
+
+<!-- Slide 5: Call stack -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Рекурсия</div>
+  <h2>Стек вызовов</h2>
+  <p>Когда функция вызывает саму себя, Python помнит все «незаконченные» вызовы в стеке. Они достаются обратно в порядке LIFO (последний пришёл — первый ушёл).</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">def f(n):
+    print(f"→ f({n})")
+    if n == 0:
+        print(f"← f({n}) = 0")
+        return 0
+    result = n + f(n - 1)
+    print(f"← f({n}) = {result}")
+    return result
+
+f(3)
+# → f(3)
+# → f(2)
+# → f(1)
+# → f(0)
+# ← f(0) = 0
+# ← f(1) = 1
+# ← f(2) = 3
+# ← f(3) = 6</code></pre>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Стек в памяти</h3>
+        <div class="call-stack">
+          <div class="stack-frame" style="background:#1c2a3a;border-color:#58a6ff;margin-left:0px">f(3): ждёт f(2)</div>
+          <div class="stack-frame" style="background:#1c2a3a;border-color:#58a6ff;margin-left:20px">f(2): ждёт f(1)</div>
+          <div class="stack-frame" style="background:#1c2a3a;border-color:#58a6ff;margin-left:40px">f(1): ждёт f(0)</div>
+          <div class="stack-frame sf-base" style="margin-left:60px">f(0): возвращает 0 ✓</div>
+        </div>
+        <p style="font-size:0.8rem;color:#8b949e;margin-top:12px">Возврат идёт снизу вверх: 0 → 1 → 3 → 6</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 6: Divide & Conquer idea -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Divide & Conquer</div>
+  <h2>Принцип «Разделяй и властвуй»</h2>
+  <p>Divide & Conquer — стратегия решения задач в три шага:</p>
+  <div class="three-col" style="margin: 16px 0;">
+    <div class="card" style="text-align:center">
+      <div style="font-size:2rem;margin-bottom:8px">✂️</div>
+      <h3 style="margin-top:0;text-align:center">1. Divide</h3>
+      <p style="font-size:0.9rem;color:#8b949e">Разбить задачу на несколько независимых подзадач меньшего размера</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:2rem;margin-bottom:8px">⚙️</div>
+      <h3 style="margin-top:0;text-align:center">2. Conquer</h3>
+      <p style="font-size:0.9rem;color:#8b949e">Решить каждую подзадачу рекурсивно (или напрямую, если она маленькая)</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:2rem;margin-bottom:8px">🔗</div>
+      <h3 style="margin-top:0;text-align:center">3. Combine</h3>
+      <p style="font-size:0.9rem;color:#8b949e">Собрать решения подзадач в ответ для исходной задачи</p>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <strong>Примеры:</strong> Быстрая сортировка (QuickSort), сортировка слиянием (MergeSort), бинарный поиск, умножение Карацубы — все используют Divide & Conquer.
+  </div>
+  <div class="highlight-box yellow">
+    <strong>В нашей задаче:</strong> Мы разбиваем строку по «плохим» символам — тем, которые не могут быть в ответе. Каждая часть решается независимо рекурсивно.
+  </div>
+</div>
+
+<!-- Slide 7: Splitting by bad chars -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Divide & Conquer</div>
+  <h2>Разделение по «плохим» символам</h2>
+  <p>«Плохой» символ — тот, который встречается в строке слишком мало раз (меньше k). Такой символ не может войти в ответ, поэтому он разделяет строку на независимые части.</p>
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="margin-top:0">Пример: s = "aababba", k = 3</h3>
+    <p style="font-size:0.85rem;color:#8b949e;margin-bottom:10px">Counter: a→5, b→2. Буква 'b' встречается только 2 раза < 3 → 'b' плохая!</p>
+    <div class="split-visual" style="margin-bottom:12px">
+      <div class="sv-char sv-good">a</div>
+      <div class="sv-char sv-good">a</div>
+      <div class="sv-char sv-bad">b</div>
+      <div style="color:#f78166;font-size:0.75rem;font-weight:700">↑ разрез</div>
+      <div class="sv-char sv-good">a</div>
+      <div class="sv-char sv-bad">b</div>
+      <div style="color:#f78166;font-size:0.75rem;font-weight:700">↑ разрез</div>
+      <div class="sv-char sv-bad">b</div>
+      <div style="color:#f78166;font-size:0.75rem;font-weight:700">↑ разрез</div>
+      <div class="sv-char sv-good">a</div>
+    </div>
+    <div class="dc-level">
+      <div class="dc-box mid">"aa" → ответ 2</div>
+      <div class="dc-box mid">"a" → ответ 1</div>
+      <div class="dc-box mid">"" → ответ 0</div>
+      <div class="dc-box mid">"a" → ответ 1</div>
+    </div>
+    <p style="margin-top:12px;font-size:0.9rem">Итоговый ответ: <strong style="color:#bc8cff">max(2, 1, 0, 1) = 2</strong></p>
+  </div>
+  <div class="highlight-box">
+    <strong>Почему это работает?</strong> Плохой символ не может входить в ответную подстроку. Значит, любая допустимая подстрока целиком лежит в одной из частей. Мы решаем задачу на каждой части независимо.
+  </div>
+</div>
+
+<!-- Slide 8: Task V2_D -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Задача V2</div>
+  <h2>Задача: Длиннейшая подстрока с k вхождениями каждого символа</h2>
+  <div class="two-col">
+    <div>
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;font-size:0.87rem;line-height:1.7;">
+        <div style="font-weight:700;color:#f0f6fc;font-size:0.95rem;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #30363d;">D. Наибольшая подстрока</div>
+        <p style="color:#c9d1d9;margin-bottom:8px;">Дана строка s и число k. В строке s требуется найти подстроку <strong style="color:#f0f6fc;">максимальной длины</strong>, в которой все различные символы встречаются <strong style="color:#f0f6fc;">не менее k раз</strong>.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#bc8cff;margin-bottom:4px;">Формат ввода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Первая строка: n и k (1 <= n, k <= 2·10⁵). Вторая: строка s из n строчных латинских букв.</p>
+          </div>
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#bc8cff;margin-bottom:4px;">Формат вывода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Одно число — максимальная длина подстроки, где каждый символ встречается >= k раз.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод 1</div><div style="color:#3fb950;font-weight:700;">5 3<br>aaabb</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод 1</div><div style="color:#3fb950;font-weight:700;">3</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод 2</div><div style="color:#3fb950;font-weight:700;">6 2<br>ababbc</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод 2</div><div style="color:#3fb950;font-weight:700;">5</div></div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:14px">
+        <strong>Задача:</strong> Найти длину наидлиннейшей подстроки, в которой каждый символ встречается не менее k раз.
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">from collections import Counter
+
+def longest(s, k):
+    # Базовый случай: строка слишком короткая
+    if len(s) < k:
+        return 0
+
+    cnt = Counter(s)
+
+    for c in cnt:
+        if cnt[c] < k:
+            # Нашли плохой символ — делим строку!
+            parts = s.split(c)
+            # Решаем задачу для каждой части
+            return max(longest(p, k)
+                       for p in parts)
+
+    # Базовый случай 2:
+    # Все символы встречаются >= k раз
+    # Вся строка — ответ
+    return len(s)
+
+n, k = map(int, input().split())
+s = input().strip()
+print(longest(s, k))</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 9: Code walkthrough -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Задача V2</div>
+  <h2>Разбор кода по шагам</h2>
+  <div class="card">
+    <h3 style="margin-top:0">Трассировка: s = "aaabb", k = 2</h3>
+    <div class="call-stack">
+      <div class="stack-frame" style="background:#2a1c3a;border-color:#bc8cff">
+        longest("aaabb", 2): cnt = {a:3, b:2} — все >= 2 → <strong style="color:#bc8cff">return 5</strong>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h3 style="margin-top:0">Трассировка: s = "aaabbc", k = 2</h3>
+    <div class="call-stack">
+      <div class="stack-frame" style="background:#2a1c3a;border-color:#bc8cff">
+        longest("aaabbc", 2): cnt = {a:3, b:2, c:1} → c плохой!
+        <br>&nbsp;&nbsp;split('c') → ["aaabb", ""]
+      </div>
+      <div class="stack-frame sf-rec" style="margin-left:20px">
+        longest("aaabb", 2): cnt = {a:3, b:2} — все >= 2 → <strong style="color:#3fb950">return 5</strong>
+      </div>
+      <div class="stack-frame sf-base" style="margin-left:20px">
+        longest("", 2): len &lt; 2 → <strong>return 0</strong>
+      </div>
+      <div class="stack-frame sf-result">
+        ← max(5, 0) = <strong style="color:#ffa657">5</strong>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box green" style="margin-top:12px">
+    <strong>Элегантность:</strong> Мы не думаем «как проверить все подстроки». Мы просто говорим: «плохие символы не могут быть в ответе — разбиваем по ним». Это суть Divide & Conquer!
+  </div>
+</div>
+
+<!-- Slide 10: Summary -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Итоги</div>
+  <h2>Что мы изучили?</h2>
+  <div class="three-col">
+    <div class="card">
+      <h3 style="margin-top:0">Рекурсия</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.85rem;color:#8b949e">
+        <li>Функция вызывает саму себя</li>
+        <li>Базовый случай — стоп</li>
+        <li>Рекурсивный — меньше задача</li>
+        <li>Стек помнит все вызовы</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Divide & Conquer</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.85rem;color:#8b949e">
+        <li>Разбить на подзадачи</li>
+        <li>Решить каждую рекурсивно</li>
+        <li>Собрать результаты</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Наша задача</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.85rem;color:#8b949e">
+        <li>«Плохой» = cnt[c] &lt; k</li>
+        <li>split() по плохому символу</li>
+        <li>Рекурсия на каждой части</li>
+        <li>max() из результатов</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top:20px">
+    <strong>Главный инсайт:</strong> Рекурсия — это когда решение большой задачи выражается через решение меньшей версии той же задачи. Ключ к правильной рекурсии: <em>выразить задачу через саму себя</em>, а не думать «что происходит на каждом шаге».
+  </div>
+</div>
+
+</div>
+
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 10</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+
+<script>
+  hljs.highlightAll();
+  let cur = 1;
+  const total = 10;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s' + prev).classList.remove('active');
+    document.getElementById('s' + cur).classList.add('active');
+    document.getElementById('counter').textContent = cur + ' / ' + total;
+    document.getElementById('prevBtn').disabled = cur === 1;
+    document.getElementById('nextBtn').disabled = cur === total;
+    document.getElementById('progress').style.width = ((cur / total) * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+    if (e.key === 'ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = ((1 / total) * 100) + '%';
+</script>
+</body>
+</html>

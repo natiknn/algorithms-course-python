@@ -1,0 +1,1110 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1312 · Minimum Insertion Steps · Interval DP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2330;
+  --border: #30363d;
+  --yellow: #f5c842;
+  --blue: #4d9de0;
+  --green: #3fb950;
+  --red: #f85149;
+  --purple: #bc8cff;
+  --orange: #ffa657;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Onest', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── Progress bar ── */
+#progress-bar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--yellow), var(--blue));
+  transition: width .35s ease;
+  z-index: 100;
+}
+
+/* ── Slides ── */
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 48px 72px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease;
+  transform: translateX(40px);
+  overflow: hidden;
+}
+.slide.active {
+  opacity: 1; pointer-events: all; transform: translateX(0);
+}
+.slide.exit-left  { opacity: 0; transform: translateX(-40px); }
+.slide.exit-right { opacity: 0; transform: translateX(40px); }
+
+/* ── Slide types ── */
+.slide-title {
+  justify-content: center;
+  padding: 48px 80px;
+}
+.slide-section {
+  background: radial-gradient(ellipse at 30% 50%, rgba(77,157,224,.07) 0%, transparent 60%);
+  justify-content: center; align-items: flex-start;
+}
+.slide-final {
+  padding: 40px 72px;
+}
+
+/* ── Decorative orbs ── */
+.bg-orb {
+  position: absolute; border-radius: 50%;
+  pointer-events: none; filter: blur(80px); opacity: .18;
+}
+.orb1 { width: 500px; height: 500px; background: var(--blue);  top: -150px; right: -100px; }
+.orb2 { width: 400px; height: 400px; background: var(--yellow); bottom: -120px; left: -80px; }
+
+/* ── Slide number ── */
+.slide-num {
+  position: absolute; top: 24px; right: 32px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--text-muted);
+  letter-spacing: .05em;
+}
+.slide-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--text-muted);
+  margin-bottom: 10px; letter-spacing: .06em;
+}
+.js-badge {
+  display: inline-block;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: var(--yellow);
+  margin-bottom: 20px;
+}
+
+/* ── Typography ── */
+h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1.15; margin-bottom: 12px;
+}
+h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(18px, 2.5vw, 28px);
+  line-height: 1.2; margin-bottom: 16px;
+}
+h3 {
+  font-family: 'Onest', sans-serif; font-weight: 600;
+  font-size: 15px; margin-bottom: 8px; color: var(--text);
+}
+.accent { color: var(--yellow); }
+.accent-blue { color: var(--blue); }
+.accent-green { color: var(--green); }
+p { font-size: 14px; line-height: 1.7; color: var(--text-muted); margin-bottom: 8px; }
+p strong { color: var(--text); }
+.sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: var(--text-muted); margin-top: 12px;
+}
+
+/* ── Pills ── */
+.pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+.pill {
+  padding: 5px 14px; border-radius: 20px;
+  font-size: 12px; font-family: 'JetBrains Mono', monospace;
+  border: 1px solid;
+}
+.pill.yellow { background: rgba(245,200,66,.1); border-color: rgba(245,200,66,.35); color: var(--yellow); }
+.pill.blue   { background: rgba(77,157,224,.1);  border-color: rgba(77,157,224,.35); color: var(--blue); }
+.pill.green  { background: rgba(63,185,80,.1);   border-color: rgba(63,185,80,.35);  color: var(--green); }
+.pill.red    { background: rgba(248,81,73,.1);   border-color: rgba(248,81,73,.35);  color: var(--red); }
+
+/* ── Layouts ── */
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.cols.wide { grid-template-columns: 1.35fr 1fr; }
+.cols.code-right { grid-template-columns: 1fr 1.25fr; }
+.cols.three { grid-template-columns: 1fr 1fr 1fr; }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px;
+}
+.card.yellow { border-color: rgba(245,200,66,.4); }
+.card.blue   { border-color: rgba(77,157,224,.4); }
+.card.green  { border-color: rgba(63,185,80,.4); }
+.card.red    { border-color: rgba(248,81,73,.4); }
+.card h3 { margin-bottom: 6px; }
+
+/* ── Code block ── */
+.code-block {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.code-header {
+  background: var(--surface2); border-bottom: 1px solid var(--border);
+  padding: 8px 14px; display: flex; align-items: center; gap: 6px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.r { background: #f85149; }
+.dot.y { background: #f5c842; }
+.dot.g { background: #3fb950; }
+.code-lang {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--text-muted); margin-left: auto;
+}
+.code-block pre {
+  padding: 16px 18px; font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px; line-height: 1.75; overflow-x: auto;
+  white-space: pre;
+}
+.kw   { color: var(--blue); }
+.fn   { color: var(--purple); }
+.str  { color: var(--yellow); }
+.nm   { color: var(--blue); }
+.op   { color: var(--red); }
+.cm   { color: var(--text-muted); font-style: italic; }
+.prop { color: var(--orange); }
+.hl   { background: rgba(245,200,66,.12); border-radius: 3px; padding: 0 2px; }
+
+/* ── Output block ── */
+.output-block {
+  background: rgba(63,185,80,.06); border: 1px solid rgba(63,185,80,.25);
+  border-radius: 8px; padding: 10px 14px; margin-top: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--green); line-height: 1.6;
+}
+.out-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text-muted); margin-bottom: 4px;
+}
+
+/* ── Callout ── */
+.callout {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: rgba(245,200,66,.07); border: 1px solid rgba(245,200,66,.3);
+  border-radius: 8px; padding: 12px 14px;
+}
+.callout.blue  { background: rgba(77,157,224,.07); border-color: rgba(77,157,224,.3); }
+.callout.green { background: rgba(63,185,80,.07);  border-color: rgba(63,185,80,.3); }
+.callout .icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.callout p { margin: 0; font-size: 13px; color: var(--text-muted); }
+.callout p strong { color: var(--text); }
+
+/* ── DP Table ── */
+.dp-table-wrap { overflow: auto; }
+.dp-table {
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  width: 100%;
+}
+.dp-table th, .dp-table td {
+  border: 1px solid var(--border);
+  padding: 8px 12px; text-align: center;
+}
+.dp-table th {
+  background: var(--surface2); color: var(--yellow); font-weight: 600;
+}
+.dp-table td { background: var(--surface); color: var(--text-muted); }
+.dp-table td.diag { background: rgba(63,185,80,.1); color: var(--green); }
+.dp-table td.ans  { background: rgba(245,200,66,.15); color: var(--yellow); font-weight: 700; }
+.dp-table td.dim  { color: var(--border); }
+.dp-table td.step2 { color: var(--blue); }
+.dp-table td.step3 { color: var(--purple); }
+.dp-table td.step4 { color: var(--orange); }
+.dp-table td.row-hd { background: var(--surface2); color: var(--text-muted); }
+
+/* ── Step cards (for recurrence walkthrough) ── */
+.step-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.step-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 14px;
+}
+.step-card .sc-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em;
+  margin-bottom: 4px;
+}
+.step-card .sc-expr {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--text); line-height: 1.6;
+}
+.step-card .sc-expr .sc-eq { color: var(--yellow); }
+.step-card .sc-expr .sc-val { color: var(--green); font-weight: 600; }
+
+/* ── Practice ── */
+.practice-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.practice-header {
+  background: var(--surface2); border-bottom: 1px solid var(--border);
+  padding: 10px 16px; font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.practice-body { padding: 14px 16px; }
+.practice-task { font-size: 13px; color: var(--text); margin-bottom: 10px; line-height: 1.6; }
+.practice-diff {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  padding: 2px 8px; border-radius: 10px;
+}
+.practice-diff.easy   { background: rgba(63,185,80,.15); color: var(--green); }
+.practice-diff.medium { background: rgba(245,200,66,.15); color: var(--yellow); }
+.practice-diff.hard   { background: rgba(248,81,73,.15);  color: var(--red); }
+.expected-block {
+  background: rgba(63,185,80,.06); border: 1px solid rgba(63,185,80,.2);
+  border-radius: 6px; padding: 8px 12px; margin-bottom: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+}
+.expected-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .07em; }
+.expected-content { color: var(--green); }
+.hint-btn, .solution-btn {
+  border: none; border-radius: 6px; padding: 6px 12px;
+  font-size: 12px; cursor: pointer; margin-right: 8px; margin-bottom: 6px;
+  font-family: 'Onest', sans-serif;
+}
+.hint-btn     { background: rgba(245,200,66,.15); color: var(--yellow); }
+.solution-btn { background: rgba(77,157,224,.15);  color: var(--blue); }
+.hint-content, .solution-content { display: none; margin-top: 8px; }
+.hint-content { font-size: 12px; color: var(--text-muted); line-height: 1.6; padding: 8px 12px; background: var(--surface2); border-radius: 6px; }
+
+/* ── Reflex cards ── */
+.reflex-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 12px; }
+.reflex-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px; text-align: center;
+}
+.rnum {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(245,200,66,.15); border: 1px solid rgba(245,200,66,.3);
+  color: var(--yellow); font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 10px;
+}
+.reflex-card p { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5; }
+.reflex-card p strong { color: var(--text); }
+
+/* ── Final slide ── */
+.final-big {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(30px, 4vw, 52px); font-weight: 900;
+  line-height: 1.1; margin-top: 8px;
+}
+.final-big span { color: var(--yellow); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table th { background: var(--surface2); color: var(--yellow); padding: 8px 12px; text-align: left; border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+table td { background: var(--surface); border: 1px solid var(--border); padding: 8px 12px; color: var(--text-muted); vertical-align: top; }
+table td:first-child { font-family: 'JetBrains Mono', monospace; color: var(--blue); white-space: nowrap; }
+kbd {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+}
+
+/* ── Navigation ── */
+#nav {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 10px; align-items: center; z-index: 100;
+}
+.nav-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, border-color .2s;
+}
+.nav-btn:hover { background: var(--surface2); border-color: var(--yellow); }
+.nav-btn:disabled { opacity: .3; cursor: default; }
+#slide-counter {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--text-muted); min-width: 52px; text-align: center;
+}
+
+/* ── Formula highlight ── */
+.formula {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px; font-size: 13px;
+  line-height: 1.8; margin: 8px 0;
+}
+.formula .f-kw   { color: var(--yellow); font-weight: 600; }
+.formula .f-val  { color: var(--green); }
+.formula .f-else { color: var(--red); }
+.formula .f-dim  { color: var(--text-muted); }
+
+/* ── Complexity badge ── */
+.complexity-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.3);
+  border-radius: 6px; padding: 6px 12px; margin: 4px 0;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--green);
+}
+
+/* ── Animated arrow ── */
+.arrow-right { color: var(--yellow); margin: 0 4px; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 1 — TITLE
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide slide-title active" id="s1">
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+  <div class="slide-num">01 / 16</div>
+  <div class="js-badge">LeetCode · Hard · #1312</div>
+  <h1>Minimum Insertion Steps<br><span class="accent">to Make a Palindrome</span></h1>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text-muted);margin-top:4px;">
+    Dynamic Programming · Interval DP
+  </p>
+  <div class="pills">
+    <span class="pill yellow">Interval DP</span>
+    <span class="pill blue">Рекуррентность</span>
+    <span class="pill green">O(n²)</span>
+    <span class="pill red">Hard</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 2 — УСЛОВИЕ ЗАДАЧИ
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-num">02 / 16</div>
+  <div class="slide-label">// постановка задачи</div>
+  <h2>Что нужно <span class="accent">сделать?</span></h2>
+  <div class="cols wide">
+    <div>
+      <div class="card yellow" style="margin-bottom:14px;">
+        <h3 style="color:var(--yellow);">📋 Условие</h3>
+        <p>Дана строка <code style="color:var(--blue);">s</code>. За одну операцию можно
+        вставить <strong>любой символ</strong> в <strong>любое место</strong> строки.</p>
+        <p style="margin-top:6px;">Найти <strong>минимальное количество вставок</strong>,
+        чтобы строка стала палиндромом.</p>
+      </div>
+      <div class="card green">
+        <h3 style="color:var(--green);">✅ Ограничения</h3>
+        <p><code style="font-family:'JetBrains Mono',monospace;color:var(--text);">1 <= s.length <= 500</code></p>
+        <p><code style="font-family:'JetBrains Mono',monospace;color:var(--text);">s</code> содержит только строчные латинские буквы</p>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:10px;">
+        <h3>Пример 1</h3>
+        <div class="formula">
+          <span class="f-kw">вход:</span>  <span class="f-val">"mbadm"</span><br>
+          <span class="f-kw">выход:</span> <span class="f-val">2</span><br>
+          <span class="f-dim">// "mbadm" → "mbdadbm"</span>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:10px;">
+        <h3>Пример 2</h3>
+        <div class="formula">
+          <span class="f-kw">вход:</span>  <span class="f-val">"leetcode"</span><br>
+          <span class="f-kw">выход:</span> <span class="f-val">5</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Пример 3</h3>
+        <div class="formula">
+          <span class="f-kw">вход:</span>  <span class="f-val">"zzazz"</span><br>
+          <span class="f-kw">выход:</span> <span class="f-val">0</span><br>
+          <span class="f-dim">// уже палиндром!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 3 — КЛЮЧЕВОЕ НАБЛЮДЕНИЕ
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-num">03 / 16</div>
+  <div class="slide-label">// ключевая идея</div>
+  <h2>Ключевое <span class="accent">наблюдение</span></h2>
+  <div class="cols wide">
+    <div>
+      <p>Смотрим на крайние символы подстроки <code style="color:var(--blue);">s[i..j]</code>:</p>
+      <div class="card yellow" style="margin:10px 0;">
+        <h3 style="color:var(--green);">Случай 1: s[i] == s[j]</h3>
+        <p>Символы уже «закрывают» друг друга. Задача сводится к решению внутреннего отрезка <code style="color:var(--blue);">s[i+1..j-1]</code>.</p>
+      </div>
+      <div class="card red" style="margin:10px 0;">
+        <h3 style="color:var(--red);">Случай 2: s[i] != s[j]</h3>
+        <p>Нужно добавить одну вставку. Либо «закрываем» левый символ (вставляем <code style="color:var(--yellow);">s[i]</code> справа), либо правый (вставляем <code style="color:var(--yellow);">s[j]</code> слева). Берём минимум из двух вариантов.</p>
+      </div>
+      <div class="callout blue">
+        <span class="icon">💡</span>
+        <p>Это классический <strong>Interval DP</strong> — решаем задачу на всё более длинных подстроках.</p>
+      </div>
+    </div>
+    <div>
+      <div class="formula" style="font-size:14px;line-height:2.2;">
+        <span class="f-dim">// если s[i] == s[j]</span><br>
+        <span class="f-kw">dp[i][j]</span> = <span class="f-val">dp[i+1][j-1]</span><br><br>
+        <span class="f-dim">// иначе</span><br>
+        <span class="f-kw">dp[i][j]</span> = <span class="f-val">1</span> + <span class="f-else">min(</span><br>
+        &nbsp;&nbsp;<span class="f-val">dp[i+1][j]</span>,<br>
+        &nbsp;&nbsp;<span class="f-val">dp[i][j-1]</span><br>
+        <span class="f-else">)</span><br><br>
+        <span class="f-dim">// база: dp[i][i] = 0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 4 — ЧТО ХРАНИТСЯ В DP
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="slide-num">04 / 16</div>
+  <div class="slide-label">// семантика таблицы</div>
+  <h2>Что хранится <span class="accent">в dp[i][j]?</span></h2>
+  <div class="cols">
+    <div>
+      <div class="card yellow" style="margin-bottom:14px;">
+        <h3 style="color:var(--yellow);font-size:16px;">dp[i][j]</h3>
+        <p style="font-size:14px;color:var(--text);margin-top:6px;">
+          Минимальное количество <strong>вставок</strong>, необходимых чтобы превратить
+          подстроку <code style="color:var(--blue);">s[i..j]</code> в палиндром.
+        </p>
+      </div>
+      <div class="card" style="margin-bottom:10px;">
+        <h3>База (длина = 1)</h3>
+        <p>Строка из одного символа — уже палиндром.</p>
+        <div class="formula"><span class="f-kw">dp[i][i]</span> = <span class="f-val">0</span>  <span class="f-dim">для всех i</span></div>
+      </div>
+      <div class="card">
+        <h3>Ответ</h3>
+        <p>После заполнения всей таблицы, ответ лежит в:</p>
+        <div class="formula"><span class="f-kw">dp[0][n-1]</span>  <span class="f-dim">// вся строка</span></div>
+      </div>
+    </div>
+    <div>
+      <p style="margin-bottom:8px;font-size:13px;">Порядок заполнения: по возрастанию <strong>длины</strong> подстроки</p>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <span class="code-lang">Python</span>
+        </div>
+        <pre><span class="cm"># длина 1 → длина 2 → ... → длина n</span>
+<span class="kw">for</span> length <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">2</span>, n <span class="op">+</span> <span class="nm">1</span>):
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n <span class="op">-</span> length <span class="op">+</span> <span class="nm">1</span>):
+        j <span class="op">=</span> i <span class="op">+</span> length <span class="op">-</span> <span class="nm">1</span>
+        <span class="cm"># dp[i][j] всегда знает dp[i+1][j-1]</span>
+        <span class="cm"># т.к. она короче и уже вычислена</span></pre>
+      </div>
+      <div class="callout green" style="margin-top:10px;">
+        <span class="icon">✅</span>
+        <p>Заполняем только <strong>верхний треугольник</strong> матрицы (i <= j). Нижний треугольник не используется.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 5 — SECTION: ТРАССИРОВКА
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide slide-section" id="s5">
+  <div class="slide-num">05 / 16</div>
+  <h2>Трассировка на примере<br><span style="color:var(--yellow);">"mbadm"</span></h2>
+  <div class="sub">// шаг за шагом заполняем таблицу dp</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 6 — ДЛИНА 2
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="slide-num">06 / 16</div>
+  <div class="slide-label">// трассировка · шаг 1</div>
+  <h2>Длина 2: <span class="accent">все соседние пары</span></h2>
+  <div class="cols wide">
+    <div>
+      <p style="margin-bottom:8px;">Для каждой пары соседних символов: символы разные → вставляем 1.</p>
+      <div class="step-cards">
+        <div class="step-card">
+          <div class="sc-label">dp[0][1] · "mb"</div>
+          <div class="sc-expr">'m' != 'b'<br>1 + min(dp[1][1], dp[0][0])<br>= 1 + min(<span class="sc-val">0</span>, <span class="sc-val">0</span>) = <span class="sc-eq">1</span></div>
+        </div>
+        <div class="step-card">
+          <div class="sc-label">dp[1][2] · "ba"</div>
+          <div class="sc-expr">'b' != 'a'<br>1 + min(dp[2][2], dp[1][1])<br>= 1 + min(<span class="sc-val">0</span>, <span class="sc-val">0</span>) = <span class="sc-eq">1</span></div>
+        </div>
+        <div class="step-card">
+          <div class="sc-label">dp[2][3] · "ad"</div>
+          <div class="sc-expr">'a' != 'd'<br>1 + min(dp[3][3], dp[2][2])<br>= 1 + min(<span class="sc-val">0</span>, <span class="sc-val">0</span>) = <span class="sc-eq">1</span></div>
+        </div>
+        <div class="step-card">
+          <div class="sc-label">dp[3][4] · "dm"</div>
+          <div class="sc-expr">'d' != 'm'<br>1 + min(dp[4][4], dp[3][3])<br>= 1 + min(<span class="sc-val">0</span>, <span class="sc-val">0</span>) = <span class="sc-eq">1</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p style="margin-bottom:6px;font-size:12px;color:var(--text-muted);">Таблица после шага 1:</p>
+      <div class="dp-table-wrap">
+        <table class="dp-table">
+          <tr><th></th><th>m(0)</th><th>b(1)</th><th>a(2)</th><th>d(3)</th><th>m(4)</th></tr>
+          <tr><td class="row-hd">m(0)</td><td class="diag">0</td><td class="step2">1</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td></tr>
+          <tr><td class="row-hd">b(1)</td><td class="dim">·</td><td class="diag">0</td><td class="step2">1</td><td class="dim">·</td><td class="dim">·</td></tr>
+          <tr><td class="row-hd">a(2)</td><td class="dim">·</td><td class="dim">·</td><td class="diag">0</td><td class="step2">1</td><td class="dim">·</td></tr>
+          <tr><td class="row-hd">d(3)</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td><td class="diag">0</td><td class="step2">1</td></tr>
+          <tr><td class="row-hd">m(4)</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td><td class="diag">0</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 7 — ДЛИНА 3 и 4
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="slide-num">07 / 16</div>
+  <div class="slide-label">// трассировка · шаги 2–3</div>
+  <h2>Длина 3 и 4</h2>
+  <div class="cols">
+    <div>
+      <p style="margin-bottom:8px;color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:12px;">// length = 3</p>
+      <div class="step-card" style="margin-bottom:8px;">
+        <div class="sc-label">dp[0][2] · "mba"</div>
+        <div class="sc-expr">'m' != 'a' → 1 + min(dp[1][2], dp[0][1]) = 1 + min(<span class="sc-val">1</span>, <span class="sc-val">1</span>) = <span class="sc-eq">2</span></div>
+      </div>
+      <div class="step-card" style="margin-bottom:8px;">
+        <div class="sc-label">dp[1][3] · "bad"</div>
+        <div class="sc-expr">'b' != 'd' → 1 + min(dp[2][3], dp[1][2]) = 1 + min(<span class="sc-val">1</span>, <span class="sc-val">1</span>) = <span class="sc-eq">2</span></div>
+      </div>
+      <div class="step-card">
+        <div class="sc-label">dp[2][4] · "adm"</div>
+        <div class="sc-expr">'a' != 'm' → 1 + min(dp[3][4], dp[2][3]) = 1 + min(<span class="sc-val">1</span>, <span class="sc-val">1</span>) = <span class="sc-eq">2</span></div>
+      </div>
+    </div>
+    <div>
+      <p style="margin-bottom:8px;color:var(--orange);font-family:'JetBrains Mono',monospace;font-size:12px;">// length = 4</p>
+      <div class="step-card" style="margin-bottom:8px;">
+        <div class="sc-label">dp[0][3] · "mbad"</div>
+        <div class="sc-expr">'m' != 'd' → 1 + min(dp[1][3], dp[0][2]) = 1 + min(<span class="sc-val">2</span>, <span class="sc-val">2</span>) = <span class="sc-eq">3</span></div>
+      </div>
+      <div class="step-card" style="margin-bottom:14px;">
+        <div class="sc-label">dp[1][4] · "badm"</div>
+        <div class="sc-expr">'b' != 'm' → 1 + min(dp[2][4], dp[1][3]) = 1 + min(<span class="sc-val">2</span>, <span class="sc-val">2</span>) = <span class="sc-eq">3</span></div>
+      </div>
+      <div class="dp-table-wrap">
+        <table class="dp-table" style="font-size:11px;">
+          <tr><th></th><th>m</th><th>b</th><th>a</th><th>d</th><th>m</th></tr>
+          <tr><td class="row-hd">m</td><td class="diag">0</td><td class="step2">1</td><td class="step3">2</td><td class="step4">3</td><td class="dim">·</td></tr>
+          <tr><td class="row-hd">b</td><td class="dim">·</td><td class="diag">0</td><td class="step2">1</td><td class="step3">2</td><td class="step4">3</td></tr>
+          <tr><td class="row-hd">a</td><td class="dim">·</td><td class="dim">·</td><td class="diag">0</td><td class="step2">1</td><td class="step3">2</td></tr>
+          <tr><td class="row-hd">d</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td><td class="diag">0</td><td class="step2">1</td></tr>
+          <tr><td class="row-hd">m</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td><td class="diag">0</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 8 — ФИНАЛ: ДЛИНА 5
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s8">
+  <div class="slide-num">08 / 16</div>
+  <div class="slide-label">// трассировка · финал</div>
+  <h2>Длина 5: <span class="accent">финальный ответ</span></h2>
+  <div class="cols wide">
+    <div>
+      <div class="card yellow" style="margin-bottom:14px;">
+        <h3 style="color:var(--yellow);">dp[0][4] · "mbadm"</h3>
+        <div class="formula" style="margin-top:8px;font-size:14px;line-height:2;">
+          s[0] = <span class="f-val">'m'</span>  ==  s[4] = <span class="f-val">'m'</span>  ✓<br>
+          <span class="f-kw">dp[0][4]</span> = <span class="f-val">dp[1][3]</span> = <span class="f-val">2</span>
+        </div>
+      </div>
+      <div class="callout green">
+        <span class="icon">🎯</span>
+        <p>Крайние символы совпали! Задача свелась к dp[1][3] = 2.
+        <strong>Ответ: 2 вставки.</strong></p>
+      </div>
+      <div class="output-block" style="margin-top:12px;">
+        <div class="out-label">Результат</div>
+        "mbadm" → вставить 'd' и 'b' → "mbdadbm" ✓
+      </div>
+    </div>
+    <div>
+      <p style="margin-bottom:6px;font-size:12px;color:var(--text-muted);">Финальная таблица dp:</p>
+      <div class="dp-table-wrap">
+        <table class="dp-table">
+          <tr><th></th><th>m(0)</th><th>b(1)</th><th>a(2)</th><th>d(3)</th><th>m(4)</th></tr>
+          <tr><td class="row-hd">m(0)</td><td class="diag">0</td><td class="step2">1</td><td class="step3">2</td><td class="step4">3</td><td class="ans">2</td></tr>
+          <tr><td class="row-hd">b(1)</td><td class="dim">·</td><td class="diag">0</td><td class="step2">1</td><td class="step3">2</td><td class="step4">3</td></tr>
+          <tr><td class="row-hd">a(2)</td><td class="dim">·</td><td class="dim">·</td><td class="diag">0</td><td class="step2">1</td><td class="step3">2</td></tr>
+          <tr><td class="row-hd">d(3)</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td><td class="diag">0</td><td class="step2">1</td></tr>
+          <tr><td class="row-hd">m(4)</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td><td class="dim">·</td><td class="diag">0</td></tr>
+        </table>
+      </div>
+      <p style="margin-top:8px;font-size:12px;color:var(--text-muted);">
+        <span style="color:var(--yellow);">■</span> жёлтая ячейка = ответ &nbsp;
+        <span style="color:var(--green);">■</span> диагональ = база = 0
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 9 — SECTION: КОД
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide slide-section" id="s9">
+  <div class="slide-num">09 / 16</div>
+  <h2>Реализация<br><span style="color:var(--yellow);">на Python</span></h2>
+  <div class="sub">// разбор кода строка за строкой</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 10 — КОД PYTHON
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s10">
+  <div class="slide-num">10 / 16</div>
+  <div class="slide-label">// реализация</div>
+  <h2>Interval DP — <span class="accent">Python</span></h2>
+  <div class="cols code-right">
+    <div>
+      <div class="card" style="margin-bottom:10px;">
+        <h3>Инициализация</h3>
+        <p>Создаём таблицу <code style="color:var(--blue);">n×n</code>, заполненную нулями. База — диагональ (длина 1 = 0 вставок).</p>
+      </div>
+      <div class="card" style="margin-bottom:10px;">
+        <h3>Внешний цикл</h3>
+        <p>Перебираем длину подстроки от 2 до n. Так гарантируем, что при вычислении dp[i][j] уже известны все более короткие подстроки.</p>
+      </div>
+      <div class="card">
+        <h3>Рекуррентность</h3>
+        <p>Если крайние символы совпали — берём внутренний отрезок. Иначе — 1 + min двух вариантов.</p>
+      </div>
+    </div>
+    <div>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <span class="code-lang">Python</span>
+        </div>
+        <pre><span class="kw">def</span> <span class="fn">minInsertions</span>(s: <span class="fn">str</span>) -> <span class="fn">int</span>:
+    n <span class="op">=</span> <span class="fn">len</span>(s)
+
+    <span class="cm"># dp[i][j] = мин. вставок для s[i..j]</span>
+    dp <span class="op">=</span> [[<span class="nm">0</span>] <span class="op">*</span> n <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n)]
+
+    <span class="cm"># заполняем по возрастанию длины</span>
+    <span class="kw">for</span> length <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">2</span>, n <span class="op">+</span> <span class="nm">1</span>):
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n <span class="op">-</span> length <span class="op">+</span> <span class="nm">1</span>):
+            j <span class="op">=</span> i <span class="op">+</span> length <span class="op">-</span> <span class="nm">1</span>
+
+            <span class="kw">if</span> s[i] <span class="op">==</span> s[j]:
+                dp[i][j] <span class="op">=</span> dp[i<span class="op">+</span><span class="nm">1</span>][j<span class="op">-</span><span class="nm">1</span>]
+            <span class="kw">else</span>:
+                dp[i][j] <span class="op">=</span> <span class="nm">1</span> <span class="op">+</span> <span class="fn">min</span>(
+                    dp[i<span class="op">+</span><span class="nm">1</span>][j],
+                    dp[i][j<span class="op">-</span><span class="nm">1</span>]
+                )
+
+    <span class="kw">return</span> dp[<span class="nm">0</span>][n<span class="op">-</span><span class="nm">1</span>]</pre>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="complexity-badge">⏱ O(n²) время</span>
+        <span class="complexity-badge">💾 O(n²) память</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 11 — АЛЬТЕРНАТИВА: LCS
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s11">
+  <div class="slide-num">11 / 16</div>
+  <div class="slide-label">// альтернативный подход</div>
+  <h2>Через <span class="accent">LCS</span> и LPS</h2>
+  <div class="cols wide">
+    <div>
+      <div class="card yellow" style="margin-bottom:12px;">
+        <h3 style="color:var(--yellow);">Формула</h3>
+        <div class="formula" style="font-size:15px;line-height:2.2;margin-top:8px;">
+          <span class="f-kw">ответ</span> = n − <span class="f-val">LPS(s)</span><br>
+          <span class="f-val">LPS(s)</span> = <span class="f-val">LCS(s, reverse(s))</span>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:12px;">
+        <h3>Почему это работает?</h3>
+        <p>Символы, входящие в наидлиннейшую палиндромную подпоследовательность (LPS), уже стоят правильно — их трогать не нужно.</p>
+        <p style="margin-top:4px;">Для каждого из оставшихся <strong>n − LPS</strong> символов нужна ровно одна вставка-пара.</p>
+      </div>
+      <div class="card">
+        <h3>Пример: "mbadm"</h3>
+        <div class="formula">
+          reverse = <span class="f-val">"mdabm"</span><br>
+          LCS = <span class="f-val">"mam"</span> → длина <span class="f-val">3</span><br>
+          ответ = 5 − 3 = <span class="f-kw">2</span> ✓
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <span class="code-lang">Python · LCS подход</span>
+        </div>
+        <pre><span class="kw">def</span> <span class="fn">minInsertions</span>(s: <span class="fn">str</span>) -> <span class="fn">int</span>:
+    n <span class="op">=</span> <span class="fn">len</span>(s)
+    t <span class="op">=</span> s[::<span class="op">-</span><span class="nm">1</span>]  <span class="cm"># реверс строки</span>
+
+    <span class="cm"># dp[i][j] = LCS(s[:i], t[:j])</span>
+    dp <span class="op">=</span> [[<span class="nm">0</span>] <span class="op">*</span> (n <span class="op">+</span> <span class="nm">1</span>) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n <span class="op">+</span> <span class="nm">1</span>)]
+
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">1</span>, n <span class="op">+</span> <span class="nm">1</span>):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">1</span>, n <span class="op">+</span> <span class="nm">1</span>):
+            <span class="kw">if</span> s[i<span class="op">-</span><span class="nm">1</span>] <span class="op">==</span> t[j<span class="op">-</span><span class="nm">1</span>]:
+                dp[i][j] <span class="op">=</span> dp[i<span class="op">-</span><span class="nm">1</span>][j<span class="op">-</span><span class="nm">1</span>] <span class="op">+</span> <span class="nm">1</span>
+            <span class="kw">else</span>:
+                dp[i][j] <span class="op">=</span> <span class="fn">max</span>(
+                    dp[i<span class="op">-</span><span class="nm">1</span>][j],
+                    dp[i][j<span class="op">-</span><span class="nm">1</span>]
+                )
+
+    lps <span class="op">=</span> dp[n][n]
+    <span class="kw">return</span> n <span class="op">-</span> lps</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 12 — SECTION: ПРАКТИКА
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide slide-section" id="s12">
+  <div class="slide-num">12 / 16</div>
+  <h2>Практические<br><span style="color:var(--yellow);">задачи</span></h2>
+  <div class="sub">// проверяем понимание</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 13 — ЗАДАЧИ 1 & 2
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s13">
+  <div class="slide-num">13 / 16</div>
+  <div class="slide-label">// практика</div>
+  <h2>Задачи <span class="accent">1 и 2</span></h2>
+  <div class="cols">
+    <div>
+      <div class="practice-card">
+        <div class="practice-header">
+          📝 Задача 1: Ответ на примере
+          <span class="practice-diff easy">Лёгкая</span>
+        </div>
+        <div class="practice-body">
+          <p class="practice-task">Чему равно dp[0][4] для строки s = "zzazz"?<br>Объясни почему.</p>
+          <div class="expected-block">
+            <div class="expected-label">Ожидаемый ответ</div>
+            <div class="expected-content">0</div>
+          </div>
+          <button class="hint-btn" onclick="toggleHint(this)">💡 Показать подсказку</button>
+          <div class="hint-content">"zzazz" — уже является палиндромом. Проверь: читается одинаково с обоих концов. Значит вставки не нужны.</div>
+          <button class="solution-btn" onclick="toggleSolution(this)">🔑 Показать решение</button>
+          <div class="solution-content">
+            <div class="code-block">
+              <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Python</span></div>
+              <pre>s <span class="op">=</span> <span class="str">"zzazz"</span>
+<span class="cm"># s[0]='z' == s[4]='z' → dp[1][3]</span>
+<span class="cm"># s[1]='z' == s[3]='z' → dp[2][2]</span>
+<span class="cm"># dp[2][2] = 0  (база)</span>
+<span class="cm"># → dp[0][4] = 0</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="practice-card">
+        <div class="practice-header">
+          📝 Задача 2: Рекуррентность
+          <span class="practice-diff medium">Средняя</span>
+        </div>
+        <div class="practice-body">
+          <p class="practice-task">Для s = "ab" вычисли dp[0][1] вручную. Какой символ нужно вставить и куда?</p>
+          <div class="expected-block">
+            <div class="expected-label">Ожидаемый ответ</div>
+            <div class="expected-content">dp[0][1] = 1</div>
+          </div>
+          <button class="hint-btn" onclick="toggleHint(this)">💡 Показать подсказку</button>
+          <div class="hint-content">s[0]='a' != s[1]='b'. Применяем рекуррентность иначе: 1 + min(dp[1][1], dp[0][0]) = 1 + 0 = 1.</div>
+          <button class="solution-btn" onclick="toggleSolution(this)">🔑 Показать решение</button>
+          <div class="solution-content">
+            <div class="code-block">
+              <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Решение</span></div>
+              <pre><span class="cm"># dp[0][1]: 'a' != 'b'</span>
+<span class="cm"># 1 + min(dp[1][1], dp[0][0])</span>
+<span class="cm"># = 1 + min(0, 0) = 1</span>
+<span class="cm"># Варианты: "ab" → "aba" или "bab"</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 14 — ЗАДАЧА 3 (КВИЗ)
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s14">
+  <div class="slide-num">14 / 16</div>
+  <div class="slide-label">// практика · квиз</div>
+  <h2>Задача 3: <span class="accent">Quiz</span></h2>
+  <div class="cols wide">
+    <div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;">
+        <div style="background:var(--surface2);border-bottom:1px solid var(--border);padding:10px 16px;font-size:13px;font-weight:600;">
+          ❓ Вопрос 1
+        </div>
+        <div style="padding:14px 16px;">
+          <p style="font-size:14px;color:var(--text);margin-bottom:12px;">Чему равно dp[i][i+1], если s[i] == s[i+1]?</p>
+          <div class="quiz-options" id="q1">
+            <div class="quiz-opt" onclick="checkQuiz(this, false)">1</div>
+            <div class="quiz-opt" onclick="checkQuiz(this, true)">0</div>
+            <div class="quiz-opt" onclick="checkQuiz(this, false)">2</div>
+          </div>
+          <div class="quiz-result" id="q1r"></div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+        <div style="background:var(--surface2);border-bottom:1px solid var(--border);padding:10px 16px;font-size:13px;font-weight:600;">
+          ❓ Вопрос 2
+        </div>
+        <div style="padding:14px 16px;">
+          <p style="font-size:14px;color:var(--text);margin-bottom:12px;">Каков порядок заполнения таблицы dp в Interval DP?</p>
+          <div class="quiz-options" id="q2">
+            <div class="quiz-opt" onclick="checkQuiz(this, false)">По строкам сверху вниз</div>
+            <div class="quiz-opt" onclick="checkQuiz(this, false)">Случайный порядок</div>
+            <div class="quiz-opt" onclick="checkQuiz(this, true)">По возрастанию длины подстроки</div>
+          </div>
+          <div class="quiz-result" id="q2r"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="practice-card">
+        <div class="practice-header">
+          📝 Задача 3: Код
+          <span class="practice-diff hard">Сложная</span>
+        </div>
+        <div class="practice-body">
+          <p class="practice-task">Напиши функцию, которая возвращает сам палиндром (а не только количество вставок) для строки "race".</p>
+          <button class="hint-btn" onclick="toggleHint(this)">💡 Показать подсказку</button>
+          <div class="hint-content">После заполнения dp[i][j] восстанавливай ответ рекурсивно: если s[i]==s[j] — идём в dp[i+1][j-1] и оборачиваем; иначе идём в меньшее из dp[i+1][j] или dp[i][j-1].</div>
+          <button class="solution-btn" onclick="toggleSolution(this)">🔑 Показать решение</button>
+          <div class="solution-content">
+            <div class="code-block">
+              <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-lang">Python</span></div>
+              <pre><span class="kw">def</span> <span class="fn">buildPalindrome</span>(s, i, j, dp):
+    <span class="kw">if</span> i <span class="op">></span> j: <span class="kw">return</span> <span class="str">""</span>
+    <span class="kw">if</span> i <span class="op">==</span> j: <span class="kw">return</span> s[i]
+    <span class="kw">if</span> s[i] <span class="op">==</span> s[j]:
+        mid <span class="op">=</span> <span class="fn">buildPalindrome</span>(s,i<span class="op">+</span><span class="nm">1</span>,j<span class="op">-</span><span class="nm">1</span>,dp)
+        <span class="kw">return</span> s[i] <span class="op">+</span> mid <span class="op">+</span> s[j]
+    <span class="kw">if</span> dp[i<span class="op">+</span><span class="nm">1</span>][j] <span class="op"><</span> dp[i][j<span class="op">-</span><span class="nm">1</span>]:
+        mid <span class="op">=</span> <span class="fn">buildPalindrome</span>(s,i<span class="op">+</span><span class="nm">1</span>,j,dp)
+        <span class="kw">return</span> s[i] <span class="op">+</span> mid <span class="op">+</span> s[i]
+    mid <span class="op">=</span> <span class="fn">buildPalindrome</span>(s,i,j<span class="op">-</span><span class="nm">1</span>,dp)
+    <span class="kw">return</span> s[j] <span class="op">+</span> mid <span class="op">+</span> s[j]
+<span class="cm"># "race" → "ecarace"</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 15 — РЕФЛЕКСИЯ
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s15">
+  <div class="slide-num">15 / 16</div>
+  <div class="slide-label">// рефлексия</div>
+  <h2>Подводим <span class="accent">итоги</span></h2>
+  <div class="reflex-cards">
+    <div class="reflex-card">
+      <div class="rnum">1</div>
+      <p>Что такое <strong>dp[i][j]</strong> в этой задаче и почему таблицу заполняют по длине?</p>
+    </div>
+    <div class="reflex-card">
+      <div class="rnum">2</div>
+      <p>Почему работает формула <strong>n − LPS(s)</strong> как альтернатива?</p>
+    </div>
+    <div class="reflex-card">
+      <div class="rnum">3</div>
+      <p>В каких ещё задачах ты встречал <strong>Interval DP</strong>? Чем он отличается от обычного?</p>
+    </div>
+  </div>
+  <div style="margin-top:20px;">
+    <div class="callout blue">
+      <span class="icon">🔗</span>
+      <p>Похожие задачи: <strong>516. Longest Palindromic Subsequence</strong> · <strong>647. Palindromic Substrings</strong> · <strong>1039. Minimum Score Triangulation</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 16 — ФИНАЛЬНЫЙ
+═══════════════════════════════════════════════════════════════ -->
+<div class="slide slide-final" id="s16">
+  <div class="slide-num">16 / 16</div>
+  <div class="cols wide" style="align-items:start;height:100%;">
+    <div style="padding-top:20px;">
+      <div class="js-badge">DP · Strings</div>
+      <div class="final-big">Итого<br><span>урока</span></div>
+      <p style="margin-top:14px;font-size:13px;">
+        LeetCode:
+        <a href="https://leetcode.com/problems/minimum-insertion-steps-to-make-a-string-palindrome/"
+           style="color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(77,157,224,.3);">
+          #1312 · Hard
+        </a>
+      </p>
+      <div style="margin-top:24px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">
+          <kbd>←</kbd><kbd>→</kbd><span>навигация</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">
+          <kbd>F</kbd><span>полный экран</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">
+          <kbd>Home</kbd><kbd>End</kbd><span>первый / последний слайд</span>
+        </div>
+      </div>
+    </div>
+    <div style="padding-top:10px;">
+      <table>
+        <tr><th>Концепция</th><th>Описание</th></tr>
+        <tr><td>dp[i][j]</td><td>мин. вставок для подстроки s[i..j]</td></tr>
+        <tr><td>dp[i][i] = 0</td><td>строка длины 1 — уже палиндром</td></tr>
+        <tr><td>s[i]==s[j]</td><td>dp[i][j] = dp[i+1][j-1]</td></tr>
+        <tr><td>s[i]!=s[j]</td><td>dp[i][j] = 1 + min(dp[i+1][j], dp[i][j-1])</td></tr>
+        <tr><td>Ответ</td><td>dp[0][n-1]</td></tr>
+        <tr><td>Порядок</td><td>по возрастанию длины подстроки</td></tr>
+        <tr><td>Через LCS</td><td>n − LCS(s, reverse(s))</td></tr>
+        <tr><td>Сложность</td><td>O(n²) время, O(n²) память</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NAVIGATION
+═══════════════════════════════════════════════════════════════ -->
+<div id="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>←</button>
+  <span id="slide-counter">1 / 16</span>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">→</button>
+</div>
+
+<style>
+.quiz-options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.quiz-opt {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px;
+  font-size: 13px; cursor: pointer; transition: background .2s, border-color .2s;
+}
+.quiz-opt:hover { border-color: var(--blue); background: rgba(77,157,224,.08); }
+.quiz-opt.correct { background: rgba(63,185,80,.15); border-color: var(--green); color: var(--green); }
+.quiz-opt.wrong   { background: rgba(248,81,73,.1);  border-color: var(--red);   color: var(--red); }
+.quiz-result { display: none; font-size: 13px; margin-top: 6px; padding: 6px 10px; border-radius: 6px; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+
+function navigate(dir) {
+  const next = cur + dir;
+  if (next < 0 || next >= total) return;
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add(dir > 0 ? 'exit-left' : 'exit-right');
+  setTimeout(() => slides[cur - dir > -1 ? cur : 0].classList.remove('exit-left', 'exit-right'), 350);
+  cur = next;
+  slides[cur].classList.add('active');
+  slides[cur - dir < total ? cur - dir : 0].classList.remove('exit-left', 'exit-right');
+  update();
+}
+
+function update() {
+  document.getElementById('slide-counter').textContent = `${cur + 1} / ${total}`;
+  document.getElementById('prevBtn').disabled = cur === 0;
+  document.getElementById('nextBtn').disabled = cur === total - 1;
+  document.getElementById('progress-bar').style.width = `${((cur + 1) / total) * 100}%`;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+  if (e.key === 'ArrowLeft') navigate(-1);
+  if (e.key === 'Home') { cur = -1; navigate(1); }
+  if (e.key === 'End') { cur = total - 2; navigate(1); }
+  if (e.key === 'f' || e.key === 'F') {
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  }
+});
+
+// Touch swipe
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) navigate(dx < 0 ? 1 : -1);
+});
+
+function toggleHint(btn) {
+  const c = btn.nextElementSibling;
+  c.style.display = c.style.display === 'block' ? 'none' : 'block';
+  btn.textContent = c.style.display === 'block' ? '💡 Скрыть подсказку' : '💡 Показать подсказку';
+}
+function toggleSolution(btn) {
+  const c = btn.nextElementSibling;
+  c.style.display = c.style.display === 'block' ? 'none' : 'block';
+  btn.textContent = c.style.display === 'block' ? '🔑 Скрыть решение' : '🔑 Показать решение';
+}
+function checkQuiz(el, correct) {
+  const opts = el.parentElement.querySelectorAll('.quiz-opt');
+  opts.forEach(o => o.style.pointerEvents = 'none');
+  el.classList.add(correct ? 'correct' : 'wrong');
+  const res = el.parentElement.nextElementSibling;
+  res.style.display = 'block';
+  res.style.background = correct ? 'rgba(63,185,80,.1)' : 'rgba(248,81,73,.1)';
+  res.style.color = correct ? 'var(--green)' : 'var(--red)';
+  res.textContent = correct ? '✅ Верно!' : '❌ Неверно. Попробуй ещё раз.';
+}
+
+update();
+</script>
+</body>
+</html>

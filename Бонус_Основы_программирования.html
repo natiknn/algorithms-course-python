@@ -1,0 +1,702 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Основы программирования — Python</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #bc8cff, #58a6ff); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 40px 60px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #bc8cff; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.15; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.75rem; font-weight: 700; color: #f0f6fc; margin-bottom: 16px; }
+  h3 { font-size: 1.05rem; font-weight: 600; color: #bc8cff; margin-bottom: 8px; margin-top: 14px; }
+  p { line-height: 1.8; margin-bottom: 10px; color: #c9d1d9; font-size: 0.95rem; }
+  strong { color: #f0f6fc; }
+  em { color: #bc8cff; font-style: normal; }
+  .subtitle { font-size: 1.1rem; color: #8b949e; margin-bottom: 28px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #bc8cff; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; line-height: 1.7; }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.blue  { border-left-color: #58a6ff; }
+  .highlight-box.red   { border-left-color: #f78166; }
+  .highlight-box.orange{ border-left-color: #ffa657; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88em; color: #79c0ff; }
+  pre { margin: 10px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 0.85rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.88rem; }
+  .trace-table th { background: #1c2128; color: #bc8cff; padding: 7px 12px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 6px 12px; text-align: center; border: 1px solid #21262d; color: #c9d1d9; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .trace-table tr.ok td { background: #1c3a1c; color: #3fb950; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 7px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #bc8cff; color: #bc8cff; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 20px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; color: #8b949e; }
+  .step-card { display: flex; gap: 12px; align-items: flex-start; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 10px 14px; margin-bottom: 7px; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: #2a1c3a; border: 1px solid #bc8cff; color: #bc8cff; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-body { flex: 1; font-size: 0.9rem; line-height: 1.6; color: #c9d1d9; }
+  .complex-row { display: flex; gap: 10px; margin: 10px 0; }
+  .complex-badge { background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 8px 14px; }
+  .complex-badge .lbl { font-size: 0.72rem; color: #8b949e; }
+  .complex-badge .val { font-size: 1rem; color: #bc8cff; font-weight: 700; font-family: monospace; }
+  .lc-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600; margin-right: 6px; }
+  .lc-easy   { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+  .lc-medium { background: rgba(210,153,34,.12); color: #d29922; border: 1px solid rgba(210,153,34,.3); }
+  .quiz-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+  .quiz-q { font-weight: 600; color: #f0f6fc; margin-bottom: 10px; font-size: 0.95rem; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 6px; }
+  .quiz-opt { padding: 8px 14px; border-radius: 8px; border: 1px solid #30363d; font-size: 0.88rem; cursor: pointer; transition: all .15s; background: none; color: #c9d1d9; text-align: left; }
+  .quiz-opt:hover { border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,.07); }
+  .quiz-opt.correct { border-color: #3fb950; color: #3fb950; background: rgba(63,185,80,.1); pointer-events: none; }
+  .quiz-opt.wrong   { border-color: #f78166; color: #f78166; background: rgba(247,129,102,.1); }
+  .quiz-result { font-size: 0.85rem; margin-top: 8px; display: none; }
+  .hw-item { display: flex; align-items: flex-start; gap: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 11px 15px; margin-bottom: 7px; }
+  .hw-item a { color: #58a6ff; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+  .hw-item a:hover { text-decoration: underline; }
+  .hw-desc { font-size: 0.82rem; color: #8b949e; margin-top: 2px; }
+  ul { padding-left: 18px; }
+  li { line-height: 1.8; color: #c9d1d9; font-size: 0.9rem; margin-bottom: 2px; }
+  details summary { cursor: pointer; font-size: 0.83rem; color: #3fb950; padding: 4px 0; list-style: none; }
+  details[open] summary { margin-bottom: 6px; }
+  .formula { font-family: 'Cascadia Code','Fira Code',monospace; background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 12px 18px; font-size: 1rem; color: #bc8cff; margin: 12px 0; text-align: center; }
+  .type-badge { display: inline-block; background: #1c2128; border: 1px solid #30363d; border-radius: 6px; padding: 4px 10px; font-family: monospace; font-size: 0.82rem; color: #79c0ff; margin: 3px; }
+  /* Отключаем лигатуры шрифта — чтобы != отображалось как != а не как ≠ */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- 1 — Титул -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">🐍</div>
+  <div class="slide-tag">Тема 1</div>
+  <h1>Основы программирования</h1>
+  <p class="subtitle">Типы данных, управляющие конструкции, функции и ООП<br>— фундамент, без которого не решить ни одну задачу</p>
+  <div class="topic-chips">
+    <span class="chip">Типы данных</span>
+    <span class="chip">Циклы</span>
+    <span class="chip">Функции</span>
+    <span class="chip">ООП</span>
+    <span class="chip">Стандартные библиотеки</span>
+    <span class="chip">Python</span>
+  </div>
+</div>
+
+<!-- 2 — Типы данных -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Теория — Типы данных</div>
+  <h2>Базовые типы данных Python</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Числа и булевы</h3>
+<pre><code class="language-python">x: int   = 42          # целое
+y: float = 3.14        # дробное
+z: bool  = True        # булево (True/False)
+
+# Преобразования
+int("42")    # → 42
+float("3.14")# → 3.14
+str(42)      # → "42"
+bool(0)      # → False  (0, "", [], {} — ложные)
+bool(1)      # → True</code></pre>
+        <div class="highlight-box blue">
+          💡 <code class="inline">bool</code> — подтип <code class="inline">int</code>. <code class="inline">True == 1</code>, <code class="inline">False == 0</code> — это используют в задачах!
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Коллекции</h3>
+<pre><code class="language-python"># list — изменяемый, упорядоченный
+lst = [1, 2, 3]
+lst.append(4)        # [1,2,3,4]
+
+# tuple — неизменяемый, упорядоченный
+t = (1, 2, 3)
+
+# dict — ключ→значение, O(1) поиск
+d = {"a": 1, "b": 2}
+
+# set — уникальные элементы, O(1) поиск
+s = {1, 2, 3}
+
+# str — неизменяемая строка
+word = "hello"</code></pre>
+        <div class="highlight-box green">
+          <strong>type(x)</strong> — узнать тип переменной<br>
+          <strong>isinstance(x, int)</strong> — проверить тип
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 — Операции -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Теория — Операции</div>
+  <h2>Операции с типами</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Числа</h3>
+<pre><code class="language-python">17 // 5   # → 3   (целочисленное деление)
+17 %  5   # → 2   (остаток)
+2  ** 10  # → 1024 (степень)
+abs(-5)   # → 5
+max(3,7,2)# → 7
+min(3,7,2)# → 2
+
+import math
+math.sqrt(16)  # → 4.0
+math.ceil(2.1) # → 3
+math.floor(2.9)# → 2</code></pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Строки</h3>
+<pre><code class="language-python">s = "Hello, World!"
+len(s)           # 13
+s.lower()        # "hello, world!"
+s.upper()        # "HELLO, WORLD!"
+s.split(", ")    # ["Hello", "World!"]
+", ".join(["a","b"]) # "a, b"
+s[0:5]           # "Hello"  (срез)
+s[::-1]          # реверс строки</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Списки</h3>
+<pre><code class="language-python">lst = [3, 1, 4, 1, 5]
+
+lst.append(9)     # добавить в конец
+lst.pop()         # удалить последний
+lst.insert(0, 0)  # вставить по индексу
+lst.remove(4)     # удалить первый элемент=4
+lst.sort()        # сортировка на месте
+sorted(lst)       # новый отсортированный список
+lst.reverse()     # реверс на месте
+sum(lst)          # сумма элементов
+len(lst)          # длина</code></pre>
+        <div class="highlight-box orange">
+          ⚠️ <code class="inline">sort()</code> изменяет список. <code class="inline">sorted()</code> — возвращает новый!
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — Ветвления -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Теория — Управляющие конструкции</div>
+  <h2>Ветвления: if / elif / else</h2>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">x = 15
+
+if x > 10:
+    print("больше 10")
+elif x == 10:
+    print("равно 10")
+else:
+    print("меньше 10")
+
+# Тернарный оператор (одна строка)
+result = "чётное" if x % 2 == 0 else "нечётное"
+
+# Логические операторы
+if x > 0 and x < 100:
+    print("в диапазоне")
+
+if x < 0 or x > 1000:
+    print("выход за диапазон")
+
+if not (x == 15):
+    print("не 15")</code></pre>
+      <div class="highlight-box blue">
+        💡 <strong>Операторы сравнения:</strong><br>
+        <code class="inline">==</code> равно &nbsp; <code class="inline">!=</code> не равно<br>
+        <code class="inline">&lt;</code> <code class="inline">&gt;</code> <code class="inline">&lt;=</code> <code class="inline">&gt;=</code>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Принадлежность и проверки</h3>
+<pre><code class="language-python">lst = [1, 2, 3]
+
+# Оператор in
+2 in lst        # True
+5 in lst        # False
+"a" in "apple"  # True
+
+# Проверка None
+x = None
+if x is None:
+    print("пусто")
+if x is not None:
+    print("не пусто")
+
+# Проверка типа
+if isinstance(x, int):
+    print("это число")</code></pre>
+        <div class="highlight-box green">
+          ✅ <code class="inline">in</code> для списка — O(n)<br>
+          ✅ <code class="inline">in</code> для множества/словаря — O(1)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — Циклы -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Теория — Циклы</div>
+  <h2>Циклы: for, while, range</h2>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python"># for + range
+for i in range(5):          # 0,1,2,3,4
+    print(i)
+
+for i in range(2, 10, 2):   # 2,4,6,8
+    print(i)
+
+for i in range(9, -1, -1):  # 9,8,...,0
+    print(i)
+
+# for по списку
+nums = [10, 20, 30]
+for x in nums:
+    print(x)
+
+# enumerate — индекс + значение
+for i, x in enumerate(nums):
+    print(i, x)  # 0 10, 1 20, 2 30
+
+# zip — два списка вместе
+a = [1, 2, 3]
+b = ["a", "b", "c"]
+for x, y in zip(a, b):
+    print(x, y)  # 1 a, 2 b, 3 c</code></pre>
+    </div>
+    <div>
+<pre><code class="language-python"># while
+i = 0
+while i < 5:
+    print(i)
+    i += 1
+
+# break и continue
+for i in range(10):
+    if i == 3:
+        continue  # пропустить 3
+    if i == 7:
+        break     # остановить цикл
+    print(i)
+
+# List comprehension — быстро и кратко
+squares = [x**2 for x in range(10)]
+# [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+
+evens = [x for x in range(20) if x % 2 == 0]
+# [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]</code></pre>
+      <div class="highlight-box green">
+        ✅ <strong>List comprehension</strong> быстрее цикла + append и читабельнее!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 — Функции -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Теория — Функции</div>
+  <h2>Функции: def, return, аргументы</h2>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python"># Базовая функция
+def greet(name):
+    return f"Привет, {name}!"
+
+# Аргументы по умолчанию
+def power(base, exp=2):
+    return base ** exp
+
+power(3)    # → 9
+power(3, 3) # → 27
+
+# *args — произвольное число аргументов
+def total(*nums):
+    return sum(nums)
+
+total(1, 2, 3, 4)  # → 10
+
+# **kwargs — именованные аргументы
+def show(**info):
+    for key, val in info.items():
+        print(f"{key}: {val}")
+
+show(name="Алиса", age=20)</code></pre>
+    </div>
+    <div>
+<pre><code class="language-python"># Несколько возвращаемых значений
+def min_max(lst):
+    return min(lst), max(lst)
+
+lo, hi = min_max([3, 1, 4, 1, 5])
+# lo=1, hi=5
+
+# lambda — анонимная функция
+square = lambda x: x ** 2
+square(5)  # → 25
+
+# Полезно для сортировки
+pairs = [(1, 'b'), (3, 'a'), (2, 'c')]
+pairs.sort(key=lambda p: p[1])
+# [(3,'a'), (1,'b'), (2,'c')]
+
+# Вложенные функции
+def make_adder(n):
+    def add(x):
+        return x + n
+    return add
+
+add5 = make_adder(5)
+add5(3)  # → 8</code></pre>
+      <div class="highlight-box blue">
+        💡 Функция — это объект. Её можно передавать как аргумент и возвращать из функции.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 — ООП -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Теория — Основы ООП</div>
+  <h2>Классы и объекты</h2>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">class Animal:
+    # Атрибут класса (общий для всех)
+    kingdom = "Животные"
+
+    # Конструктор — вызывается при создании
+    def __init__(self, name, sound):
+        self.name = name    # атрибут объекта
+        self.sound = sound
+
+    # Метод объекта
+    def speak(self):
+        return f"{self.name} говорит: {self.sound}"
+
+    # Строковое представление
+    def __str__(self):
+        return f"Animal({self.name})"
+
+# Создание объектов
+cat = Animal("Кот", "Мяу")
+dog = Animal("Пёс", "Гав")
+
+print(cat.speak())  # Кот говорит: Мяу
+print(dog.name)     # Пёс</code></pre>
+    </div>
+    <div>
+<pre><code class="language-python"># Наследование
+class Dog(Animal):
+    def __init__(self, name, breed):
+        super().__init__(name, "Гав")
+        self.breed = breed
+
+    def fetch(self):
+        return f"{self.name} приносит мяч!"
+
+    # Переопределение метода
+    def speak(self):
+        return f"{self.name} лает громко!"
+
+rex = Dog("Рекс", "Лабрадор")
+print(rex.speak())   # Рекс лает громко!
+print(rex.fetch())   # Рекс приносит мяч!
+print(rex.kingdom)   # Животные (унаследован)</code></pre>
+      <div class="highlight-box green">
+        <strong>3 столпа ООП:</strong><br>
+        ✅ <strong>Инкапсуляция</strong> — данные внутри класса<br>
+        ✅ <strong>Наследование</strong> — класс-потомок расширяет родителя<br>
+        ✅ <strong>Полиморфизм</strong> — разные классы, один интерфейс
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 — Стандартные библиотеки -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Теория — Стандартные библиотеки</div>
+  <h2>Важные библиотеки для алгоритмов</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">collections</h3>
+<pre><code class="language-python">from collections import (
+    Counter, defaultdict, deque
+)
+
+# Counter — подсчёт элементов
+c = Counter("abracadabra")
+c.most_common(2)  # [('a',5),('b',2)]
+
+# defaultdict — словарь с дефолтом
+d = defaultdict(list)
+d["key"].append(1)  # не нужно проверять
+
+# deque — двусторонняя очередь O(1)
+q = deque([1, 2, 3])
+q.appendleft(0)   # [0,1,2,3]
+q.popleft()       # → 0</code></pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">math</h3>
+<pre><code class="language-python">import math
+
+math.inf        # бесконечность
+math.gcd(12,8)  # 4 (НОД)
+math.lcm(4,6)   # 12 (НОК)
+math.log2(8)    # 3.0
+math.factorial(5) # 120</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">heapq — куча (мин-heap)</h3>
+<pre><code class="language-python">import heapq
+
+nums = [3, 1, 4, 1, 5, 9, 2]
+
+heapq.heapify(nums)       # O(n)
+heapq.heappush(nums, 0)   # добавить
+heapq.heappop(nums)       # → 0 (минимум) O(log n)
+heapq.nlargest(3, nums)   # [9, 5, 4]
+heapq.nsmallest(3, nums)  # [1, 1, 2]</code></pre>
+        <div class="highlight-box orange">
+          ⚠️ Python реализует только <strong>min-heap</strong>. Для max-heap — добавляй элементы со знаком минус: <code class="inline">heappush(h, -x)</code>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">itertools</h3>
+<pre><code class="language-python">from itertools import (
+    permutations, combinations, accumulate
+)
+
+list(permutations([1,2,3]))  # все перестановки
+list(combinations([1,2,3],2))# все пары
+list(accumulate([1,2,3,4]))  # [1,3,6,10]</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 — Квиз -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Проверь себя</div>
+  <h2>🗣️ Квиз — ответь быстро!</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">1. Что вернёт <code class="inline">17 // 5</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">3.4</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">3</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">2</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">2. Что такое list comprehension <code class="inline">[x*2 for x in range(3)]</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">[1, 2, 3]</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">[0, 2, 4]</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">[2, 4, 6]</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">3. Какая сложность поиска в <code class="inline">set</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(log n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">O(1)</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">4. Что делает <code class="inline">sorted(lst)</code> в отличие от <code class="inline">lst.sort()</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">Сортирует быстрее</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Возвращает новый список, не меняя исходный</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Сортирует по убыванию</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">5. Что выведет <code class="inline">bool([])</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,true)">False</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">True</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">None</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">6. Как получить минимальный элемент из кучи <code class="inline">heapq</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">h[0] через heapmin()</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">heapq.heappop(h)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">min(h)</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 — Итог -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Итог</div>
+  <h2>Что запомнить</h2>
+  <div class="three-col" style="align-items:start">
+    <div class="card">
+      <h3 style="margin-top:0">📦 Типы данных</h3>
+      <ul style="font-size:0.85rem">
+        <li><strong>int, float, bool</strong> — числа</li>
+        <li><strong>str</strong> — неизменяемая строка</li>
+        <li><strong>list</strong> — изменяемый, O(n) поиск</li>
+        <li><strong>tuple</strong> — неизменяемый список</li>
+        <li><strong>dict, set</strong> — хэш, O(1) поиск</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🔄 Циклы и функции</h3>
+      <ul style="font-size:0.85rem">
+        <li><strong>range(n)</strong> — 0..n-1</li>
+        <li><strong>enumerate</strong> — индекс + значение</li>
+        <li><strong>zip</strong> — два списка вместе</li>
+        <li><strong>list comprehension</strong> — краткая запись</li>
+        <li><strong>lambda</strong> — анонимная функция</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">📚 Библиотеки</h3>
+      <ul style="font-size:0.85rem">
+        <li><strong>math</strong> — gcd, sqrt, inf, log</li>
+        <li><strong>collections</strong> — Counter, defaultdict, deque</li>
+        <li><strong>heapq</strong> — мин-куча за O(log n)</li>
+        <li><strong>itertools</strong> — permutations, accumulate</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box blue" style="margin-top:12px">
+    🎯 <strong>На экзамене:</strong> умей быстро писать функции, работать со списками через comprehension и использовать <code class="inline">collections.Counter</code> для подсчёта частот — это нужно почти везде!
+  </div>
+</div>
+
+<!-- 11 — Домашнее задание -->
+<div class="slide" id="s11">
+  <div class="slide-tag">Домашнее задание</div>
+  <h2>🏠 Задачи для самостоятельной практики</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <p style="font-size:0.88rem;color:#3fb950;font-weight:600;margin-bottom:8px">🟢 Лёгкие — начни с них</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">Easy</span>
+        <div><a href="https://leetcode.com/problems/two-sum/" target="_blank">Two Sum (#1)</a>
+        <div class="hw-desc">Найти два числа дающих заданную сумму. Используй dict для O(n).</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">Easy</span>
+        <div><a href="https://leetcode.com/problems/fizz-buzz/" target="_blank">FizzBuzz (#412)</a>
+        <div class="hw-desc">Классика: циклы, условия, % операция.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">Easy</span>
+        <div><a href="https://leetcode.com/problems/palindrome-number/" target="_blank">Palindrome Number (#9)</a>
+        <div class="hw-desc">Проверить число на палиндром. Строки и срезы.</div></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:0.88rem;color:#d29922;font-weight:600;margin-bottom:8px">🟡 Следующий уровень</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">Medium</span>
+        <div><a href="https://leetcode.com/problems/group-anagrams/" target="_blank">Group Anagrams (#49)</a>
+        <div class="hw-desc">Группировка строк-анаграмм. defaultdict + сортировка строки.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">Medium</span>
+        <div><a href="https://leetcode.com/problems/top-k-frequent-elements/" target="_blank">Top K Frequent Elements (#347)</a>
+        <div class="hw-desc">Counter.most_common(k) или heapq.nlargest.</div></div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:14px">
+        💡 Порядок: #412 → #9 → #1 → #49 → #347
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slide-area -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 11</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+<script>
+  hljs.highlightAll();
+  let cur = 1, total = 11;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s'+prev).classList.remove('active');
+    document.getElementById('s'+cur).classList.add('active');
+    document.getElementById('counter').textContent = cur+' / '+total;
+    document.getElementById('prevBtn').disabled = cur===1;
+    document.getElementById('nextBtn').disabled = cur===total;
+    document.getElementById('progress').style.width = (cur/total*100)+'%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key===' ') navigate(1);
+    if (e.key==='ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = (1/total*100)+'%';
+
+  function checkQ(el, correct) {
+    const opts = el.parentElement.querySelectorAll('.quiz-opt');
+    opts.forEach(o => o.style.pointerEvents = 'none');
+    el.classList.add(correct ? 'correct' : 'wrong');
+    const res = el.closest('.quiz-card').querySelector('.quiz-result');
+    res.style.display = 'block';
+    res.style.color = correct ? '#3fb950' : '#f78166';
+    if (!res.textContent.trim()) res.textContent = correct ? '✅ Верно!' : '❌ Неверно — попробуй ещё раз.';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,1022 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Двоичный поиск — Binary Search</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #58a6ff, #3fb950); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 44px 64px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #58a6ff; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.85rem; font-weight: 700; color: #f0f6fc; margin-bottom: 18px; }
+  h3 { font-size: 1.1rem; font-weight: 600; color: #58a6ff; margin-bottom: 10px; margin-top: 18px; }
+  p { line-height: 1.8; margin-bottom: 12px; color: #c9d1d9; }
+  strong { color: #f0f6fc; }
+  em { color: #ffa657; font-style: normal; }
+  .subtitle { font-size: 1.15rem; color: #8b949e; margin-bottom: 32px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 18px 22px; margin-bottom: 14px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #58a6ff; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 14px 0; }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.yellow { border-left-color: #d29922; }
+  .highlight-box.red { border-left-color: #f78166; }
+  .highlight-box.orange { border-left-color: #ffa657; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.9em; color: #79c0ff; }
+  pre { margin: 12px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.87rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.9rem; }
+  .trace-table th { background: #1c2128; color: #58a6ff; padding: 8px 14px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 7px 14px; text-align: center; border: 1px solid #21262d; color: #c9d1d9; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .trace-table tr.found td { background: #1c3a1c; color: #3fb950; }
+  .trace-table tr.eliminated td { background: #3a1c1c; color: #8b949e; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 14px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 8px 22px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #58a6ff; color: #58a6ff; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 24px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; color: #8b949e; }
+
+  /* Array visualization */
+  .arr-vis { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin: 14px 0; }
+  .arr-cell { min-width: 40px; height: 40px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; font-size: 1rem; font-weight: 700; border: 1px solid #30363d; background: #1c2128; color: #c9d1d9; position: relative; }
+  .arr-cell .idx { font-size: 0.6rem; color: #8b949e; font-weight: 400; position: absolute; bottom: -18px; }
+  .arr-cell.active { background: #1c2a3a; border-color: #58a6ff; color: #58a6ff; }
+  .arr-cell.mid { background: #2a1c3a; border-color: #ffa657; color: #ffa657; }
+  .arr-cell.found { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .arr-cell.elim { background: #21262d; border-color: #21262d; color: #444; }
+  .arr-label { font-size: 0.8rem; color: #8b949e; text-align: center; margin-top: 22px; font-family: monospace; }
+
+  /* Step cards */
+  .step-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start; }
+  .step-num { min-width: 28px; height: 28px; border-radius: 50%; background: #1c2a3a; border: 1px solid #58a6ff; color: #58a6ff; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-body { flex: 1; }
+  .step-body p { margin: 0; font-size: 0.95rem; }
+
+  /* Complexity badge */
+  .complexity-row { display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+  .complex-badge { background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 10px 18px; font-family: monospace; }
+  .complex-badge .label { font-size: 0.75rem; color: #8b949e; margin-bottom: 4px; }
+  .complex-badge .value { font-size: 1.1rem; color: #ffa657; font-weight: 700; }
+
+  /* Call stack frames */
+  .call-stack { display: flex; flex-direction: column; gap: 6px; }
+  .stack-frame { padding: 10px 16px; border-radius: 6px; font-family: monospace; font-size: 0.88rem; border: 1px solid #30363d; position: relative; }
+  .stack-frame::before { content: attr(data-label); position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.7rem; color: #8b949e; }
+  .sf-blue { background: #1c2a3a; border-color: #58a6ff; color: #79c0ff; }
+  .sf-green { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .sf-orange { background: #3a2a1c; border-color: #ffa657; color: #ffa657; }
+  .sf-muted { background: #21262d; border-color: #30363d; color: #8b949e; }
+
+  /* Mountain visual */
+  .mountain-vis { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 16px 0; }
+  .mountain-bars { display: flex; gap: 3px; align-items: flex-end; height: 120px; }
+  .m-bar { width: 36px; border-radius: 4px 4px 0 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; font-size: 0.7rem; font-weight: 700; font-family: monospace; transition: all 0.3s; }
+  .m-bar.normal { background: #1c2a3a; border: 1px solid #58a6ff; color: #58a6ff; }
+  .m-bar.peak { background: #2a1c3a; border: 2px solid #ffa657; color: #ffa657; }
+  .m-bar.left-half { background: #1c3a1c; border: 1px solid #3fb950; color: #3fb950; }
+  .m-bar.right-half { background: #3a1c1c; border: 1px solid #f78166; color: #f78166; }
+  .m-bar.elim { background: #21262d; border: 1px solid #21262d; color: #444; }
+  .m-indices { display: flex; gap: 3px; }
+  .m-idx { width: 36px; text-align: center; font-size: 0.65rem; color: #8b949e; font-family: monospace; }
+
+  /* LeetCode badge */
+  .lc-badge { display: inline-flex; align-items: center; gap: 8px; background: #1c2128; border: 1px solid #30363d; border-radius: 20px; padding: 5px 14px; font-size: 0.82rem; color: #8b949e; margin-bottom: 14px; }
+  .lc-easy { color: #3fb950; border-color: #3fb950; }
+  .lc-medium { color: #d29922; border-color: #d29922; }
+
+  ul { padding-left: 20px; margin-bottom: 12px; }
+  li { line-height: 1.8; color: #c9d1d9; margin-bottom: 4px; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 1 — Титульный
+════════════════════════════════════════════════════ -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">🔍</div>
+  <div class="slide-tag">Тема 5</div>
+  <h1>Двоичный поиск</h1>
+  <p class="subtitle">Как искать в миллионе элементов за 20 шагов<br>и почему это работает</p>
+  <div class="topic-chips">
+    <span class="chip">Binary Search</span>
+    <span class="chip">O(log n)</span>
+    <span class="chip">Поиск пика</span>
+    <span class="chip">LeetCode #704</span>
+    <span class="chip">LeetCode #852</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 2 — Простой поиск vs двоичный поиск
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Мотивация</div>
+  <h2>Зачем нужен двоичный поиск?</h2>
+  <p>Представь, что нужно угадать число от 1 до 100. Какую стратегию выбрать?</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0; color:#f78166">❌ Простой поиск (Linear)</h3>
+        <p style="font-size:0.95rem">Проверяем числа по порядку: 1, 2, 3, 4...</p>
+        <div class="highlight-box red">
+          <strong>Худший случай:</strong> 100 попыток для 100 чисел<br>
+          <strong>Для 1 000 000:</strong> до 1 000 000 попыток 😱
+        </div>
+        <p style="font-size:0.9rem; color: #8b949e">Это O(n) — линейное время.</p>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0; color:#3fb950">✅ Двоичный поиск (Binary)</h3>
+        <p style="font-size:0.95rem">Всегда называем <em>середину</em> и отбрасываем половину!</p>
+        <div class="highlight-box green">
+          <strong>Худший случай:</strong> 7 попыток для 100 чисел<br>
+          <strong>Для 1 000 000:</strong> всего 20 попыток 🚀
+        </div>
+        <p style="font-size:0.9rem; color: #8b949e">Это O(log n) — логарифмическое время.</p>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box orange">
+    ⚠️ <strong>Важно:</strong> двоичный поиск работает только на <strong>отсортированных</strong> данных!
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 3 — Пример из книги: угадай число
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Теория — из книги «Грокаем алгоритмы»</div>
+  <h2>Как работает двоичный поиск</h2>
+  <p>Ищем число <em>37</em> в отсортированном массиве от 1 до 100. На каждом шаге называем середину.</p>
+
+  <div class="step-card">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <p><strong>Диапазон: [1, 100].</strong> Середина = 50. Получаем ответ: «меньше». Исключаем числа 50–100.</p>
+    </div>
+  </div>
+  <div class="step-card">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <p><strong>Диапазон: [1, 49].</strong> Середина = 25. Получаем ответ: «больше». Исключаем числа 1–25.</p>
+    </div>
+  </div>
+  <div class="step-card">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <p><strong>Диапазон: [26, 49].</strong> Середина = 37. Получаем ответ: «угадал!» 🎉</p>
+    </div>
+  </div>
+
+  <div class="highlight-box green" style="margin-top: 8px">
+    <strong>Ключевая идея:</strong> каждый шаг вдвое уменьшает область поиска. Начали со 100 чисел — уже на 3-м шаге нашли! При линейном поиске понадобилось бы 37 шагов.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 4 — Визуализация массива
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Визуализация</div>
+  <h2>Пошагово на массиве</h2>
+  <p>Ищем значение <em>7</em> в массиве <code class="inline">[1, 3, 5, 7, 9, 11, 13]</code></p>
+
+  <div class="card">
+    <h3 style="margin-top:0">Шаг 1: left=0, right=6, mid=3 → nums[3]=7 == 7 → найдено! 🎉</h3>
+    <div class="arr-vis" style="margin-bottom: 28px">
+      <div class="arr-cell active"><span>1</span><span class="idx">0</span></div>
+      <div class="arr-cell active"><span>3</span><span class="idx">1</span></div>
+      <div class="arr-cell active"><span>5</span><span class="idx">2</span></div>
+      <div class="arr-cell found"><span>7</span><span class="idx">3 ← mid</span></div>
+      <div class="arr-cell active"><span>9</span><span class="idx">4</span></div>
+      <div class="arr-cell active"><span>11</span><span class="idx">5</span></div>
+      <div class="arr-cell active"><span>13</span><span class="idx">6</span></div>
+    </div>
+  </div>
+
+  <p style="margin-top: 8px">Ищем значение <em>11</em> в том же массиве</p>
+  <div class="card">
+    <h3 style="margin-top:0">Шаг 1: left=0, right=6, mid=3 → nums[3]=7 &lt; 11 → ищем правее</h3>
+    <div class="arr-vis" style="margin-bottom: 28px">
+      <div class="arr-cell elim"><span>1</span><span class="idx">0</span></div>
+      <div class="arr-cell elim"><span>3</span><span class="idx">1</span></div>
+      <div class="arr-cell elim"><span>5</span><span class="idx">2</span></div>
+      <div class="arr-cell mid"><span>7</span><span class="idx">3 ← mid</span></div>
+      <div class="arr-cell active"><span>9</span><span class="idx">4</span></div>
+      <div class="arr-cell active"><span>11</span><span class="idx">5</span></div>
+      <div class="arr-cell active"><span>13</span><span class="idx">6</span></div>
+    </div>
+    <h3>Шаг 2: left=4, right=6, mid=5 → nums[5]=11 == 11 → найдено! 🎉</h3>
+    <div class="arr-vis" style="margin-bottom: 28px">
+      <div class="arr-cell elim"><span>1</span><span class="idx">0</span></div>
+      <div class="arr-cell elim"><span>3</span><span class="idx">1</span></div>
+      <div class="arr-cell elim"><span>5</span><span class="idx">2</span></div>
+      <div class="arr-cell elim"><span>7</span><span class="idx">3</span></div>
+      <div class="arr-cell active"><span>9</span><span class="idx">4</span></div>
+      <div class="arr-cell found"><span>11</span><span class="idx">5 ← mid</span></div>
+      <div class="arr-cell active"><span>13</span><span class="idx">6</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 5 — Алгоритм и шаблон
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Алгоритм</div>
+  <h2>Шаблон двоичного поиска</h2>
+  <div class="two-col">
+    <div>
+      <p>Три обязательных переменных:</p>
+      <div class="step-card">
+        <div class="step-num" style="background:#1c3a1c; border-color:#3fb950; color:#3fb950">L</div>
+        <div class="step-body"><p><code class="inline">left = 0</code> — левая граница поиска</p></div>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background:#3a1c1c; border-color:#f78166; color:#f78166">R</div>
+        <div class="step-body"><p><code class="inline">right = len(nums) - 1</code> — правая граница</p></div>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background:#2a1c3a; border-color:#ffa657; color:#ffa657">M</div>
+        <div class="step-body"><p><code class="inline">mid = (left + right) // 2</code> — середина</p></div>
+      </div>
+      <div class="highlight-box" style="margin-top:12px">
+        <strong>Цикл продолжается</strong> пока <code class="inline">left &lt;= right</code><br>
+        На каждом шаге сдвигаем либо left, либо right.
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def binary_search(nums, target):
+    left = 0
+    right = len(nums) - 1
+
+    while left <= right:
+        mid = (left + right) // 2
+
+        if nums[mid] == target:
+            return mid          # нашли!
+        elif nums[mid] < target:
+            left = mid + 1      # ищем правее
+        else:
+            right = mid - 1     # ищем левее
+
+    return -1   # не нашли</code></pre>
+      <div class="complexity-row">
+        <div class="complex-badge">
+          <div class="label">Время</div>
+          <div class="value">O(log n)</div>
+        </div>
+        <div class="complex-badge">
+          <div class="label">Память</div>
+          <div class="value">O(1)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 6 — Трассировка
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Трассировка</div>
+  <h2>Трассировка: ищем 13 в массиве</h2>
+  <p>Массив: <code class="inline">[2, 5, 8, 13, 17, 21, 30]</code>&nbsp;&nbsp;Цель: <em>13</em></p>
+
+  <div class="card" style="overflow-x: auto">
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Шаг</th>
+          <th>left</th>
+          <th>right</th>
+          <th>mid</th>
+          <th>nums[mid]</th>
+          <th>Действие</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>0</td><td>6</td><td>3</td><td>13</td>
+          <td style="color:#3fb950">== target → вернуть 3 ✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:16px">Массив: <code class="inline">[2, 5, 8, 13, 17, 21, 30]</code>&nbsp;&nbsp;Цель: <em>21</em></p>
+  <div class="card" style="overflow-x: auto">
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Шаг</th>
+          <th>left</th>
+          <th>right</th>
+          <th>mid</th>
+          <th>nums[mid]</th>
+          <th>Действие</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>0</td><td>6</td><td>3</td><td>13</td>
+          <td style="color:#ffa657">13 &lt; 21 → left = 4</td>
+        </tr>
+        <tr>
+          <td>2</td><td>4</td><td>6</td><td>5</td><td>21</td>
+          <td style="color:#3fb950">== target → вернуть 5 ✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:16px">Массив: <code class="inline">[2, 5, 8, 13, 17, 21, 30]</code>&nbsp;&nbsp;Цель: <em>10</em></p>
+  <div class="card" style="overflow-x: auto">
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Шаг</th>
+          <th>left</th>
+          <th>right</th>
+          <th>mid</th>
+          <th>nums[mid]</th>
+          <th>Действие</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>0</td><td>6</td><td>3</td><td>13</td>
+          <td style="color:#f78166">13 &gt; 10 → right = 2</td>
+        </tr>
+        <tr>
+          <td>2</td><td>0</td><td>2</td><td>1</td><td>5</td>
+          <td style="color:#ffa657">5 &lt; 10 → left = 2</td>
+        </tr>
+        <tr>
+          <td>3</td><td>2</td><td>2</td><td>2</td><td>8</td>
+          <td style="color:#f78166">8 &gt; 10 → right = 1</td>
+        </tr>
+        <tr>
+          <td>4</td><td>2</td><td>1</td><td>—</td><td>—</td>
+          <td style="color:#8b949e">left &gt; right → вернуть -1 (не найдено)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 7 — O(log n) объяснение
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Сложность</div>
+  <h2>Почему O(log n)?</h2>
+  <p>На каждом шаге двоичный поиск <strong>вдвое уменьшает</strong> количество оставшихся элементов. Это и есть логарифм с основанием 2.</p>
+
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Сравнение количества шагов</h3>
+        <table class="trace-table">
+          <thead>
+            <tr><th>Размер n</th><th>Линейный O(n)</th><th>Двоичный O(log n)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>8</td><td>8</td><td style="color:#3fb950">3</td></tr>
+            <tr><td>100</td><td>100</td><td style="color:#3fb950">7</td></tr>
+            <tr><td>1 000</td><td>1 000</td><td style="color:#3fb950">10</td></tr>
+            <tr><td>1 000 000</td><td>1 000 000</td><td style="color:#3fb950">20</td></tr>
+            <tr><td>1 000 000 000</td><td>1 млрд</td><td style="color:#3fb950">30</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="highlight-box">
+        <strong>log₂(n)</strong> — это количество раз, которое нужно поделить n на 2, чтобы получить 1.
+      </div>
+      <div class="call-stack" style="margin-top:14px">
+        <div class="stack-frame sf-blue" data-label="1 шаг">n = 1 000 000 → делим пополам</div>
+        <div class="stack-frame sf-blue" data-label="2 шага">n = 500 000 → делим пополам</div>
+        <div class="stack-frame sf-blue" data-label="...">...</div>
+        <div class="stack-frame sf-blue" data-label="20 шагов">n = 1 → нашли!</div>
+        <div class="stack-frame sf-green" data-label="итог">log₂(1 000 000) ≈ 20 ✓</div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:12px">
+        📖 Из книги «Грокаем алгоритмы»: «Простой поиск — последовательный, он проверяет каждый элемент по очереди. Бинарный поиск, используя лишь информацию о том, что массив отсортирован, устраняет половину вариантов на каждом шаге.»
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 8 — LeetCode #704
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Задача</div>
+  <span class="lc-badge lc-easy">🟢 LeetCode #704 · Easy</span>
+  <h2>Binary Search</h2>
+
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.95rem">Дан массив целых чисел <code class="inline">nums</code>, отсортированный по возрастанию, и целое число <code class="inline">target</code>.</p>
+        <p style="font-size:0.95rem">Напиши функцию для поиска <code class="inline">target</code> в <code class="inline">nums</code>. Если <code class="inline">target</code> существует, верни его индекс. Иначе верни <code class="inline">-1</code>.</p>
+        <div class="highlight-box">
+          <strong>Пример 1:</strong><br>
+          <code class="inline">nums = [-1, 0, 3, 5, 9, 12], target = 9</code><br>
+          <strong>Ответ:</strong> 4
+        </div>
+        <div class="highlight-box">
+          <strong>Пример 2:</strong><br>
+          <code class="inline">nums = [-1, 0, 3, 5, 9, 12], target = 2</code><br>
+          <strong>Ответ:</strong> -1
+        </div>
+        <div class="highlight-box orange">
+          <strong>Ограничения:</strong> 1 <= n <= 10⁴, все элементы уникальны
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Решение</h3>
+<pre><code class="language-python">class Solution:
+    def search(
+        self, nums: list[int], target: int
+    ) -> int:
+        left = 0
+        right = len(nums) - 1
+
+        while left <= right:
+            mid = (left + right) // 2
+
+            if nums[mid] == target:
+                return mid
+            elif nums[mid] < target:
+                left = mid + 1
+            else:
+                right = mid - 1
+
+        return -1</code></pre>
+        <div class="complexity-row">
+          <div class="complex-badge">
+            <div class="label">Время</div>
+            <div class="value">O(log n)</div>
+          </div>
+          <div class="complex-badge">
+            <div class="label">Память</div>
+            <div class="value">O(1)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 9 — #704 Трассировка
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Задача #704 — разбор</div>
+  <h2>Трассируем: nums=[-1,0,3,5,9,12], target=9</h2>
+
+  <div class="arr-vis" style="margin-bottom: 28px; margin-top: 8px">
+    <div class="arr-cell"><span>-1</span><span class="idx">0</span></div>
+    <div class="arr-cell"><span>0</span><span class="idx">1</span></div>
+    <div class="arr-cell"><span>3</span><span class="idx">2</span></div>
+    <div class="arr-cell"><span>5</span><span class="idx">3</span></div>
+    <div class="arr-cell"><span>9</span><span class="idx">4</span></div>
+    <div class="arr-cell"><span>12</span><span class="idx">5</span></div>
+  </div>
+
+  <div class="card" style="overflow-x: auto">
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Шаг</th>
+          <th>left</th>
+          <th>right</th>
+          <th>mid</th>
+          <th>nums[mid]</th>
+          <th>Сравнение</th>
+          <th>Действие</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>0</td><td>5</td><td>2</td><td>3</td>
+          <td>3 &lt; 9</td>
+          <td style="color:#ffa657">left = 3</td>
+        </tr>
+        <tr>
+          <td>2</td><td>3</td><td>5</td><td>4</td><td>9</td>
+          <td>9 == 9</td>
+          <td style="color:#3fb950">return 4 ✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="arr-vis" style="margin-bottom: 28px; margin-top: 18px">
+    <div class="arr-cell elim"><span>-1</span><span class="idx">0</span></div>
+    <div class="arr-cell elim"><span>0</span><span class="idx">1</span></div>
+    <div class="arr-cell mid"><span>3</span><span class="idx">2←mid1</span></div>
+    <div class="arr-cell active"><span>5</span><span class="idx">3</span></div>
+    <div class="arr-cell found"><span>9</span><span class="idx">4←mid2</span></div>
+    <div class="arr-cell active"><span>12</span><span class="idx">5</span></div>
+  </div>
+
+  <div class="highlight-box green">
+    ✅ Ответ: индекс <strong>4</strong>. Нашли за <strong>2 шага</strong> из возможных 6 при линейном поиске.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 10 — Поиск пика (теория)
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Поиск пика</div>
+  <h2>Как найти вершину горы?</h2>
+  <p>Иногда мы ищем не конкретное значение, а <em>пик</em> — элемент, который больше своих соседей. Двоичный поиск работает и здесь!</p>
+
+  <div class="two-col">
+    <div>
+      <p><strong>Ключевое наблюдение:</strong></p>
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Берём середину <code class="inline">mid</code> и смотрим на соседа справа.</p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Если <code class="inline">nums[mid] &lt; nums[mid+1]</code> — мы находимся на <strong>подъёме</strong>, пик правее → сдвигаем <code class="inline">left</code></p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Иначе — мы на <strong>спуске или на пике</strong> → пик либо здесь, либо левее → сдвигаем <code class="inline">right</code></p>
+        </div>
+      </div>
+      <div class="highlight-box green">
+        Это работает, потому что в «горном» массиве <strong>всегда есть ровно один пик</strong>, и каждое сравнение говорит нам, в какую сторону он находится.
+      </div>
+    </div>
+    <div>
+      <div class="mountain-vis">
+        <div class="mountain-bars">
+          <div class="m-bar left-half" style="height:30%">1</div>
+          <div class="m-bar left-half" style="height:50%">3</div>
+          <div class="m-bar left-half" style="height:70%">5</div>
+          <div class="m-bar peak" style="height:100%">7</div>
+          <div class="m-bar right-half" style="height:60%">4</div>
+          <div class="m-bar right-half" style="height:30%">2</div>
+          <div class="m-bar right-half" style="height:10%">0</div>
+        </div>
+        <div class="m-indices">
+          <div class="m-idx">0</div>
+          <div class="m-idx">1</div>
+          <div class="m-idx">2</div>
+          <div class="m-idx">3 🏔</div>
+          <div class="m-idx">4</div>
+          <div class="m-idx">5</div>
+          <div class="m-idx">6</div>
+        </div>
+        <div class="arr-label">[1, 3, 5, 7, 4, 2, 0] — пик на индексе 3</div>
+      </div>
+      <div class="highlight-box" style="margin-top:12px">
+        <strong>Связь с задачей «Горы»:</strong> задача B. Горы из Варианта 1 — ровно эта идея! Там массив гарантированно «горный», и нужно найти основную гору.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 11 — LeetCode #852
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s11">
+  <div class="slide-tag">Задача</div>
+  <span class="lc-badge lc-easy">🟢 LeetCode #852 · Easy</span>
+  <h2>Peak Index in a Mountain Array</h2>
+
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие (на русском)</h3>
+        <p style="font-size:0.95rem">Назовём массив <em>«горным»</em>, если выполняются условия:</p>
+        <ul style="font-size:0.95rem; margin-bottom: 12px;">
+          <li>длина массива >= 3</li>
+          <li>существует такой индекс <code class="inline">i</code>, что: <code class="inline">arr[0] &lt; arr[1] &lt; ... &lt; arr[i] &gt; arr[i+1] &gt; ... &gt; arr[arr.length-1]</code></li>
+        </ul>
+        <p style="font-size:0.95rem">Дан гарантированно горный массив <code class="inline">arr</code>. Верни индекс <code class="inline">i</code> такой, что <code class="inline">arr[i]</code> — наибольший элемент массива.</p>
+        <div class="highlight-box">
+          <strong>Пример 1:</strong> <code class="inline">arr = [0, 1, 0]</code> → <strong>1</strong>
+        </div>
+        <div class="highlight-box">
+          <strong>Пример 2:</strong> <code class="inline">arr = [0, 2, 1, 0]</code> → <strong>1</strong>
+        </div>
+        <div class="highlight-box">
+          <strong>Пример 3:</strong> <code class="inline">arr = [0, 10, 5, 2]</code> → <strong>1</strong>
+        </div>
+        <div class="highlight-box orange">
+          <strong>Ограничения:</strong> 3 <= n <= 10⁵, все элементы уникальны
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Решение</h3>
+<pre><code class="language-python">class Solution:
+    def peakIndexInMountainArray(
+        self, arr: list[int]
+    ) -> int:
+        left = 0
+        right = len(arr) - 1
+
+        while left < right:
+            mid = (left + right) // 2
+
+            if arr[mid] < arr[mid + 1]:
+                # мы на подъёме → пик правее
+                left = mid + 1
+            else:
+                # мы на спуске или на пике
+                right = mid
+
+        # left == right == индекс пика
+        return left</code></pre>
+        <div class="complexity-row">
+          <div class="complex-badge">
+            <div class="label">Время</div>
+            <div class="value">O(log n)</div>
+          </div>
+          <div class="complex-badge">
+            <div class="label">Память</div>
+            <div class="value">O(1)</div>
+          </div>
+        </div>
+        <div class="highlight-box green" style="margin-top: 4px">
+          ⚠️ Цикл: <code class="inline">left &lt; right</code> (не <=), потому что мы не ищем конкретный target — мы сужаемся к точке.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 12 — #852 Трассировка
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s12">
+  <div class="slide-tag">Задача #852 — разбор</div>
+  <h2>Трассируем: arr = [1, 3, 8, 12, 7, 4, 2]</h2>
+
+  <div class="mountain-vis" style="margin-bottom: 8px">
+    <div class="mountain-bars">
+      <div class="m-bar normal" style="height:8%">1</div>
+      <div class="m-bar normal" style="height:25%">3</div>
+      <div class="m-bar normal" style="height:65%">8</div>
+      <div class="m-bar peak" style="height:100%">12</div>
+      <div class="m-bar normal" style="height:57%">7</div>
+      <div class="m-bar normal" style="height:32%">4</div>
+      <div class="m-bar normal" style="height:16%">2</div>
+    </div>
+    <div class="m-indices">
+      <div class="m-idx">0</div>
+      <div class="m-idx">1</div>
+      <div class="m-idx">2</div>
+      <div class="m-idx">3</div>
+      <div class="m-idx">4</div>
+      <div class="m-idx">5</div>
+      <div class="m-idx">6</div>
+    </div>
+  </div>
+
+  <div class="card" style="overflow-x: auto">
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Шаг</th>
+          <th>left</th>
+          <th>right</th>
+          <th>mid</th>
+          <th>arr[mid]</th>
+          <th>arr[mid+1]</th>
+          <th>Сравнение</th>
+          <th>Действие</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>0</td><td>6</td><td>3</td><td>12</td><td>7</td>
+          <td>12 &gt; 7 → спуск</td>
+          <td style="color:#f78166">right = 3</td>
+        </tr>
+        <tr>
+          <td>2</td><td>0</td><td>3</td><td>1</td><td>3</td><td>8</td>
+          <td>3 &lt; 8 → подъём</td>
+          <td style="color:#ffa657">left = 2</td>
+        </tr>
+        <tr>
+          <td>3</td><td>2</td><td>3</td><td>2</td><td>8</td><td>12</td>
+          <td>8 &lt; 12 → подъём</td>
+          <td style="color:#ffa657">left = 3</td>
+        </tr>
+        <tr class="found">
+          <td>—</td><td>3</td><td>3</td><td>—</td><td>—</td><td>—</td>
+          <td>left == right</td>
+          <td>return 3 ✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="highlight-box green" style="margin-top: 12px">
+    ✅ Ответ: индекс <strong>3</strong> (значение 12). Нашли за <strong>3 шага</strong> вместо 7 при линейном поиске.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 13 — Отличия двух задач
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s13">
+  <div class="slide-tag">Сравнение</div>
+  <h2>#704 vs #852 — в чём разница?</h2>
+
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">#704 — ищем конкретный target</h3>
+        <ul>
+          <li>Условие цикла: <code class="inline">left &lt;= right</code></li>
+          <li>На каждом шаге три ветки: ==, &lt;, &gt;</li>
+          <li>При == сразу возвращаем <code class="inline">mid</code></li>
+          <li>Если не нашли — возвращаем <code class="inline">-1</code></li>
+        </ul>
+<pre style="margin-top:10px"><code class="language-python">while left <= right:
+    mid = (left + right) // 2
+    if nums[mid] == target:
+        return mid
+    elif nums[mid] < target:
+        left = mid + 1
+    else:
+        right = mid - 1
+return -1</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">#852 — ищем пик (нет точного target)</h3>
+        <ul>
+          <li>Условие цикла: <code class="inline">left &lt; right</code></li>
+          <li>На каждом шаге две ветки: вверх / вниз</li>
+          <li>При условии подъёма: <code class="inline">left = mid + 1</code></li>
+          <li>При спуске: <code class="inline">right = mid</code> (не mid-1!)</li>
+          <li>Ответ — left после выхода из цикла</li>
+        </ul>
+<pre style="margin-top:10px"><code class="language-python">while left < right:
+    mid = (left + right) // 2
+    if arr[mid] < arr[mid + 1]:
+        left = mid + 1
+    else:
+        right = mid
+return left</code></pre>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box orange" style="margin-top: 4px">
+    ⚠️ Почему <code class="inline">right = mid</code>, а не <code class="inline">mid - 1</code>? Потому что сам <code class="inline">mid</code> может быть пиком! Мы не исключаем его, а сужаем до него.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 14 — Связь с задачей «Горы»
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s14">
+  <div class="slide-tag">Применение</div>
+  <h2>Связь с задачей «B. Горы» (Вариант 1)</h2>
+  <p>Задача «Горы» — это <em>в точности</em> #852. Нужно найти основную гору — элемент, после которого массив начинает убывать.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Горы — решение через бинарный поиск</h3>
+<pre><code class="language-python">n = int(input())
+h = list(map(int, input().split()))
+
+left = 1          # не 0: пик не может быть крайним
+right = n - 2     # не n-1: пик не может быть крайним
+
+while left < right:
+    mid = (left + right) // 2
+    if h[mid] < h[mid + 1]:
+        left = mid + 1    # идём вправо
+    else:
+        right = mid       # идём влево
+
+print(left + 1)   # +1 т.к. в задаче нумерация с 1</code></pre>
+        <div class="complexity-row">
+          <div class="complex-badge"><div class="label">Время</div><div class="value">O(log n)</div></div>
+          <div class="complex-badge"><div class="label">vs линейный</div><div class="value">O(n)</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Сравнение подходов</h3>
+        <table class="trace-table">
+          <thead>
+            <tr><th>Подход</th><th>n = 10 000</th><th>Корректность</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:#f78166">Линейный поиск</td>
+              <td style="color:#f78166">до 10 000 шагов</td>
+              <td style="color:#3fb950">✓</td>
+            </tr>
+            <tr class="found">
+              <td>Бинарный поиск</td>
+              <td>до 14 шагов</td>
+              <td>✓</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="highlight-box" style="margin-top: 12px">
+          <strong>Важно:</strong> для задачи «Горы» линейный поиск тоже проходит (n <= 10⁴), но задача специально помечена как «Двоичный поиск». Умение увидеть бинарный поиск здесь — это ключевой навык.
+        </div>
+      </div>
+      <div class="highlight-box green" style="margin-top: 10px">
+        💡 Если на экзамене видишь «отсортированный массив» или «горный массив» — сразу думай о двоичном поиске!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 15 — Итог
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s15">
+  <div class="slide-tag">Итог</div>
+  <h2>Что запомнить</h2>
+  <div class="three-col">
+    <div class="card">
+      <h3 style="margin-top:0">🔑 Шаблон</h3>
+      <ul style="font-size:0.9rem">
+        <li><code class="inline">left = 0</code></li>
+        <li><code class="inline">right = n - 1</code></li>
+        <li><code class="inline">mid = (left + right) // 2</code></li>
+        <li>Цикл: <code class="inline">while left &lt;= right</code></li>
+        <li>Три ветки: ==, &lt;, &gt;</li>
+        <li>Не нашли → <code class="inline">return -1</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🏔 Поиск пика</h3>
+      <ul style="font-size:0.9rem">
+        <li>Цикл: <code class="inline">while left &lt; right</code></li>
+        <li>Сравниваем <code class="inline">mid</code> и <code class="inline">mid+1</code></li>
+        <li>Подъём → <code class="inline">left = mid + 1</code></li>
+        <li>Спуск → <code class="inline">right = mid</code></li>
+        <li>Ответ: <code class="inline">return left</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">⚡ Сложность</h3>
+      <ul style="font-size:0.9rem">
+        <li>Время: <strong>O(log n)</strong></li>
+        <li>Память: <strong>O(1)</strong></li>
+        <li>Только для <strong>отсортированных</strong> данных</li>
+        <li>1 млн элементов → <strong>20 шагов</strong></li>
+      </ul>
+      <div class="highlight-box green" style="margin-top:10px; font-size:0.85rem">
+        LeetCode #704 ✅<br>
+        LeetCode #852 ✅<br>
+        B. Горы ✅
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box orange" style="margin-top: 16px">
+    🎯 <strong>Следующий шаг:</strong> LeetCode #35 (Search Insert Position) и #162 (Find Peak Element) — там немного сложнее, но та же идея.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     Слайд 16 — Домашнее задание
+════════════════════════════════════════════════════ -->
+<div class="slide" id="s16">
+  <div class="slide-tag">Домашнее задание</div>
+  <h2>🏠 Задачи для самостоятельной практики</h2>
+
+  <div class="two-col" style="align-items: start; gap: 24px;">
+    <div>
+      <h3 style="color: #3fb950; margin-top: 0">🟢 Лёгкие — начни с них</h3>
+
+      <div class="card" style="margin-bottom: 12px">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <span class="lc-badge lc-easy" style="margin: 0">#704 · Easy</span>
+          <a href="https://leetcode.com/problems/binary-search/" style="color: #58a6ff; font-weight: 600; font-size: 0.95rem; text-decoration: none;">Binary Search</a>
+        </div>
+        <p style="font-size: 0.9rem; margin: 0; color: #8b949e">Найти индекс числа в отсортированном массиве. Шаблон бинарного поиска в чистом виде — начни с этой задачи.</p>
+      </div>
+
+      <div class="card" style="margin-bottom: 12px">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <span class="lc-badge lc-easy" style="margin: 0">#35 · Easy</span>
+          <a href="https://leetcode.com/problems/search-insert-position/" style="color: #58a6ff; font-weight: 600; font-size: 0.95rem; text-decoration: none;">Search Insert Position</a>
+        </div>
+        <p style="font-size: 0.9rem; margin: 0; color: #8b949e">Найти позицию для вставки числа в отсортированный массив. Похоже на #704, но чуть интереснее — нет точного совпадения.</p>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <span class="lc-badge lc-easy" style="margin: 0">#278 · Easy</span>
+          <a href="https://leetcode.com/problems/first-bad-version/" style="color: #58a6ff; font-weight: 600; font-size: 0.95rem; text-decoration: none;">First Bad Version</a>
+        </div>
+        <p style="font-size: 0.9rem; margin: 0; color: #8b949e">Найти первую «сломанную версию» среди N версий. Классика бинарного поиска на предикате (true/false) — очень легко читается.</p>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="color: #d29922; margin-top: 0">🟡 Следующий уровень — поиск пика</h3>
+
+      <div class="card" style="margin-bottom: 12px">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <span class="lc-badge lc-easy" style="margin: 0">#852 · Easy</span>
+          <a href="https://leetcode.com/problems/peak-index-in-a-mountain-array/" style="color: #58a6ff; font-weight: 600; font-size: 0.95rem; text-decoration: none;">Peak Index in a Mountain Array</a>
+        </div>
+        <p style="font-size: 0.9rem; margin: 0; color: #8b949e">Найти вершину горного массива. Гарантированно битонический массив — один подъём и один спуск. Классическая задача «Горы».</p>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <span class="lc-badge lc-medium" style="margin: 0">#162 · Medium</span>
+          <a href="https://leetcode.com/problems/find-peak-element/" style="color: #58a6ff; font-weight: 600; font-size: 0.95rem; text-decoration: none;">Find Peak Element</a>
+        </div>
+        <p style="font-size: 0.9rem; margin: 0; color: #8b949e">Найти пик в произвольном массиве. Практически та же задача «Горы» на английском, но без гарантии единственного пика — чуть сложнее.</p>
+      </div>
+
+      <div class="highlight-box orange" style="margin-top: 14px">
+        💡 <strong>Рекомендуемый порядок:</strong><br>
+        #704 → #35 → #278 → #852 → #162<br><br>
+        После #852 вернись к задаче «B. Горы» и перепиши решение через бинарный поиск!
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slide-area -->
+
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 16</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+
+<script>
+  hljs.highlightAll();
+  let cur = 1;
+  const total = 16;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s' + prev).classList.remove('active');
+    document.getElementById('s' + cur).classList.add('active');
+    document.getElementById('counter').textContent = cur + ' / ' + total;
+    document.getElementById('prevBtn').disabled = cur === 1;
+    document.getElementById('nextBtn').disabled = cur === total;
+    document.getElementById('progress').style.width = ((cur / total) * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+    if (e.key === 'ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = ((1 / total) * 100) + '%';
+</script>
+</body>
+</html>

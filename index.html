@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Курс по алгоритмам</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #1c2128;
+      --border:    #30363d;
+      --border2:   #21262d;
+      --text:      #c9d1d9;
+      --text-dim:  #8b949e;
+      --head:      #f0f6fc;
+      --green:     #3fb950;
+      --blue:      #58a6ff;
+      --orange:    #ffa657;
+      --yellow:    #d29922;
+      --red:       #f78166;
+      --purple:    #bc8cff;
+      --teal:      #39d3c3;
+      --pink:      #f97583;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 72px 24px 64px;
+      text-align: center;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -20%, rgba(88,166,255,.14) 0%, transparent 70%),
+        var(--bg);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2330363d' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: .4;
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      color: var(--blue);
+      background: rgba(88,166,255,.1);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 700;
+      color: var(--head);
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+    .hero h1 span {
+      background: linear-gradient(90deg, var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      max-width: 560px;
+      margin: 0 auto 36px;
+    }
+
+    /* ── STATS BAR ── */
+    .stats {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px 24px;
+    }
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+    }
+    .stat-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .stat strong { color: var(--text); }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0 auto;
+      max-width: 1100px;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      max-width: 1100px;
+      margin: 48px auto 28px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .section-header h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--head);
+      letter-spacing: -0.01em;
+    }
+    .section-pill {
+      font-size: 0.72rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 10px;
+      color: var(--text-dim);
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border2);
+    }
+
+    /* ── GRID ── */
+    .grid {
+      max-width: 1100px;
+      margin: 0 auto 64px;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 18px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 22px 22px 18px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent, var(--blue));
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .card:hover {
+      border-color: var(--accent, var(--blue));
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+    .card:hover::before { opacity: 1; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .card-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent, var(--blue));
+      background: color-mix(in srgb, var(--accent, var(--blue)) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent, var(--blue)) 25%, transparent);
+      border-radius: 6px;
+      padding: 3px 9px;
+    }
+    .card-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--head);
+      line-height: 1.35;
+    }
+    .card-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+      flex: 1;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--border2);
+    }
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .tag {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .card-arrow {
+      font-size: 1rem;
+      color: var(--accent, var(--blue));
+      opacity: 0;
+      transform: translateX(-6px);
+      transition: opacity .2s, transform .2s;
+      flex-shrink: 0;
+    }
+    .card:hover .card-arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* ── BONUS CARDS ── */
+    .bonus-grid {
+      max-width: 1100px;
+      margin: 0 auto 80px;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .bonus-card {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color .2s, background .2s;
+    }
+    .bonus-card:hover {
+      border-color: var(--purple);
+      background: rgba(188,140,255,.05);
+    }
+    .bonus-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .bonus-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--head);
+    }
+    .bonus-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border2);
+      padding: 28px 24px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+    footer a { color: var(--blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .hero { padding: 48px 18px 40px; }
+      .grid, .bonus-grid { padding: 0 14px; gap: 12px; }
+      .grid { grid-template-columns: 1fr; }
+      .bonus-grid { grid-template-columns: 1fr; }
+      .section-header { padding: 0 14px; margin-top: 36px; }
+    }
+    @media (max-width: 400px) {
+      .hero h1 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+<header class="hero">
+  <div class="hero-badge">Алгоритмы и структуры данных</div>
+  <h1>Курс по <span>алгоритмам</span></h1>
+  <p class="hero-sub">
+    12 тем от целочисленного деления до сбалансированных деревьев.
+    Интерактивные слайды, трассировки и задачи с LeetCode.
+  </p>
+  <div class="stats">
+    <div class="stat"><span class="stat-dot" style="background:var(--green)"></span><strong>12</strong>&nbsp;тем</div>
+    <div class="stat"><span class="stat-dot" style="background:var(--blue)"></span><strong>Python</strong></div>
+    <div class="stat"><span class="stat-dot" style="background:var(--orange)"></span><strong>LeetCode</strong>&nbsp;задачи</div>
+    <div class="stat"><span class="stat-dot" style="background:var(--purple)"></span><strong>Мобильная</strong>&nbsp;версия</div>
+  </div>
+</header>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════ SECTION ═══════════════════════ -->
+<div class="section-header">
+  <h2>Темы курса</h2>
+  <span class="section-pill">12 лекций</span>
+  <div class="section-line"></div>
+</div>
+
+<!-- ═══════════════════════════ GRID ═══════════════════════════ -->
+<main class="grid">
+
+  <!-- 1 -->
+  <a class="card" href="Тема_01_Целочисленное_деление.html" style="--accent: var(--blue)">
+    <div class="card-top">
+      <span class="card-num">Тема 01</span>
+      <span class="card-icon">🔢</span>
+    </div>
+    <div class="card-title">Целочисленное деление и системы счисления</div>
+    <div class="card-desc">
+      Операторы <code style="font-size:.8em;background:#1c2128;padding:1px 5px;border-radius:4px">//</code> и
+      <code style="font-size:.8em;background:#1c2128;padding:1px 5px;border-radius:4px">%</code>,
+      переводы между системами исчисления, единицы измерения данных.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Math</span>
+        <span class="tag">Modulo</span>
+        <span class="tag">Основы</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 2 -->
+  <a class="card" href="Тема_02_Строки.html" style="--accent: var(--green)">
+    <div class="card-top">
+      <span class="card-num">Тема 02</span>
+      <span class="card-icon">📝</span>
+    </div>
+    <div class="card-title">Строки и операции над ними</div>
+    <div class="card-desc">
+      Срезы, методы строк, форматирование, работа с символами и подстроками. Паттерны задач на строки.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">String</span>
+        <span class="tag">Slice</span>
+        <span class="tag">Two Pointers</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 3 -->
+  <a class="card" href="Тема_03_Сортировка_и_поиск.html" style="--accent: var(--orange)">
+    <div class="card-top">
+      <span class="card-num">Тема 03</span>
+      <span class="card-icon">🔍</span>
+    </div>
+    <div class="card-title">Сортировка и линейный поиск</div>
+    <div class="card-desc">
+      Встроенные алгоритмы сортировки Python, ключи сортировки, линейный поиск по условию, сложность O(n log n).
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Sort</span>
+        <span class="tag">Search</span>
+        <span class="tag">O(n log n)</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 4 -->
+  <a class="card" href="Тема_04_Рекурсия_Divide_Conquer.html" style="--accent: var(--purple)">
+    <div class="card-top">
+      <span class="card-num">Тема 04</span>
+      <span class="card-icon">↩️</span>
+    </div>
+    <div class="card-title">Рекурсия и «Разделяй и властвуй»</div>
+    <div class="card-desc">
+      Базовый и рекурсивный случай, стек вызовов, сортировка слиянием, быстрая сортировка. Теорема Мастера.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Recursion</span>
+        <span class="tag">D&amp;C</span>
+        <span class="tag">MergeSort</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 5 -->
+  <a class="card" href="Тема_05_Двоичный_поиск.html" style="--accent: var(--teal)">
+    <div class="card-top">
+      <span class="card-num">Тема 05</span>
+      <span class="card-icon">🎯</span>
+    </div>
+    <div class="card-title">Двоичный поиск</div>
+    <div class="card-desc">
+      Классический бинарный поиск, поиск на монотонной функции, паттерн «горы» и ротированные массивы. O(log n).
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Binary Search</span>
+        <span class="tag">O(log n)</span>
+        <span class="tag">Monotonic</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 6 -->
+  <a class="card" href="Тема_06_Два_указателя.html" style="--accent: var(--green)">
+    <div class="card-top">
+      <span class="card-num">Тема 06</span>
+      <span class="card-icon">👆</span>
+    </div>
+    <div class="card-title">Два указателя</div>
+    <div class="card-desc">
+      Встречный ход, догоняющий ход (черепаха и заяц), скользящее окно. Суммы, палиндромы, циклы.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Two Pointers</span>
+        <span class="tag">Sliding Window</span>
+        <span class="tag">Floyd</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 7 -->
+  <a class="card" href="Тема_07_Жадные_алгоритмы.html" style="--accent: var(--yellow)">
+    <div class="card-top">
+      <span class="card-num">Тема 07</span>
+      <span class="card-icon">💰</span>
+    </div>
+    <div class="card-title">Жадные алгоритмы</div>
+    <div class="card-desc">
+      Принцип жадного выбора, задачи о расписании, кодирование Хаффмана, задача о рюкзаке.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Greedy</span>
+        <span class="tag">Scheduling</span>
+        <span class="tag">Huffman</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 8 -->
+  <a class="card" href="Тема_08_Префиксные_суммы.html" style="--accent: var(--purple)">
+    <div class="card-top">
+      <span class="card-num">Тема 08</span>
+      <span class="card-icon">∑</span>
+    </div>
+    <div class="card-title">Префиксные суммы</div>
+    <div class="card-desc">
+      Массив префиксных сумм, запросы на диапазоны за O(1), двумерные префиксы. Разностный массив.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">Prefix Sum</span>
+        <span class="tag">Range Query</span>
+        <span class="tag">O(1)</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 9 -->
+  <a class="card" href="Тема_09_Динамическое_программирование.html" style="--accent: var(--blue)">
+    <div class="card-top">
+      <span class="card-num">Тема 09</span>
+      <span class="card-icon">📊</span>
+    </div>
+    <div class="card-title">Динамическое программирование</div>
+    <div class="card-desc">
+      Мемоизация и табуляция, подзадачи и переходы, LCS, LIS, задача о рюкзаке, редакционное расстояние.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">DP</span>
+        <span class="tag">Memoization</span>
+        <span class="tag">LCS / LIS</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 10 -->
+  <a class="card" href="Тема_10_Графы_BFS_DFS.html" style="--accent: var(--green)">
+    <div class="card-top">
+      <span class="card-num">Тема 10</span>
+      <span class="card-icon">🕸️</span>
+    </div>
+    <div class="card-title">Графы: BFS и DFS</div>
+    <div class="card-desc">
+      Представление графов, обход в ширину и глубину, кратчайший путь, топологическая сортировка, компоненты.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">BFS</span>
+        <span class="tag">DFS</span>
+        <span class="tag">Graphs</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 11 -->
+  <a class="card" href="Тема_11_Порядковые_статистики.html" style="--accent: var(--orange)">
+    <div class="card-top">
+      <span class="card-num">Тема 11</span>
+      <span class="card-icon">📈</span>
+    </div>
+    <div class="card-title">Порядковые статистики</div>
+    <div class="card-desc">
+      k-й наименьший элемент, QuickSelect, медиана медиан, heap-based подход. Сложность O(n) в среднем.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">QuickSelect</span>
+        <span class="tag">Heap</span>
+        <span class="tag">O(n)</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- 12 -->
+  <a class="card" href="Тема_12_Деревья.html" style="--accent: var(--teal)">
+    <div class="card-top">
+      <span class="card-num">Тема 12</span>
+      <span class="card-icon">🌳</span>
+    </div>
+    <div class="card-title">Сбалансированные деревья</div>
+    <div class="card-desc">
+      BST, AVL-деревья, красно-чёрные деревья. Вставка, поиск, удаление. Деревья в задачах LeetCode.
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag">BST</span>
+        <span class="tag">AVL</span>
+        <span class="tag">Red-Black</span>
+      </div>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+</main>
+
+<!-- ═══════════════════════ BONUS SECTION ══════════════════════ -->
+<div class="divider"></div>
+
+<div class="section-header">
+  <h2>Дополнительные материалы</h2>
+  <span class="section-pill">бонус</span>
+  <div class="section-line"></div>
+</div>
+
+<div class="bonus-grid">
+  <a class="bonus-card" href="Бонус_LeetCode_1312.html">
+    <span class="bonus-icon">🧩</span>
+    <div>
+      <div class="bonus-title">LeetCode 1312 — Min Insertions Palindrome</div>
+      <div class="bonus-sub">Разбор задачи · DP · Hard</div>
+    </div>
+  </a>
+  <a class="bonus-card" href="Бонус_Структуры_данных.html">
+    <span class="bonus-icon">🗂️</span>
+    <div>
+      <div class="bonus-title">Структуры данных</div>
+      <div class="bonus-sub">Стек, очередь, связный список, хеш-таблица</div>
+    </div>
+  </a>
+  <a class="bonus-card" href="Бонус_Основы_программирования.html">
+    <span class="bonus-icon">🐍</span>
+    <div>
+      <div class="bonus-title">Основы программирования</div>
+      <div class="bonus-sub">Python: переменные, типы, управляющие конструкции</div>
+    </div>
+  </a>
+  <a class="bonus-card" href="Бонус_Множества_и_словари.html">
+    <span class="bonus-icon">📖</span>
+    <div>
+      <div class="bonus-title">Множества и словари</div>
+      <div class="bonus-sub">set, dict, Counter, defaultdict — паттерны использования</div>
+    </div>
+  </a>
+  <a class="bonus-card" href="Бонус_Порядковые_статистики_2.html">
+    <span class="bonus-icon">🏆</span>
+    <div>
+      <div class="bonus-title">Порядковые статистики (расширение)</div>
+      <div class="bonus-sub">Дополнительные задачи и паттерны</div>
+    </div>
+  </a>
+</div>
+
+<!-- ═══════════════════════════ FOOTER ════════════════════════ -->
+<footer>
+  Курс «Алгоритмы и структуры данных» &nbsp;·&nbsp;
+  Слайды созданы с помощью <a href="https://claude.ai" target="_blank">Claude</a>
+</footer>
+
+</body>
+</html>

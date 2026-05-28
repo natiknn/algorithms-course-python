@@ -1,0 +1,739 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Порядковые статистики — Python</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #bc8cff, #58a6ff); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 40px 60px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #bc8cff; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.15; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.75rem; font-weight: 700; color: #f0f6fc; margin-bottom: 16px; }
+  h3 { font-size: 1.05rem; font-weight: 600; color: #bc8cff; margin-bottom: 8px; margin-top: 14px; }
+  p { line-height: 1.8; margin-bottom: 10px; color: #c9d1d9; font-size: 0.95rem; }
+  strong { color: #f0f6fc; }
+  em { color: #bc8cff; font-style: normal; }
+  .subtitle { font-size: 1.1rem; color: #8b949e; margin-bottom: 28px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #bc8cff; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; line-height: 1.7; }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.blue  { border-left-color: #58a6ff; }
+  .highlight-box.red   { border-left-color: #f78166; }
+  .highlight-box.orange{ border-left-color: #ffa657; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88em; color: #79c0ff; }
+  pre { margin: 10px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 0.85rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.88rem; }
+  .trace-table th { background: #1c2128; color: #bc8cff; padding: 7px 12px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 6px 12px; text-align: center; border: 1px solid #21262d; color: #c9d1d9; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .trace-table tr.ok td { background: #1c3a1c; color: #3fb950; }
+  .trace-table tr.hi td { background: #2a1c3a; color: #bc8cff; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 7px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #bc8cff; color: #bc8cff; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 20px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; color: #8b949e; }
+  .step-card { display: flex; gap: 12px; align-items: flex-start; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 10px 14px; margin-bottom: 7px; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: #2a1c3a; border: 1px solid #bc8cff; color: #bc8cff; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-body { flex: 1; font-size: 0.9rem; line-height: 1.6; color: #c9d1d9; }
+  .complex-row { display: flex; gap: 10px; margin: 10px 0; }
+  .complex-badge { background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 8px 14px; }
+  .complex-badge .lbl { font-size: 0.72rem; color: #8b949e; }
+  .complex-badge .val { font-size: 1rem; color: #bc8cff; font-weight: 700; font-family: monospace; }
+  .lc-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600; margin-right: 6px; }
+  .lc-easy   { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+  .lc-medium { background: rgba(210,153,34,.12); color: #d29922; border: 1px solid rgba(210,153,34,.3); }
+  .lc-hard   { background: rgba(247,129,102,.12); color: #f78166; border: 1px solid rgba(247,129,102,.3); }
+  .arr-vis { display: flex; gap: 4px; align-items: flex-end; flex-wrap: wrap; margin: 12px 0; }
+  .arr-cell { min-width: 40px; height: 40px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; font-weight: 700; font-size: 0.95rem; border: 1px solid #30363d; background: #1c2128; color: #c9d1d9; position: relative; }
+  .arr-cell .idx { font-size: 0.6rem; color: #8b949e; font-weight: 400; position: absolute; bottom: -18px; }
+  .arr-cell.hl  { background: #2a1c3a; border-color: #bc8cff; color: #bc8cff; }
+  .arr-cell.grn { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .arr-cell.org { background: #3a2a1c; border-color: #ffa657; color: #ffa657; }
+  .arr-cell.blue { background: #1c2a3a; border-color: #58a6ff; color: #58a6ff; }
+  .arr-cell.red  { background: #3a1c1c; border-color: #f78166; color: #f78166; }
+  .arr-cell.dim { background: #21262d; border-color: #21262d; color: #444; }
+  .quiz-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+  .quiz-q { font-weight: 600; color: #f0f6fc; margin-bottom: 10px; font-size: 0.95rem; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 6px; }
+  .quiz-opt { padding: 8px 14px; border-radius: 8px; border: 1px solid #30363d; font-size: 0.88rem; cursor: pointer; transition: all .15s; background: none; color: #c9d1d9; text-align: left; }
+  .quiz-opt:hover { border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,.07); }
+  .quiz-opt.correct { border-color: #3fb950; color: #3fb950; background: rgba(63,185,80,.1); pointer-events: none; }
+  .quiz-opt.wrong   { border-color: #f78166; color: #f78166; background: rgba(247,129,102,.1); }
+  .quiz-result { font-size: 0.85rem; margin-top: 8px; display: none; }
+  .hw-item { display: flex; align-items: flex-start; gap: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 11px 15px; margin-bottom: 7px; }
+  .hw-item a { color: #58a6ff; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+  .hw-item a:hover { text-decoration: underline; }
+  .hw-desc { font-size: 0.82rem; color: #8b949e; margin-top: 2px; }
+  ul { padding-left: 18px; }
+  li { line-height: 1.8; color: #c9d1d9; font-size: 0.9rem; margin-bottom: 2px; }
+  details summary { cursor: pointer; font-size: 0.83rem; color: #3fb950; padding: 4px 0; list-style: none; }
+  details[open] summary { margin-bottom: 6px; }
+  .formula { font-family: 'Cascadia Code','Fira Code',monospace; background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 12px 18px; font-size: 1rem; color: #bc8cff; margin: 12px 0; text-align: center; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- 1 — Титул -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">📊</div>
+  <div class="slide-tag">Тема 5</div>
+  <h1>Порядковые статистики</h1>
+  <p class="subtitle">k-й наименьший/наибольший, медиана, QuickSelect<br>— как не сортировать весь массив ради одного элемента</p>
+  <div class="topic-chips">
+    <span class="chip">k-й элемент</span>
+    <span class="chip">QuickSelect O(n)</span>
+    <span class="chip">heapq.nlargest</span>
+    <span class="chip">Медиана</span>
+    <span class="chip">Скользящее окно</span>
+    <span class="chip">Два heap</span>
+  </div>
+</div>
+
+<!-- 2 — Что такое порядковые статистики -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Теория</div>
+  <h2>Что такое порядковая статистика?</h2>
+  <p><strong>k-я порядковая статистика</strong> массива — это k-й по величине элемент в <em>отсортированном</em> виде.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Примеры</h3>
+        <p style="font-size:0.88rem">Массив: [3, 1, 4, 1, 5, 9, 2, 6]</p>
+        <div class="arr-vis" style="margin-bottom:28px">
+          <div class="arr-cell">3</div><div class="arr-cell">1</div><div class="arr-cell">4</div><div class="arr-cell">1</div><div class="arr-cell">5</div><div class="arr-cell">9</div><div class="arr-cell">2</div><div class="arr-cell">6</div>
+        </div>
+        <p style="font-size:0.88rem">Отсортированный: [1, 1, 2, 3, 4, 5, 6, 9]</p>
+        <div class="arr-vis" style="margin-bottom:28px">
+          <div class="arr-cell blue">1<span class="idx">k=1</span></div>
+          <div class="arr-cell blue">1<span class="idx">k=2</span></div>
+          <div class="arr-cell">2<span class="idx">k=3</span></div>
+          <div class="arr-cell hl">3<span class="idx">k=4</span></div>
+          <div class="arr-cell">4<span class="idx">k=5</span></div>
+          <div class="arr-cell">5<span class="idx">k=6</span></div>
+          <div class="arr-cell">6<span class="idx">k=7</span></div>
+          <div class="arr-cell grn">9<span class="idx">k=8</span></div>
+        </div>
+        <ul style="font-size:0.85rem">
+          <li>Минимум = 1-я порядковая статистика</li>
+          <li>Максимум = n-я порядковая статистика</li>
+          <li><strong>Медиана</strong> = ⌊n/2⌋-я статистика</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Зачем нам это нужно?</h3>
+        <ul style="font-size:0.88rem">
+          <li><strong>Медиана массива</strong> — устойчивое среднее</li>
+          <li><strong>Top-K рекомендации</strong> — k лучших товаров</li>
+          <li><strong>Перцентили</strong> — 95-й перцентиль задержки</li>
+          <li><strong>Алгоритм k-means</strong> — медиана кластера</li>
+        </ul>
+        <h3>Варианты решения</h3>
+        <div class="highlight-box red">❌ Сортировка + взять k-й элемент — O(n log n)</div>
+        <div class="highlight-box orange">⚡ heapq.nlargest / nsmallest — O(n log k)</div>
+        <div class="highlight-box green">🚀 QuickSelect — O(n) среднее</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 — Наивный подход и heapq -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Теория — Подходы</div>
+  <h2>Наивный O(n log n) и heapq O(n log k)</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#f78166">❌ Наивный — сортировка</h3>
+<pre><code class="language-python">def kth_smallest_naive(nums, k):
+    return sorted(nums)[k - 1]  # O(n log n)
+
+def kth_largest_naive(nums, k):
+    return sorted(nums)[-k]     # O(n log n)</code></pre>
+        <div class="highlight-box red">
+          Зачем сортировать весь массив, если нас интересует один элемент?
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#ffa657">⚡ heapq — O(n log k)</h3>
+<pre><code class="language-python">import heapq
+
+nums = [3, 1, 4, 1, 5, 9, 2, 6]
+
+# k наибольших
+heapq.nlargest(3, nums)   # [9, 6, 5]
+
+# k наименьших
+heapq.nsmallest(3, nums)  # [1, 1, 2]
+
+# k-й наибольший
+def kth_largest(nums, k):
+    return heapq.nlargest(k, nums)[-1]
+# O(n log k) — лучше сортировки при малом k</code></pre>
+        <div class="highlight-box orange">
+          При k &lt;&lt; n это намного быстрее полной сортировки. Например, k=10, n=10⁶: log k ≈ 3 vs log n ≈ 20.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Мин-куча размером k — ручная реализация</h3>
+        <p style="font-size:0.85rem">Храним кучу из k наибольших элементов. Вершина кучи — наименьший из k наибольших = k-й наибольший.</p>
+<pre><code class="language-python">def kth_largest_heap(nums, k):
+    heap = []
+    for num in nums:
+        heapq.heappush(heap, num)
+        if len(heap) > k:
+            heapq.heappop(heap)  # выбросить минимум
+    return heap[0]  # k-й наибольший
+
+# Трассировка: nums=[3,1,4,1,5], k=2
+# heap=[3]    → [1,3]
+# heap=[1,3]  → [1,3,4] → pop → [3,4]
+# heap=[3,4]  → [1,3,4] → pop → [3,4]
+# heap=[3,4]  → [3,4,5] → pop → [4,5]
+# Ответ: heap[0] = 4  ✓ (2-й наибольший)</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — Что такое куча (heap) -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Теория — heapq</div>
+  <h2>Что такое <em>куча</em> (heap)?</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Куча — это особое дерево</h3>
+        <p style="font-size:0.88rem">Куча (heap) — двоичное дерево, где <strong>родитель всегда меньше своих детей</strong> (min-heap). Это гарантирует: минимум всегда на вершине.</p>
+        <div style="text-align:center;margin:14px 0">
+          <div style="margin-bottom:8px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:2px solid #3fb950;background:#1c3a1c;color:#3fb950;font-weight:700;font-family:monospace">1</span>
+          </div>
+          <div style="display:flex;justify-content:center;gap:60px;margin-bottom:8px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:2px solid #58a6ff;background:#1c2a3a;color:#58a6ff;font-weight:700;font-family:monospace">3</span>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:2px solid #58a6ff;background:#1c2a3a;color:#58a6ff;font-weight:700;font-family:monospace">5</span>
+          </div>
+          <div style="display:flex;justify-content:center;gap:14px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:2px solid #30363d;background:#1c2128;color:#c9d1d9;font-weight:700;font-family:monospace">4</span>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:2px solid #30363d;background:#1c2128;color:#c9d1d9;font-weight:700;font-family:monospace">9</span>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:2px solid #30363d;background:#1c2128;color:#c9d1d9;font-weight:700;font-family:monospace">7</span>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:2px solid #30363d;background:#1c2128;color:#c9d1d9;font-weight:700;font-family:monospace">6</span>
+          </div>
+          <p style="font-size:0.78rem;color:#8b949e;margin-top:10px">Вершина = минимум = <strong style="color:#3fb950">1</strong></p>
+        </div>
+        <div class="highlight-box blue">
+          💡 Куча хранится как <strong>обычный список!</strong><br>
+          <code class="inline">[1, 3, 5, 4, 9, 7, 6]</code><br>
+          Родитель элемента i → индекс <code class="inline">(i-1)//2</code><br>
+          Дети элемента i → индексы <code class="inline">2i+1</code> и <code class="inline">2i+2</code>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Min-heap vs Max-heap</h3>
+        <div class="step-card">
+          <div class="step-num" style="background:#1c3a1c;border-color:#3fb950;color:#3fb950">↓</div>
+          <div class="step-body"><strong>Min-heap</strong> — родитель <= детей. Вершина = <strong>минимум</strong>. Именно это реализует Python's <code class="inline">heapq</code>.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="background:#3a1c1c;border-color:#f78166;color:#f78166">↑</div>
+          <div class="step-body"><strong>Max-heap</strong> — родитель >= детей. Вершина = <strong>максимум</strong>. В Python нет напрямую — эмулируем через <code class="inline">-x</code>.</div>
+        </div>
+        <h3>Сложности операций</h3>
+        <div style="overflow-x:auto">
+          <table class="trace-table" style="font-size:0.82rem">
+            <thead><tr><th>Операция</th><th>Сложность</th><th>Что делает</th></tr></thead>
+            <tbody>
+              <tr><td><code class="inline">heappush</code></td><td style="color:#3fb950">O(log n)</td><td>Добавить элемент</td></tr>
+              <tr><td><code class="inline">heappop</code></td><td style="color:#3fb950">O(log n)</td><td>Извлечь минимум</td></tr>
+              <tr><td><code class="inline">heap[0]</code></td><td style="color:#3fb950">O(1)</td><td>Посмотреть минимум</td></tr>
+              <tr><td><code class="inline">heapify</code></td><td style="color:#58a6ff">O(n)</td><td>Превратить список в кучу</td></tr>
+              <tr><td><code class="inline">nlargest</code></td><td style="color:#ffa657">O(n log k)</td><td>k наибольших</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — heapq: все операции -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Теория — heapq</div>
+  <h2>heapq: все операции с примерами</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Базовые операции</h3>
+<pre><code class="language-python">import heapq
+
+# 1. Создать кучу из списка — O(n)
+nums = [5, 1, 8, 3, 7, 2]
+heapq.heapify(nums)
+# nums теперь куча: [1, 3, 2, 5, 7, 8]
+
+# 2. Добавить элемент — O(log n)
+heapq.heappush(nums, 0)
+# nums[0] == 0  ← новый минимум
+
+# 3. Извлечь минимум — O(log n)
+minimum = heapq.heappop(nums)
+# minimum == 0
+
+# 4. Посмотреть минимум без удаления — O(1)
+peek = nums[0]
+
+# 5. Добавить и сразу извлечь минимум — O(log n)
+result = heapq.heappushpop(nums, 4)
+# эффективнее, чем push + pop отдельно
+
+# 6. Извлечь минимум и добавить новый — O(log n)
+old_min = heapq.heapreplace(nums, 10)</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">nlargest, nsmallest и max-heap</h3>
+<pre><code class="language-python">nums = [3, 1, 4, 1, 5, 9, 2, 6]
+
+# k наибольших — O(n log k)
+heapq.nlargest(3, nums)   # [9, 6, 5]
+
+# k наименьших — O(n log k)
+heapq.nsmallest(3, nums)  # [1, 1, 2]
+
+# С ключом сортировки
+data = [('Alice', 30), ('Bob', 25), ('Eve', 35)]
+heapq.nlargest(2, data, key=lambda x: x[1])
+# [('Eve', 35), ('Alice', 30)]
+
+# Max-heap через отрицание — O(log n)
+max_heap = []
+for x in [3, 1, 4, 1, 5]:
+    heapq.heappush(max_heap, -x)
+
+max_val = -heapq.heappop(max_heap)  # 5
+max_peek = -max_heap[0]             # текущий максимум</code></pre>
+        <div class="highlight-box green" style="margin-top:8px">
+          ✅ <strong>Когда nlargest/nsmallest, когда sorted?</strong><br>
+          k &lt;&lt; n → <code class="inline">nlargest</code> быстрее (O(n log k))<br>
+          k ≈ n → <code class="inline">sorted</code> быстрее (O(n log n) но меньше накладных)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 — QuickSelect -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Теория — QuickSelect</div>
+  <h2>QuickSelect: поиск k-го элемента за O(n)</h2>
+  <div class="two-col">
+    <div>
+      <p style="font-size:0.88rem">QuickSelect — алгоритм, похожий на QuickSort. Разница: мы рекурсивно уходим только <strong>в одну половину</strong>, а не в обе.</p>
+      <div class="card">
+        <h3 style="margin-top:0">Идея — партиция (partition)</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Выбрать опорный элемент (<em>pivot</em>)</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Разделить массив: слева от pivot — меньше, справа — больше</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">Если pivot на позиции k — нашли! Если k меньше — идём влево. Если k больше — идём вправо.</div></div>
+        <div class="highlight-box green">
+          <strong>Среднее:</strong> T(n) = T(n/2) + O(n) → O(n)<br>
+          <strong>Худший случай:</strong> O(n²) (плохой pivot)
+        </div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">import random
+
+def quickselect(nums, k):
+    """Найти k-й наименьший элемент (1-based)"""
+    def partition(lo, hi):
+        pivot_idx = random.randint(lo, hi)
+        nums[pivot_idx], nums[hi] = nums[hi], nums[pivot_idx]
+        pivot = nums[hi]
+        store = lo
+        for i in range(lo, hi):
+            if nums[i] <= pivot:
+                nums[i], nums[store] = nums[store], nums[i]
+                store += 1
+        nums[store], nums[hi] = nums[hi], nums[store]
+        return store
+
+    lo, hi = 0, len(nums) - 1
+    target = k - 1  # 0-based
+    while True:
+        pivot_pos = partition(lo, hi)
+        if pivot_pos == target:
+            return nums[pivot_pos]
+        elif pivot_pos < target:
+            lo = pivot_pos + 1
+        else:
+            hi = pivot_pos - 1</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Среднее</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Худшее</div><div class="val">O(n²)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(1)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — Визуализация QuickSelect -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Визуализация — QuickSelect</div>
+  <h2>QuickSelect пошагово: найти 3-й наименьший в [3,1,4,1,5,9,2]</h2>
+  <div class="card" style="margin-bottom:14px">
+    <h3 style="margin-top:0">Исходный массив (target: k=3, ищем элемент с индексом 2)</h3>
+    <div class="arr-vis" style="margin-bottom:28px">
+      <div class="arr-cell org">3</div><div class="arr-cell org">1</div><div class="arr-cell org">4</div><div class="arr-cell org">1</div><div class="arr-cell org">5</div><div class="arr-cell org">9</div><div class="arr-cell org">2</div>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="trace-table">
+      <thead><tr><th>Шаг</th><th>lo</th><th>hi</th><th>pivot</th><th>Массив после partition</th><th>pivot_pos</th><th>Действие</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>0</td><td>6</td><td>4</td>
+          <td style="font-family:monospace;text-align:left">[3,1,2,1, <span style="color:#bc8cff">4</span> ,9,5]</td>
+          <td>4</td><td>target=2 &lt; 4 → hi=3</td>
+        </tr>
+        <tr>
+          <td>2</td><td>0</td><td>3</td><td>1</td>
+          <td style="font-family:monospace;text-align:left">[1,1, <span style="color:#bc8cff">...</span> ,3,2]</td>
+          <td>1</td><td>target=2 &gt; 1 → lo=2</td>
+        </tr>
+        <tr class="ok">
+          <td>3</td><td>2</td><td>3</td><td>2</td>
+          <td style="font-family:monospace;text-align:left">[1,1, <span style="color:#3fb950">2</span> ,3,...]</td>
+          <td>2</td><td>pivot_pos == target → <strong>Ответ: 2</strong> ✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="two-col" style="margin-top:14px">
+    <div class="highlight-box green">
+      ✅ 3-й наименьший = <strong>2</strong> (индекс 2 в [1,1,2,3,4,5,9])
+    </div>
+    <div class="highlight-box blue">
+      💡 На каждом шаге мы отбрасываем половину массива. Поэтому в среднем O(n) вместо O(n log n).
+    </div>
+  </div>
+</div>
+
+<!-- 6 — Медиана двух heap -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Теория — Медиана онлайн</div>
+  <h2>Медиана в скользящем окне: два heap</h2>
+  <p>Задача: поток чисел поступает по одному. После каждого нового числа — найти текущую медиану за O(log n).</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Идея: два heap</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body"><strong>max-heap</strong> (левая половина) — хранит меньшие числа. Вершина = максимум левых.</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body"><strong>min-heap</strong> (правая половина) — хранит большие числа. Вершина = минимум правых.</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">Инвариант: |left| - |right| <= 1. Медиана = вершина большего heap или среднее двух вершин.</div></div>
+      </div>
+      <div class="highlight-box blue">
+        💡 Python не имеет max-heap. Храним отрицательные числа в min-heap: <code class="inline">heappush(left, -x)</code>, тогда вершина = <code class="inline">-left[0]</code>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">import heapq
+
+class MedianFinder:
+    def __init__(self):
+        self.left = []   # max-heap (отриц. числа)
+        self.right = []  # min-heap
+
+    def addNum(self, num):
+        heapq.heappush(self.left, -num)
+
+        # left.max <= right.min
+        if self.right and -self.left[0] > self.right[0]:
+            val = -heapq.heappop(self.left)
+            heapq.heappush(self.right, val)
+
+        # балансировка размеров
+        if len(self.left) < len(self.right):
+            val = heapq.heappop(self.right)
+            heapq.heappush(self.left, -val)
+        elif len(self.left) > len(self.right) + 1:
+            val = -heapq.heappop(self.left)
+            heapq.heappush(self.right, val)
+
+    def findMedian(self):
+        if len(self.left) > len(self.right):
+            return -self.left[0]
+        return (-self.left[0] + self.right[0]) / 2</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">addNum</div><div class="val">O(log n)</div></div>
+        <div class="complex-badge"><div class="lbl">findMedian</div><div class="val">O(1)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 — Медиана в окне фиксированного размера -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Применение — Скользящее окно</div>
+  <h2>Медиана в скользящем окне фиксированного размера</h2>
+  <p><span class="lc-badge lc-hard">#480 · Hard</span> Дан массив и размер окна k. Найти медиану в каждом окне.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Пример: nums=[1,3,-1,-3,5,3,6,7], k=3</h3>
+        <div style="overflow-x:auto">
+          <table class="trace-table">
+            <thead><tr><th>Окно</th><th>Элементы</th><th>Медиана</th></tr></thead>
+            <tbody>
+              <tr><td>[0..2]</td><td>[1,3,-1] → [-1,1,3]</td><td>1</td></tr>
+              <tr><td>[1..3]</td><td>[3,-1,-3] → [-3,-1,3]</td><td>-1</td></tr>
+              <tr><td>[2..4]</td><td>[-1,-3,5] → [-3,-1,5]</td><td>-1</td></tr>
+              <tr class="ok"><td>[3..5]</td><td>[-3,5,3] → [-3,3,5]</td><td>3</td></tr>
+              <tr><td>[4..6]</td><td>[5,3,6] → [3,5,6]</td><td>5</td></tr>
+              <tr><td>[5..7]</td><td>[3,6,7] → [3,6,7]</td><td>6</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="highlight-box green" style="margin-top:8px">
+          Ответ: [1.0, -1.0, -1.0, 3.0, 5.0, 6.0]
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Простой подход O(n·k) — достаточно для экзамена</h3>
+<pre><code class="language-python">def medianSlidingWindow(nums, k):
+    result = []
+    for i in range(len(nums) - k + 1):
+        window = sorted(nums[i:i+k])
+        if k % 2 == 1:
+            result.append(float(window[k//2]))
+        else:
+            result.append(
+                (window[k//2-1] + window[k//2]) / 2
+            )
+    return result</code></pre>
+        <div class="complex-row">
+          <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n·k log k)</div></div>
+        </div>
+      </div>
+      <div class="highlight-box blue">
+        💡 Оптимальное решение использует <code class="inline">sortedcontainers.SortedList</code> для O(n log k). Достаточно наивного подхода при n <= 10⁵.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 — Квиз -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Проверь себя</div>
+  <h2>🗣️ Квиз по порядковым статистикам</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">1. Какова средняя сложность QuickSelect?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(n log n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">O(n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(log n)</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">2. <code class="inline">heapq.nlargest(3, [5,1,8,3,7])</code> вернёт?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,true)">[8, 7, 5]</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">[5, 7, 8]</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">[1, 3, 5]</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">3. Медиана массива [1,2,3,4,5,6] (чётная длина)?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">3</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">3.5 (среднее 3 и 4)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">4</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">4. Зачем в max-heap хранить отрицательные числа?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">Чтобы числа не повторялись</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Python реализует только min-heap, отрицание превращает его в max-heap</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Для ускорения работы</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">5. QuickSelect в <strong>худшем</strong> случае (плохой pivot)?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(n log n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">O(n²)</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">6. Как найти медиану массива из n чисел встроенными средствами Python?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">median(nums)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">sorted(nums)[n//2] или statistics.median()</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">heapq.median(nums)</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 — Итог -->
+<div class="slide" id="s11">
+  <div class="slide-tag">Итог</div>
+  <h2>Что запомнить</h2>
+  <div class="three-col" style="align-items:start">
+    <div class="card">
+      <h3 style="margin-top:0">📦 Подходы и сложности</h3>
+      <div class="complex-row" style="flex-direction:column;gap:8px">
+        <div class="complex-badge"><div class="lbl">sorted()[k] — простейший</div><div class="val">O(n log n)</div></div>
+        <div class="complex-badge"><div class="lbl">heapq.nlargest(k)</div><div class="val">O(n log k)</div></div>
+        <div class="complex-badge"><div class="lbl">QuickSelect — среднее</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Два heap (онлайн)</div><div class="val">O(log n)</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🎯 Когда что использовать</h3>
+      <ul style="font-size:0.85rem">
+        <li><strong>sorted</strong> — маленькие данные, простота</li>
+        <li><strong>nlargest/nsmallest</strong> — k &lt;&lt; n</li>
+        <li><strong>QuickSelect</strong> — один раз, большой n</li>
+        <li><strong>Два heap</strong> — поток данных, онлайн</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">💡 Трюки</h3>
+      <ul style="font-size:0.85rem">
+        <li>max-heap = <code class="inline">heappush(h, -x)</code></li>
+        <li>Медиана нечёт. = <code class="inline">sorted[n//2]</code></li>
+        <li>Медиана чёт. = среднее двух средних</li>
+        <li>Рандомный pivot в QuickSelect избегает худшего случая</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box blue" style="margin-top:12px">
+    🎯 <strong>На экзамене:</strong> k наибольших → <code class="inline">heapq.nlargest(k, nums)</code>. k-й элемент онлайн → два heap. Медиана один раз → <code class="inline">sorted(nums)[n//2]</code>.
+  </div>
+</div>
+
+<!-- 10 — Домашнее задание -->
+<div class="slide" id="s12">
+  <div class="slide-tag">Домашнее задание</div>
+  <h2>🏠 Задачи для самостоятельной практики</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <p style="font-size:0.88rem;color:#3fb950;font-weight:600;margin-bottom:8px">🟢 Лёгкие — начни с них</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">#703</span>
+        <div><a href="https://leetcode.com/problems/kth-largest-element-in-a-stream/" target="_blank">Kth Largest Element in a Stream</a>
+        <div class="hw-desc">Онлайн k-й наибольший. Min-heap размером k.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">#1337</span>
+        <div><a href="https://leetcode.com/problems/the-k-weakest-rows-in-a-matrix/" target="_blank">K Weakest Rows in a Matrix</a>
+        <div class="hw-desc">heapq.nsmallest с ключом сортировки.</div></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:0.88rem;color:#d29922;font-weight:600;margin-bottom:8px">🟡 Средний уровень</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">#215</span>
+        <div><a href="https://leetcode.com/problems/kth-largest-element-in-an-array/" target="_blank">Kth Largest Element in an Array</a>
+        <div class="hw-desc">Классика QuickSelect. Самая важная задача темы.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">#295</span>
+        <div><a href="https://leetcode.com/problems/find-median-from-data-stream/" target="_blank">Find Median from Data Stream</a>
+        <div class="hw-desc">Два heap — разобрать слайд 6 и реализовать.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">#347</span>
+        <div><a href="https://leetcode.com/problems/top-k-frequent-elements/" target="_blank">Top K Frequent Elements</a>
+        <div class="hw-desc">Counter + nlargest или heap с частотами.</div></div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:14px">
+        💡 Порядок: #703 → #215 → #295 → #347
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slide-area -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 12</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+<script>
+  hljs.highlightAll();
+  let cur = 1, total = 12;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s'+prev).classList.remove('active');
+    document.getElementById('s'+cur).classList.add('active');
+    document.getElementById('counter').textContent = cur+' / '+total;
+    document.getElementById('prevBtn').disabled = cur===1;
+    document.getElementById('nextBtn').disabled = cur===total;
+    document.getElementById('progress').style.width = (cur/total*100)+'%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key===' ') navigate(1);
+    if (e.key==='ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = (1/total*100)+'%';
+
+  function checkQ(el, correct) {
+    const opts = el.parentElement.querySelectorAll('.quiz-opt');
+    opts.forEach(o => o.style.pointerEvents = 'none');
+    el.classList.add(correct ? 'correct' : 'wrong');
+    const res = el.closest('.quiz-card').querySelector('.quiz-result');
+    res.style.display = 'block';
+    res.style.color = correct ? '#3fb950' : '#f78166';
+    if (!res.textContent.trim()) res.textContent = correct ? '✅ Верно!' : '❌ Неверно — попробуй ещё раз.';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,846 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Префиксные суммы — Prefix Sum</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #bc8cff, #58a6ff); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 40px 60px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #bc8cff; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.15; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.75rem; font-weight: 700; color: #f0f6fc; margin-bottom: 16px; }
+  h3 { font-size: 1.05rem; font-weight: 600; color: #bc8cff; margin-bottom: 8px; margin-top: 14px; }
+  h3 a { color: #bc8cff; text-decoration: none; } h3 a:hover { text-decoration: underline; }
+  h2 a { color: #bc8cff; text-decoration: none; } h2 a:hover { text-decoration: underline; }
+  p { line-height: 1.8; margin-bottom: 10px; color: #c9d1d9; font-size: 0.95rem; }
+  strong { color: #f0f6fc; }
+  em { color: #bc8cff; font-style: normal; }
+  .subtitle { font-size: 1.1rem; color: #8b949e; margin-bottom: 28px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #bc8cff; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; line-height: 1.7; }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.blue  { border-left-color: #58a6ff; }
+  .highlight-box.red   { border-left-color: #f78166; }
+  .highlight-box.orange{ border-left-color: #ffa657; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88em; color: #79c0ff; }
+  pre { margin: 10px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 0.85rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.88rem; }
+  .trace-table th { background: #1c2128; color: #bc8cff; padding: 7px 12px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 6px 12px; text-align: center; border: 1px solid #21262d; color: #c9d1d9; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .trace-table tr.ok td { background: #1c3a1c; color: #3fb950; }
+  .trace-table tr.hi td { background: #2a1c3a; color: #bc8cff; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 7px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #bc8cff; color: #bc8cff; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 20px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; color: #8b949e; }
+  .step-card { display: flex; gap: 12px; align-items: flex-start; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 10px 14px; margin-bottom: 7px; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: #2a1c3a; border: 1px solid #bc8cff; color: #bc8cff; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-body { flex: 1; font-size: 0.9rem; line-height: 1.6; color: #c9d1d9; }
+  .complex-row { display: flex; gap: 10px; margin: 10px 0; }
+  .complex-badge { background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 8px 14px; }
+  .complex-badge .lbl { font-size: 0.72rem; color: #8b949e; }
+  .complex-badge .val { font-size: 1rem; color: #bc8cff; font-weight: 700; font-family: monospace; }
+  .lc-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600; margin-right: 6px; }
+  .lc-easy   { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+  .lc-medium { background: rgba(210,153,34,.12); color: #d29922; border: 1px solid rgba(210,153,34,.3); }
+  .arr-vis { display: flex; gap: 4px; align-items: flex-end; flex-wrap: wrap; margin: 12px 0; }
+  .arr-cell { min-width: 40px; height: 40px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; font-weight: 700; font-size: 0.95rem; border: 1px solid #30363d; background: #1c2128; color: #c9d1d9; position: relative; }
+  .arr-cell .idx { font-size: 0.6rem; color: #8b949e; font-weight: 400; position: absolute; bottom: -18px; }
+  .arr-cell.hl  { background: #2a1c3a; border-color: #bc8cff; color: #bc8cff; }
+  .arr-cell.grn { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .arr-cell.org { background: #3a2a1c; border-color: #ffa657; color: #ffa657; }
+  .arr-cell.blue { background: #1c2a3a; border-color: #58a6ff; color: #58a6ff; }
+  .arr-cell.dim { background: #21262d; border-color: #21262d; color: #444; }
+  .quiz-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+  .quiz-q { font-weight: 600; color: #f0f6fc; margin-bottom: 10px; font-size: 0.95rem; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 6px; }
+  .quiz-opt { padding: 8px 14px; border-radius: 8px; border: 1px solid #30363d; font-size: 0.88rem; cursor: pointer; transition: all .15s; background: none; color: #c9d1d9; text-align: left; }
+  .quiz-opt:hover { border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,.07); }
+  .quiz-opt.correct { border-color: #3fb950; color: #3fb950; background: rgba(63,185,80,.1); pointer-events: none; }
+  .quiz-opt.wrong   { border-color: #f78166; color: #f78166; background: rgba(247,129,102,.1); }
+  .quiz-result { font-size: 0.85rem; margin-top: 8px; display: none; }
+  .hw-item { display: flex; align-items: flex-start; gap: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 11px 15px; margin-bottom: 7px; }
+  .hw-item a { color: #58a6ff; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+  .hw-item a:hover { text-decoration: underline; }
+  .hw-desc { font-size: 0.82rem; color: #8b949e; margin-top: 2px; }
+  ul { padding-left: 18px; }
+  li { line-height: 1.8; color: #c9d1d9; font-size: 0.9rem; margin-bottom: 2px; }
+  details summary { cursor: pointer; font-size: 0.83rem; color: #3fb950; padding: 4px 0; list-style: none; }
+  details[open] summary { margin-bottom: 6px; }
+  .formula { font-family: 'Cascadia Code','Fira Code',monospace; background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 12px 18px; font-size: 1rem; color: #bc8cff; margin: 12px 0; text-align: center; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- 1 — Титул -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">➕</div>
+  <div class="slide-tag">Тема 8</div>
+  <h1>Префиксные суммы</h1>
+  <p class="subtitle">Считаем сумму подмассива за O(1) вместо O(n)<br>— один из самых полезных трюков в алгоритмах</p>
+  <div class="topic-chips">
+    <span class="chip">Prefix Sum</span>
+    <span class="chip">Накопительная сумма</span>
+    <span class="chip">Запросы на отрезке</span>
+    <span class="chip">O(1) запрос</span>
+    <span class="chip">B. Экспедиция</span>
+  </div>
+</div>
+
+<!-- 2 — Проблема без префиксных сумм -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Мотивация</div>
+  <h2>Зачем нужны префиксные суммы?</h2>
+  <p>Представь: есть массив продаж за 365 дней. Тебя часто спрашивают: «сколько продали с 10 по 200 день?» Как отвечать быстро?</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#f78166">❌ Наивный подход — O(n) на запрос</h3>
+        <p style="font-size:0.88rem">Каждый раз суммируем элементы от l до r в цикле.</p>
+<pre><code class="language-python">def range_sum(nums, l, r):
+    total = 0
+    for i in range(l, r + 1):
+        total += nums[i]
+    return total
+
+# 1000 запросов × 365 дней = 365 000 операций 😱</code></pre>
+        <div class="highlight-box red">
+          Q запросов × N элементов = <strong>O(Q·N)</strong><br>
+          При Q=10⁵ и N=10⁵ это 10¹⁰ операций — слишком медленно!
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#3fb950">✅ Префиксные суммы — O(n) предобработка + O(1) запрос</h3>
+        <p style="font-size:0.88rem">Один раз считаем накопленные суммы. Потом любой запрос — одно вычитание.</p>
+<pre><code class="language-python"># Один раз предобрабатываем — O(n)
+prefix = [0] * (n + 1)
+for i in range(n):
+    prefix[i+1] = prefix[i] + nums[i]
+
+# Каждый запрос — O(1)!
+def range_sum(l, r):
+    return prefix[r+1] - prefix[l]</code></pre>
+        <div class="highlight-box green">
+          O(n) один раз + O(1) каждый запрос<br>
+          При Q=10⁵ это всего 10⁵ + 10⁵ операций 🚀
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 — Что такое префиксная сумма -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Теория</div>
+  <h2>Что такое префиксная сумма?</h2>
+  <p><code class="inline">prefix[i]</code> — это сумма всех элементов от начала массива до индекса <code class="inline">i-1</code> включительно.</p>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="margin-top:0">Пример: nums = [3, 1, 4, 1, 5, 9, 2]</h3>
+    <p style="font-size:0.85rem;color:#8b949e;margin-bottom:6px">Исходный массив:</p>
+    <div class="arr-vis" style="margin-bottom:28px">
+      <div class="arr-cell org">3<span class="idx">0</span></div>
+      <div class="arr-cell org">1<span class="idx">1</span></div>
+      <div class="arr-cell org">4<span class="idx">2</span></div>
+      <div class="arr-cell org">1<span class="idx">3</span></div>
+      <div class="arr-cell org">5<span class="idx">4</span></div>
+      <div class="arr-cell org">9<span class="idx">5</span></div>
+      <div class="arr-cell org">2<span class="idx">6</span></div>
+    </div>
+    <p style="font-size:0.85rem;color:#8b949e;margin-bottom:6px">Префиксный массив (со сдвигом — нулевой элемент = 0):</p>
+    <div class="arr-vis" style="margin-bottom:28px">
+      <div class="arr-cell blue">0<span class="idx">0</span></div>
+      <div class="arr-cell hl">3<span class="idx">1</span></div>
+      <div class="arr-cell hl">4<span class="idx">2</span></div>
+      <div class="arr-cell hl">8<span class="idx">3</span></div>
+      <div class="arr-cell hl">9<span class="idx">4</span></div>
+      <div class="arr-cell hl">14<span class="idx">5</span></div>
+      <div class="arr-cell hl">23<span class="idx">6</span></div>
+      <div class="arr-cell hl">25<span class="idx">7</span></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="formula">prefix[i] = prefix[i-1] + nums[i-1]</div>
+      <div class="highlight-box blue">
+        💡 Мы добавляем <strong>нулевой элемент = 0</strong> в начало. Это упрощает формулу запроса и убирает граничные случаи.
+      </div>
+    </div>
+    <div>
+      <div class="formula">sum(l, r) = prefix[r+1] - prefix[l]</div>
+      <div class="highlight-box green">
+        <strong>Пример:</strong> сумма nums[2..4] = [4,1,5] = 10<br>
+        prefix[5] - prefix[2] = 14 - 4 = <strong>10</strong> ✓
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — Почему формула работает -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Теория — Почему работает</div>
+  <h2>Почему <code class="inline" style="font-size:1.2rem">prefix[r+1] - prefix[l]</code>?</h2>
+  <p>Это простая математика. Посмотрим на массив [3, 1, 4, 1, 5, 9, 2] и запрос sum(2, 4):</p>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="arr-vis" style="margin-bottom:28px">
+      <div class="arr-cell dim">3<span class="idx">0</span></div>
+      <div class="arr-cell dim">1<span class="idx">1</span></div>
+      <div class="arr-cell grn">4<span class="idx">2</span></div>
+      <div class="arr-cell grn">1<span class="idx">3</span></div>
+      <div class="arr-cell grn">5<span class="idx">4</span></div>
+      <div class="arr-cell dim">9<span class="idx">5</span></div>
+      <div class="arr-cell dim">2<span class="idx">6</span></div>
+    </div>
+    <p style="font-size:0.88rem;text-align:center;color:#8b949e">Нам нужна сумма зелёных элементов: 4 + 1 + 5 = 10</p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="step-card"><div class="step-num">1</div><div class="step-body"><code class="inline">prefix[5]</code> = сумма первых 5 элементов = 3+1+4+1+5 = <strong>14</strong></div></div>
+      <div class="step-card"><div class="step-num">2</div><div class="step-body"><code class="inline">prefix[2]</code> = сумма первых 2 элементов = 3+1 = <strong>4</strong></div></div>
+      <div class="step-card"><div class="step-num">3</div><div class="step-body"><code class="inline">prefix[5] - prefix[2]</code> = 14 - 4 = <strong>10</strong> ✓</div></div>
+      <div class="highlight-box green" style="margin-top:8px">
+        Вычитая «лишний хвост» слева, мы получаем именно нужный нам отрезок!
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Визуально:</h3>
+        <p style="font-family:monospace;font-size:0.88rem;line-height:2">
+          prefix[5] = <span style="color:#f78166">3+1</span> + <span style="color:#3fb950">4+1+5</span> = 14<br>
+          prefix[2] = <span style="color:#f78166">3+1</span> = 4<br>
+          ─────────────────────<br>
+          разница  = <span style="color:#3fb950">4+1+5</span> = <strong style="color:#3fb950">10</strong>
+        </p>
+        <div class="highlight-box blue" style="margin-top:8px">
+          <strong>Общая формула:</strong><br>
+          sum(l, r) = prefix[r+1] - prefix[l]<br><br>
+          Индексы <strong>l, r</strong> — в исходном массиве (0-based).<br>
+          Индексы prefix — со сдвигом +1.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — Шаблон кода -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Шаблон</div>
+  <h2>Шаблон — два варианта</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Вариант 1: со сдвигом (рекомендую)</h3>
+        <p style="font-size:0.85rem;color:#8b949e">Массив prefix длиной n+1. Первый элемент = 0. Удобнее, нет граничных случаев.</p>
+<pre><code class="language-python">n = len(nums)
+prefix = [0] * (n + 1)
+
+# Построение — O(n)
+for i in range(n):
+    prefix[i + 1] = prefix[i] + nums[i]
+
+# Запрос sum(l, r) — O(1)
+# l, r — индексы в nums (включительно)
+def query(l, r):
+    return prefix[r + 1] - prefix[l]
+
+# Пример:
+# nums  = [3, 1, 4, 1, 5]
+# prefix= [0, 3, 4, 8, 9, 14]
+# query(1, 3) = prefix[4] - prefix[1]
+#             = 9 - 3 = 6  ✓  (1+4+1)</code></pre>
+        <div class="highlight-box green" style="margin-top:4px">
+          ✅ Этот вариант используй по умолчанию
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Вариант 2: без сдвига</h3>
+        <p style="font-size:0.85rem;color:#8b949e">Массив prefix той же длины. Нужно аккуратно обрабатывать l=0.</p>
+<pre><code class="language-python">n = len(nums)
+prefix = [0] * n
+
+# Построение — O(n)
+prefix[0] = nums[0]
+for i in range(1, n):
+    prefix[i] = prefix[i-1] + nums[i]
+
+# Запрос sum(l, r) — O(1)
+def query(l, r):
+    if l == 0:
+        return prefix[r]
+    return prefix[r] - prefix[l - 1]
+
+# ⚠️ Осторожно с l=0!</code></pre>
+        <div class="highlight-box orange" style="margin-top:4px">
+          ⚠️ Легко ошибиться при l=0
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box blue" style="margin-top:4px">
+    💡 <strong>Мнемоника для варианта 1:</strong> <code class="inline">prefix[i]</code> = «сколько набрали до i-го элемента (не включая его)». Поэтому сумма [l..r] = «сколько до r+1» минус «сколько до l».
+  </div>
+</div>
+
+<!-- 6 — Разминка -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Разминка</div>
+  <h2>🗣️ Устные задачи — ответь не считая вручную!</h2>
+  <p style="margin-bottom:14px">nums = [2, 4, 1, 3, 5] → prefix = [0, 2, 6, 7, 10, 15]</p>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">1. Чему равна сумма всего массива?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">prefix[4] = 10</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">prefix[5] = 15</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">prefix[5] - prefix[1] = 13</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">2. Сумма элементов nums[1..3] = [4,1,3] = ?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">prefix[3] - prefix[1] = 5</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">prefix[4] - prefix[1] = 10 - 2 = 8</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">prefix[3] - prefix[0] = 7</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">3. Сумма nums[0..2] = [2,4,1] = ?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">prefix[2] = 6</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">prefix[3] - prefix[0] = 7 - 0 = 7</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">prefix[3] - prefix[1] = 5</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">4. Какова сложность построения prefix-массива?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(1)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">O(n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(n²)</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">5. Каждый запрос суммы на отрезке после предобработки?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(log n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">O(1) — одно вычитание!</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">6. nums = [1, -2, 3, -1, 2]. Сумма nums[1..3] = [-2,3,-1] = ?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,true)">0 (−2+3−1=0)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">2</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">−1</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 — #1480 Running Sum -->
+<div class="slide" id="s7">
+  <div class="slide-tag">LeetCode — Easy</div>
+  <span class="lc-badge lc-easy">#1480 · Easy</span>
+  <h2><a href="https://leetcode.com/problems/running-sum-of-1d-array/" target="_blank">Running Sum of 1D Array ↗</a></h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">Дан массив <code class="inline">nums</code>. Вернуть массив <code class="inline">runningSum</code>, где <code class="inline">runningSum[i] = sum(nums[0..i])</code>.</p>
+        <div class="highlight-box green">
+          <strong>Вход:</strong> [1, 2, 3, 4]<br>
+          <strong>Выход:</strong> [1, 3, 6, 10]
+        </div>
+        <div class="highlight-box">
+          <strong>Вход:</strong> [1, 1, 1, 1, 1]<br>
+          <strong>Выход:</strong> [1, 2, 3, 4, 5]
+        </div>
+        <h3>Суть задачи</h3>
+        <p style="font-size:0.88rem">Это буквально и есть построение префиксного массива! Только без нулевого элемента в начале и без запросов. Идеальная первая задача.</p>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def runningSum(nums):
+    result = []
+    total = 0
+
+    for num in nums:
+        total += num
+        result.append(total)
+
+    return result
+
+# Или ещё короче:
+def runningSum(nums):
+    for i in range(1, len(nums)):
+        nums[i] += nums[i - 1]
+    return nums</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(n)</div></div>
+      </div>
+      <div class="highlight-box blue" style="margin-top:4px">
+        💡 Трассировка [1,2,3,4]:<br>
+        i=0: total=1, result=[1]<br>
+        i=1: total=3, result=[1,3]<br>
+        i=2: total=6, result=[1,3,6]<br>
+        i=3: total=10, result=[1,3,6,10] ✓
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- 8 — B. Экспедиция -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Задача — Демо 2025</div>
+  <h2>B. Экспедиция — разбор</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">N дней (2<=N<=100). В первый день приезжают A₀ школьников. Далее N-2 пар чисел (уезжают / приезжают). В последний день все уезжают. Найти <strong>максимальное количество человек одновременно</strong> в лагере.</p>
+        <div class="highlight-box">
+          <strong>Пример:</strong><br>
+          5 дней, 10 приехали<br>
+          3 1 / 5 10 / 0 2<br>
+          15 уехали<br>
+          Ответ: <strong>15</strong>
+        </div>
+        <h3>Алгоритм</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Читаем первый день → добавляем приехавших</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Для каждого промежуточного дня: people = people - уехало + приехало</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">На каждом шаге обновляем максимум</div></div>
+        <div class="highlight-box blue" style="margin-top:8px">
+          💡 <code class="inline">people</code> — это текущая накопительная сумма изменений. Это и есть идея prefix sum, применённая на ходу без отдельного массива.
+        </div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">n = int(input())
+people = 0
+max_people = 0
+
+# Первый день — только приезжают
+people += int(input())
+max_people = people
+
+# Промежуточные дни
+for _ in range(n - 2):
+    leave, arrive = map(int, input().split())
+    people = people - leave + arrive
+    max_people = max(max_people, people)
+
+# Последний день — все уезжают (не важен)
+input()
+
+print(max_people)</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(1)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 — Трассировка Экспедиции -->
+<div class="slide" id="s9">
+  <div class="slide-tag">B. Экспедиция — Трассировка</div>
+  <h2>Трассировка: B. Экспедиция</h2>
+  <p>Входные данные: 5 дней, начало с 10 школьников</p>
+  <div style="overflow-x:auto;margin-bottom:16px">
+    <table class="trace-table">
+      <thead><tr><th>День</th><th>Событие</th><th>Уехало</th><th>Приехало</th><th>В лагере</th><th>Максимум</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Первый день</td><td>—</td><td>10</td><td style="color:#bc8cff">10</td><td>10</td></tr>
+        <tr><td>2</td><td>Промежут.</td><td>3</td><td>1</td><td style="color:#bc8cff">8</td><td>10</td></tr>
+        <tr><td>3</td><td>Промежут.</td><td>5</td><td>10</td><td style="color:#bc8cff">13</td><td>13</td></tr>
+        <tr class="ok"><td>4</td><td>Промежут.</td><td>0</td><td>2</td><td style="color:#3fb950"><strong>15</strong></td><td><strong>15 ★</strong></td></tr>
+        <tr><td>5</td><td>Последний</td><td>15</td><td>—</td><td>0</td><td>15</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="arr-vis" style="margin-bottom:28px;margin-top:8px">
+    <div class="arr-cell org">10<span class="idx">день 1</span></div>
+    <div class="arr-cell blue">8<span class="idx">день 2</span></div>
+    <div class="arr-cell hl">13<span class="idx">день 3</span></div>
+    <div class="arr-cell grn">15<span class="idx">день 4 ★</span></div>
+    <div class="arr-cell dim">0<span class="idx">день 5</span></div>
+  </div>
+  <div class="highlight-box green">Ответ: <strong>15</strong> — максимум на 4-й день ✓</div>
+  <div class="highlight-box blue" style="margin-top:10px">
+    💡 <strong>Связь с #1732 Find the Highest Altitude:</strong> это та же задача — есть массив изменений (+/-), нужно найти максимум накопительной суммы. Решается абсолютно одинаково!
+  </div>
+</div>
+
+<!-- 10 — Итог -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Итог</div>
+  <h2>Что запомнить</h2>
+  <div class="three-col" style="align-items:start">
+    <div class="card">
+      <h3 style="margin-top:0">📐 Формулы</h3>
+      <div class="formula" style="font-size:0.85rem;margin-bottom:8px">prefix[i+1] = prefix[i] + nums[i]</div>
+      <div class="formula" style="font-size:0.85rem">sum(l,r) = prefix[r+1] - prefix[l]</div>
+      <ul style="font-size:0.85rem;margin-top:10px">
+        <li>prefix длиной <strong>n+1</strong></li>
+        <li>prefix[0] = <strong>0</strong></li>
+        <li>l, r — индексы в исходном массиве</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">⚡ Сложность</h3>
+      <div class="complex-row" style="flex-direction:column;gap:8px">
+        <div class="complex-badge"><div class="lbl">Построение</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Каждый запрос</div><div class="val">O(1)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(n)</div></div>
+      </div>
+      <div class="highlight-box green" style="margin-top:8px;font-size:0.82rem">
+        Без prefix: O(Q·N)<br>
+        С prefix: O(N + Q)
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🔍 Когда применять</h3>
+      <ul style="font-size:0.85rem">
+        <li>Много запросов суммы на отрезке</li>
+        <li>Накопительные суммы / изменения</li>
+        <li>Поиск подмассива с нужной суммой</li>
+        <li>Нахождение точки баланса</li>
+      </ul>
+      <div class="highlight-box" style="margin-top:8px;font-size:0.82rem">
+        #1480 Running Sum ✓<br>
+        #303 Range Sum Query ✓<br>
+        #724 Pivot Index ✓<br>
+        #560 Subarray Sum = K ✓<br>
+        B. Экспедиция ✓
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box blue" style="margin-top:12px">
+    🎯 <strong>Ключевой сигнал:</strong> если видишь «сумма на отрезке» + «много запросов» или «накопительные данные» — сразу думай о префиксных суммах!
+  </div>
+</div>
+
+<!-- 11 — Домашнее задание -->
+<div class="slide" id="s11">
+  <div class="slide-tag">Домашнее задание</div>
+  <h2>🏠 Задачи для самостоятельной практики</h2>
+  <p style="font-size:0.88rem;color:#8b949e;margin-bottom:14px">Разборы всех задач с подсказками — на следующих слайдах 👉</p>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <p style="font-size:0.88rem;color:#3fb950;font-weight:600;margin-bottom:8px">🟢 Лёгкие — начни с них</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#1480</span>
+        <div><a href="https://leetcode.com/problems/running-sum-of-1d-array/" target="_blank">Running Sum of 1D Array</a>
+        <div class="hw-desc">Построить накопительную сумму. Разбор — слайд 7. ✅</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#303</span>
+        <div><a href="https://leetcode.com/problems/range-sum-query-immutable/" target="_blank">Range Sum Query — Immutable</a>
+        <div class="hw-desc">Класс с методом sumRange(l, r). Разбор — слайд 12.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#724</span>
+        <div><a href="https://leetcode.com/problems/find-pivot-index/" target="_blank">Find Pivot Index</a>
+        <div class="hw-desc">Найти индекс баланса — слева = справа. Разбор — слайд 13.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#1732</span>
+        <div><a href="https://leetcode.com/problems/find-the-highest-altitude/" target="_blank">Find the Highest Altitude</a>
+        <div class="hw-desc">Максимальная высота по приращениям. Очень похоже на Экспедицию!</div></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:0.88rem;color:#d29922;font-weight:600;margin-bottom:8px">🟡 Следующий уровень</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium" style="white-space:nowrap">#560</span>
+        <div><a href="https://leetcode.com/problems/subarray-sum-equals-k/" target="_blank">Subarray Sum Equals K</a>
+        <div class="hw-desc">Prefix sum + hashmap. Разбор — слайд 14.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium" style="white-space:nowrap">#238</span>
+        <div><a href="https://leetcode.com/problems/product-of-array-except-self/" target="_blank">Product of Array Except Self</a>
+        <div class="hw-desc">Та же идея, но с произведением. Prefix + suffix product.</div></div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:14px">
+        💡 <strong>Порядок:</strong><br>
+        #1480 → #303 → #724 → #1732 → #560 → #238<br><br>
+        После #1732 вернись к <strong>«B. Экспедиция»</strong> — они одинаковые!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 — Разбор #303 -->
+<div class="slide" id="s12">
+  <div class="slide-tag">Разбор с подсказками</div>
+  <span class="lc-badge lc-easy">#303 · Easy</span>
+  <h2><a href="https://leetcode.com/problems/range-sum-query-immutable/" target="_blank">Range Sum Query — Immutable ↗</a></h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">Реализовать класс <code class="inline">NumArray</code>. Метод <code class="inline">sumRange(left, right)</code> вызывается много раз. Нужно O(1) на запрос.</p>
+        <div class="highlight-box">
+          nums = [-2, 0, 3, -5, 2, -1]<br>
+          sumRange(0, 2) → <strong>1</strong><br>
+          sumRange(2, 5) → <strong>-1</strong><br>
+          sumRange(0, 5) → <strong>-3</strong>
+        </div>
+        <h3>Подсказки</h3>
+        <details style="margin-bottom:8px">
+          <summary>💡 Подсказка 1: где строить prefix?</summary>
+          <div class="highlight-box" style="margin-top:6px">В конструкторе <code class="inline">__init__</code> — один раз при создании объекта. Тогда каждый вызов sumRange будет O(1).</div>
+        </details>
+        <details style="margin-bottom:8px">
+          <summary>💡 Подсказка 2: какая формула?</summary>
+          <div class="highlight-box" style="margin-top:6px"><code class="inline">prefix[right+1] - prefix[left]</code> — используем массив со сдвигом (нулевой элемент = 0).</div>
+        </details>
+        <details>
+          <summary>💡 Подсказка 3: проверь на примере</summary>
+          <div class="highlight-box" style="margin-top:6px">prefix = [0, -2, -2, 1, -4, -2, -3]<br>sumRange(0,2) = prefix[3]-prefix[0] = 1-0 = <strong>1</strong> ✓</div>
+        </details>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">🔑 Решение</h3>
+        <details>
+          <summary style="color:#bc8cff;font-size:0.88rem;font-weight:600">Показать полное решение</summary>
+<pre style="margin-top:10px"><code class="language-python">class NumArray:
+    def __init__(self, nums):
+        n = len(nums)
+        self.prefix = [0] * (n + 1)
+        for i in range(n):
+            self.prefix[i+1] = self.prefix[i] + nums[i]
+
+    def sumRange(self, left, right):
+        return self.prefix[right+1] - self.prefix[left]
+
+# Трассировка:
+# nums   = [-2,  0,  3, -5,  2, -1]
+# prefix = [ 0, -2, -2,  1, -4, -2, -3]
+#
+# sumRange(2,5) = prefix[6]-prefix[2]
+#              = -3 - (-2) = -1 ✓</code></pre>
+        </details>
+      </div>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Построение</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Запрос</div><div class="val">O(1)</div></div>
+      </div>
+      <div class="highlight-box green" style="margin-top:4px">
+        ✅ Это эталонная задача на prefix sum — если понял её, понял всё!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 — Разбор #724 -->
+<div class="slide" id="s13">
+  <div class="slide-tag">Разбор с подсказками</div>
+  <span class="lc-badge lc-easy">#724 · Easy</span>
+  <h2><a href="https://leetcode.com/problems/find-pivot-index/" target="_blank">Find Pivot Index ↗</a></h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">Найти индекс i, где сумма слева = сумма справа. Вернуть -1 если нет.</p>
+        <div class="highlight-box green">[1,7,3,6,5,6] → <strong>3</strong> (слева=11, справа=11)</div>
+        <div class="highlight-box red">[1,2,3] → <strong>-1</strong></div>
+        <div class="highlight-box">[2,1,-1] → <strong>0</strong> (слева=0, справа=0)</div>
+        <h3>Подсказки</h3>
+        <details style="margin-bottom:8px">
+          <summary>💡 Подсказка 1: как посчитать сумму справа?</summary>
+          <div class="highlight-box" style="margin-top:6px">Зная <code class="inline">total = sum(nums)</code> и <code class="inline">left_sum</code>, сумма справа = <code class="inline">total - left_sum - nums[i]</code>. Не нужен отдельный массив!</div>
+        </details>
+        <details style="margin-bottom:8px">
+          <summary>💡 Подсказка 2: когда обновлять left_sum?</summary>
+          <div class="highlight-box" style="margin-top:6px"><strong>После</strong> проверки, не до! Иначе left_sum будет включать текущий элемент.</div>
+        </details>
+        <details>
+          <summary>💡 Подсказка 3: крайний случай i=0</summary>
+          <div class="highlight-box" style="margin-top:6px">При i=0 слева нет элементов → left_sum=0. Формула работает автоматически: right = total - 0 - nums[0].</div>
+        </details>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">🔑 Решение</h3>
+        <details>
+          <summary style="color:#bc8cff;font-size:0.88rem;font-weight:600">Показать полное решение</summary>
+<pre style="margin-top:10px"><code class="language-python">def pivotIndex(nums):
+    total = sum(nums)
+    left_sum = 0
+
+    for i, num in enumerate(nums):
+        # right = total - left_sum - nums[i]
+        if left_sum == total - left_sum - num:
+            return i
+        left_sum += num  # обновляем ПОСЛЕ проверки
+
+    return -1</code></pre>
+        </details>
+      </div>
+      <div style="overflow-x:auto;margin-top:10px">
+        <table class="trace-table">
+          <thead><tr><th>i</th><th>num</th><th>left</th><th>right=28-left-num</th><th>=?</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>1</td><td>0</td><td>28-0-1=27</td><td>✗</td></tr>
+            <tr><td>1</td><td>7</td><td>1</td><td>28-1-7=20</td><td>✗</td></tr>
+            <tr><td>2</td><td>3</td><td>8</td><td>28-8-3=17</td><td>✗</td></tr>
+            <tr class="ok"><td>3</td><td>6</td><td>11</td><td>28-11-6=11</td><td>✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14 — Разбор #560 -->
+<div class="slide" id="s14">
+  <div class="slide-tag">Разбор с подсказками</div>
+  <span class="lc-badge lc-medium">#560 · Medium</span>
+  <h2><a href="https://leetcode.com/problems/subarray-sum-equals-k/" target="_blank">Subarray Sum Equals K ↗</a></h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">Найти количество непрерывных подмассивов с суммой равной <code class="inline">k</code>.</p>
+        <div class="highlight-box green">nums=[1,1,1], k=2 → <strong>2</strong></div>
+        <div class="highlight-box">nums=[1,2,3], k=3 → <strong>2</strong> ([1,2] и [3])</div>
+        <h3>Подсказки</h3>
+        <details style="margin-bottom:8px">
+          <summary>💡 Подсказка 1: как записать условие через prefix?</summary>
+          <div class="highlight-box" style="margin-top:6px">Сумма подмассива [i..j] = <code class="inline">prefix[j+1] - prefix[i]</code>. Нам нужно это равнялось k, то есть <code class="inline">prefix[i] == prefix[j+1] - k</code>.</div>
+        </details>
+        <details style="margin-bottom:8px">
+          <summary>💡 Подсказка 2: как использовать hashmap?</summary>
+          <div class="highlight-box" style="margin-top:6px">Храним в словаре сколько раз встречалась каждая prefix-сумма. Для текущей суммы проверяем — сколько раз встречалась <code class="inline">prefix - k</code>.</div>
+        </details>
+        <details>
+          <summary>💡 Подсказка 3: зачем seen[0] = 1?</summary>
+          <div class="highlight-box" style="margin-top:6px">Это «пустой префикс» (сумма 0 до начала массива). Нужен для случая когда подмассив начинается с индекса 0.</div>
+        </details>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">🔑 Решение</h3>
+        <details>
+          <summary style="color:#bc8cff;font-size:0.88rem;font-weight:600">Показать полное решение</summary>
+<pre style="margin-top:10px"><code class="language-python">from collections import defaultdict
+
+def subarraySum(nums, k):
+    count = 0
+    prefix = 0
+    seen = defaultdict(int)
+    seen[0] = 1  # пустой префикс!
+
+    for num in nums:
+        prefix += num
+        # ищем сколько раз была сумма prefix-k
+        count += seen[prefix - k]
+        seen[prefix] += 1
+
+    return count
+
+# Трассировка nums=[1,1,1], k=2:
+# prefix=1: seen[1-2]=-1 → 0; seen={0:1,1:1}
+# prefix=2: seen[2-2]=0 → +1; seen={0:1,1:1,2:1}
+# prefix=3: seen[3-2]=1 → +1; count=2 ✓</code></pre>
+        </details>
+      </div>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(n)</div></div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:4px">
+        ⚠️ Это <strong>Medium</strong> — комбинация prefix + hashmap. Не расстраивайся если не с первого раза! Сначала закрой #303 и #724.
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slide-area -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 14</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+<script>
+  hljs.highlightAll();
+  let cur = 1, total = 14;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s'+prev).classList.remove('active');
+    document.getElementById('s'+cur).classList.add('active');
+    document.getElementById('counter').textContent = cur+' / '+total;
+    document.getElementById('prevBtn').disabled = cur===1;
+    document.getElementById('nextBtn').disabled = cur===total;
+    document.getElementById('progress').style.width = (cur/total*100)+'%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key===' ') navigate(1);
+    if (e.key==='ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = (1/total*100)+'%';
+
+  function checkQ(el, correct) {
+    const opts = el.parentElement.querySelectorAll('.quiz-opt');
+    opts.forEach(o => o.style.pointerEvents = 'none');
+    el.classList.add(correct ? 'correct' : 'wrong');
+    const res = el.closest('.quiz-card').querySelector('.quiz-result');
+    res.style.display = 'block';
+    res.style.color = correct ? '#3fb950' : '#f78166';
+    if (!res.textContent.trim()) res.textContent = correct ? '✅ Верно!' : '❌ Неверно — попробуй ещё раз.';
+  }
+</script>
+</body>
+</html>

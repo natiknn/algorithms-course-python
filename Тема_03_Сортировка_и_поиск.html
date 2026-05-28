@@ -1,0 +1,613 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сортировка и поиск</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #3fb950, #58a6ff); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 44px 64px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #3fb950; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.85rem; font-weight: 700; color: #f0f6fc; margin-bottom: 18px; }
+  h3 { font-size: 1.1rem; font-weight: 600; color: #3fb950; margin-bottom: 10px; margin-top: 18px; }
+  p { line-height: 1.8; margin-bottom: 12px; color: #c9d1d9; }
+  .subtitle { font-size: 1.15rem; color: #8b949e; margin-bottom: 32px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 18px 22px; margin-bottom: 14px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #3fb950; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 14px 0; }
+  .highlight-box.blue { border-left-color: #58a6ff; }
+  .highlight-box.yellow { border-left-color: #d29922; }
+  .highlight-box.red { border-left-color: #f78166; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.9em; color: #79c0ff; }
+  pre { margin: 12px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.87rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.9rem; }
+  .trace-table th { background: #1c2128; color: #3fb950; padding: 8px 14px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 7px 14px; text-align: center; border: 1px solid #21262d; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .task-img { max-width: 100%; max-height: 210px; border-radius: 8px; border: 1px solid #30363d; object-fit: contain; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 14px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 8px 22px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #3fb950; color: #3fb950; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 24px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; color: #8b949e; }
+  .sort-visual { display: flex; align-items: flex-end; gap: 8px; padding: 16px 0; }
+  .sort-bar { border-radius: 6px 6px 0 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: white; min-width: 40px; }
+  .arrow-down { color: #3fb950; font-size: 1.2rem; }
+  .keyword-box { background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; font-family: monospace; font-size: 0.9rem; }
+  .for-else-visual { display: flex; flex-direction: column; gap: 4px; }
+  .fe-block { padding: 10px 16px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; }
+  .fe-for { background: #0d2a4a; border: 1px solid #1f6feb; }
+  .fe-else { background: #0a2a12; border: 1px solid #3fb950; }
+  .fe-break { background: #2a1a0a; border: 1px solid #ffa657; }
+  .linear-visual { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .lv-box { width: 44px; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: monospace; font-size: 1rem; }
+  .lv-check { background: #1c3a1c; border: 2px solid #3fb950; color: #3fb950; }
+  .lv-skip { background: #1c2128; border: 1px solid #30363d; color: #8b949e; }
+  .lv-found { background: #1c3a1c; border: 2px dashed #3fb950; color: #3fb950; }
+  .lv-arrow { color: #3fb950; font-size: 1.4rem; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- Slide 1: Title -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">🔍</div>
+  <div class="slide-tag">Тема 3</div>
+  <h1>Сортировка и поиск</h1>
+  <p class="subtitle">Сортировка по ключу, линейный поиск<br>и конструкция for-else</p>
+  <div class="topic-chips">
+    <span class="chip">sorted(key=)</span>
+    <span class="chip">lambda</span>
+    <span class="chip">Линейный поиск</span>
+    <span class="chip">for-else</span>
+    <span class="chip">all() / any()</span>
+  </div>
+</div>
+
+<!-- Slide 2: sorted() basics -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Сортировка</div>
+  <h2>Функция <code class="inline">sorted()</code></h2>
+  <p><code class="inline">sorted()</code> возвращает <em>новый</em> отсортированный список. Не изменяет оригинал.</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">nums = [3, 1, 4, 1, 5, 9, 2]
+
+# По умолчанию — по возрастанию
+print(sorted(nums))
+# [1, 1, 2, 3, 4, 5, 9]
+
+# По убыванию
+print(sorted(nums, reverse=True))
+# [9, 5, 4, 3, 2, 1, 1]
+
+# Строки — по алфавиту
+words = ["banana", "apple", "cherry"]
+print(sorted(words))
+# ['apple', 'banana', 'cherry']
+
+# list.sort() — сортирует на месте
+nums.sort()  # меняет оригинал
+print(nums)</code></pre>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">sorted() vs list.sort()</h3>
+        <table class="trace-table">
+          <tr><th></th><th>sorted()</th><th>list.sort()</th></tr>
+          <tr><td>Возвращает</td><td style="color:#3fb950">Новый список</td><td style="color:#f78166">None</td></tr>
+          <tr><td>Оригинал</td><td style="color:#3fb950">Не меняет</td><td style="color:#f78166">Изменяет</td></tr>
+          <tr><td>Применимо к</td><td>Любому iterable</td><td>Только list</td></tr>
+        </table>
+      </div>
+      <div class="highlight-box blue" style="margin-top:12px">
+        <strong>Рекомендация:</strong> Используй <code class="inline">sorted()</code> — он безопаснее, не изменяет данные и работает с любыми коллекциями.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 3: key= parameter -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Сортировка</div>
+  <h2>Параметр <code class="inline">key=</code></h2>
+  <p>Параметр <code class="inline">key</code> принимает функцию. Для каждого элемента вызывается эта функция, и сортировка происходит по её результату.</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">words = ["banana", "fig", "apple", "kiwi"]
+
+# По длине слова
+print(sorted(words, key=len))
+# ['fig', 'kiwi', 'apple', 'banana']
+
+# По последней букве
+print(sorted(words, key=lambda w: w[-1]))
+# ['banana', 'apple', 'fig', 'kiwi']
+
+# По числу гласных
+VOWELS = set('aeiou')
+def count_vowels(w):
+    return sum(1 for c in w if c in VOWELS)
+
+print(sorted(words, key=count_vowels))
+# ['fig', 'kiwi', 'apple', 'banana']</code></pre>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Как это работает внутри?</h3>
+        <p style="font-size:0.85rem;color:#8b949e;margin-bottom:10px">Python как бы делает:</p>
+        <table class="trace-table">
+          <tr><th>Слово</th><th>key(слово)</th></tr>
+          <tr><td>banana</td><td>6</td></tr>
+          <tr><td>fig</td><td>3</td></tr>
+          <tr><td>apple</td><td>5</td></tr>
+          <tr><td>kiwi</td><td>4</td></tr>
+        </table>
+        <p style="font-size:0.85rem;color:#8b949e;margin-top:8px">→ Сортирует по значениям ключей: 3,4,5,6</p>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <strong>Важно:</strong> Функция key вызывается один раз для каждого элемента. Python не сравнивает сами элементы — он сравнивает значения ключей.
+  </div>
+</div>
+
+<!-- Slide 4: Lambda functions -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Сортировка</div>
+  <h2>Лямбда-функции</h2>
+  <p>Lambda — это <strong>анонимная функция</strong> (без имени) в одну строку. Удобна, когда функция простая и нужна только в одном месте.</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python"># Обычная функция
+def square(x):
+    return x * x
+
+# То же самое через lambda
+square = lambda x: x * x
+
+print(square(5))  # 25
+
+# В sorted — можно прямо там:
+nums = [(3, 'c'), (1, 'a'), (2, 'b')]
+
+# Сортировка по первому элементу
+sorted(nums, key=lambda pair: pair[0])
+# [(1, 'a'), (2, 'b'), (3, 'c')]
+
+# Сортировка по второму элементу
+sorted(nums, key=lambda pair: pair[1])
+# [(1, 'a'), (2, 'b'), (3, 'c')]</code></pre>
+    </div>
+    <div>
+<pre><code class="language-python"># Синтаксис:
+# lambda аргументы: выражение
+
+# Несколько аргументов
+add = lambda x, y: x + y
+print(add(3, 4))  # 7
+
+# Для сортировки по нескольким критериям
+# возвращаем КОРТЕЖ!
+words = ["aaa", "bb", "cccc", "d"]
+
+# Сначала по длине, потом по алфавиту
+result = sorted(words,
+    key=lambda w: (len(w), w))
+print(result)
+# ['d', 'bb', 'aaa', 'cccc']</code></pre>
+    </div>
+  </div>
+  <div class="highlight-box yellow">
+    <strong>Трюк:</strong> Чтобы сортировать по убыванию только по одному критерию из нескольких, поставь минус: <code class="inline">key=lambda w: (-len(w), w)</code> — сначала длинные, при одинаковой длине — по алфавиту.
+  </div>
+</div>
+
+<!-- Slide 5: Linear search -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Поиск</div>
+  <h2>Линейный поиск</h2>
+  <p>Перебираем все элементы по одному, пока не найдём нужный. Простой, но медленный для больших данных.</p>
+  <div class="card" style="margin-bottom:16px">
+    <p style="font-size:0.85rem;color:#8b949e;margin-bottom:10px">Ищем значение 5 в массиве:</p>
+    <div class="linear-visual">
+      <div class="lv-box lv-check">2</div>
+      <div class="lv-arrow">→</div>
+      <div class="lv-box lv-check">7</div>
+      <div class="lv-arrow">→</div>
+      <div class="lv-box lv-check">1</div>
+      <div class="lv-arrow">→</div>
+      <div class="lv-box lv-found">5</div>
+      <span style="color:#3fb950;margin-left:8px;font-weight:700">✓ Найдено!</span>
+    </div>
+  </div>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">def linear_search(arr, target):
+    for i, val in enumerate(arr):
+        if val == target:
+            return i  # нашли — возвращаем индекс
+    return -1  # не нашли
+
+arr = [2, 7, 1, 5, 3]
+print(linear_search(arr, 5))   # 3
+print(linear_search(arr, 99))  # -1</code></pre>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Когда использовать линейный поиск?</h3>
+        <ul style="line-height:2;margin-left:16px;font-size:0.9rem;color:#8b949e">
+          <li>Массив маленький (до ~1000 элементов)</li>
+          <li>Массив <strong>не отсортирован</strong></li>
+          <li>Поиск по сложному условию</li>
+          <li>Нужно найти <em>первый подходящий</em></li>
+          <li>Перебор значений (например, x от 0 до 100)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box blue">
+    <strong>Пример из задачи:</strong> Перебор значений x от 0 до 99 — это тоже линейный поиск! Проверяем каждый x, подходит ли он.
+  </div>
+</div>
+
+<!-- Slide 6: for-else -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Поиск</div>
+  <h2>Конструкция <code class="inline">for-else</code></h2>
+  <p>В Python у цикла <code class="inline">for</code> есть необязательная ветка <code class="inline">else</code>. Она выполняется только если цикл завершился <strong>нормально</strong> (без <code class="inline">break</code>).</p>
+  <div class="for-else-visual" style="margin: 16px 0;">
+    <div class="fe-block fe-for">for элемент in последовательность:</div>
+    <div class="fe-block fe-for" style="margin-left:24px">    &nbsp;&nbsp;&nbsp;&nbsp;тело цикла</div>
+    <div class="fe-block fe-for" style="margin-left:24px">    &nbsp;&nbsp;&nbsp;&nbsp;if условие: <span style="color:#ffa657">break</span>  ← если выполнится, else пропускается</div>
+    <div class="fe-block fe-else">else:  ← выполняется если break НЕ был вызван</div>
+    <div class="fe-block fe-else" style="margin-left:24px">    &nbsp;&nbsp;&nbsp;&nbsp;код при «не нашли»</div>
+  </div>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python"># Поиск: нашли или нет?
+target = 99
+numbers = [1, 5, 7, 3, 2]
+
+for n in numbers:
+    if n == target:
+        print("Нашли!")
+        break
+else:
+    # Сюда попадаем если break не был вызван
+    print("Не нашли")
+    # → "Не нашли"</code></pre>
+    </div>
+    <div>
+<pre><code class="language-python"># Перебор значений полинома
+Q = int(input())
+# a0 + a1*x + ... + a5*x^5
+coeffs = list(map(int, input().split()))
+
+for x in range(100):
+    value = sum(coeffs[i] * (x ** i)
+                for i in range(6))
+    if value == Q:
+        print(x)
+        break
+else:
+    print(-1)  # ни один x не подошёл</code></pre>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <strong>Без for-else</strong> пришлось бы использовать переменную-флаг. for-else — это более Pythonic способ!
+  </div>
+</div>
+
+<!-- Slide 7: all() and any() -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Поиск</div>
+  <h2>Функции <code class="inline">all()</code> и <code class="inline">any()</code></h2>
+  <p>Работают с генераторами и проверяют условия для всей последовательности.</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python"># all() — все ли элементы True?
+nums = [2, 4, 6, 8]
+print(all(x % 2 == 0 for x in nums))
+# True — все чётные
+
+nums2 = [2, 4, 5, 8]
+print(all(x % 2 == 0 for x in nums2))
+# False — 5 нечётное
+
+# any() — хотя бы один True?
+print(any(x > 7 for x in nums))
+# True — 8 > 7</code></pre>
+    </div>
+    <div>
+<pre><code class="language-python"># Задача: является ли горка пиком?
+# (строго растёт до вершины, строго убывает)
+
+h = [1, 3, 5, 4, 2]
+n = len(h)
+
+for i in range(1, n - 1):
+    # all(h[j] < h[j+1]) — строго растёт
+    left_ok = all(h[j] < h[j+1]
+                  for j in range(i))
+    # строго убывает после вершины
+    right_ok = all(h[j] > h[j+1]
+                   for j in range(i, n-1))
+    if left_ok and right_ok:
+        print(i + 1)  # 1-индексация
+        break</code></pre>
+    </div>
+  </div>
+  <div class="highlight-box yellow">
+    <strong>Важно:</strong> <code class="inline">all()</code> и <code class="inline">any()</code> работают с «ленивым» вычислением — они останавливаются как только находят ответ. Это эффективно!
+  </div>
+</div>
+
+<!-- Slide 8: Task DEMO_V_C -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Задача DEMO</div>
+  <h2>Задача: Сортировка слов по числу гласных</h2>
+  <div class="two-col">
+    <div>
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;font-size:0.87rem;line-height:1.7;">
+        <div style="font-weight:700;color:#f0f6fc;font-size:0.95rem;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #30363d;">С. Новые заклинания</div>
+        <p style="color:#c9d1d9;margin-bottom:6px;">Гарри выписал список потенциальных заклинаний. Нужно отсортировать их по «благозвучности»:</p>
+        <p style="color:#c9d1d9;margin-bottom:6px;">1) Сначала по <strong style="color:#f0f6fc;">убыванию числа гласных</strong> (a, e, i, o, u).</p>
+        <p style="color:#c9d1d9;margin-bottom:8px;">2) При равном числе гласных — по <strong style="color:#f0f6fc;">возрастанию длины</strong>. Сортировка должна быть стабильной.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3fb950;margin-bottom:4px;">Формат ввода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Первая строка: N (1 <= N <= 100). Далее N заклинаний — строки строчных букв, длина <= 10.</p>
+          </div>
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3fb950;margin-bottom:4px;">Формат вывода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Отсортированные заклинания по одному на строке.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод</div><div style="color:#3fb950;font-weight:700;">3<br>aab<br>aa<br>abababab</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод</div><div style="color:#3fb950;font-weight:700;">abababab<br>aa<br>aab</div></div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:14px">
+        <strong>Критерии сортировки:</strong>
+        <ol style="margin-left:16px;line-height:2;font-size:0.9rem">
+          <li>По числу гласных — по убыванию</li>
+          <li>При равном числе гласных — по длине слова по возрастанию</li>
+        </ol>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">VOWELS = set('aeiouAEIOU')
+n = int(input())
+words = [input().strip() for _ in range(n)]
+
+def key(w):
+    vowels_count = sum(1 for c in w
+                       if c in VOWELS)
+    # Минус — для убывания по гласным
+    # len(w) — для возрастания по длине
+    return (-vowels_count, len(w))
+
+# sorted() — стабильная сортировка
+result = sorted(words, key=key)
+
+for w in result:
+    print(w)</code></pre>
+      <div class="card" style="margin-top:10px">
+        <h3 style="margin-top:0">Почему кортеж?</h3>
+        <p style="font-size:0.85rem;color:#8b949e">Кортежи сравниваются поэлементно: сначала по первому, при равенстве — по второму. Именно это нам и нужно для двухуровневой сортировки.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 9: Task V1_B -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Задача V1</div>
+  <h2>Задача: Пик массива</h2>
+  <div class="two-col">
+    <div>
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;font-size:0.87rem;line-height:1.7;">
+        <div style="font-weight:700;color:#f0f6fc;font-size:0.95rem;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #30363d;">B. Горы</div>
+        <p style="color:#c9d1d9;margin-bottom:6px;">Горный хребет — набор высот h₁...hₙ (n > 3). Существует «основная гора» с индексом i (1 &lt; i &lt; n), такая что высоты строго возрастают до hᵢ, а затем строго убывают: h₁ &lt; h₂ &lt; ... &lt; hᵢ &gt; hᵢ₊₁ &gt; ... &gt; hₙ.</p>
+        <p style="color:#c9d1d9;margin-bottom:8px;">Гарантируется, что горный хребет существует. Найдите индекс любой основной горы.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3fb950;margin-bottom:4px;">Формат ввода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Число n (3 <= n <= 10⁴), затем n чисел hᵢ (1 <= hᵢ <= 10⁹).</p>
+          </div>
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3fb950;margin-bottom:4px;">Формат вывода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Одно число — индекс любой основной горы (нумерация с 1).</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод 1</div><div style="color:#3fb950;font-weight:700;">3<br>1 2 1</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод 1</div><div style="color:#3fb950;font-weight:700;">2</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод 2</div><div style="color:#3fb950;font-weight:700;">4<br>1 2 3 1</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод 2</div><div style="color:#3fb950;font-weight:700;">3</div></div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:14px">
+        <strong>Пик</strong> — позиция i, такая что все элементы слева строго возрастают до h[i], а все справа строго убывают от h[i].
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin-top:0">Пример: [1, 3, 5, 4, 2]</h3>
+        <div style="display:flex;gap:6px;align-items:flex-end;margin-top:8px">
+          <div style="text-align:center;flex:1"><div style="background:#1f6feb;height:20px;border-radius:4px 4px 0 0"></div><div style="font-size:0.8rem;color:#8b949e;margin-top:4px">1</div></div>
+          <div style="text-align:center;flex:1"><div style="background:#1f6feb;height:60px;border-radius:4px 4px 0 0"></div><div style="font-size:0.8rem;color:#8b949e;margin-top:4px">3</div></div>
+          <div style="text-align:center;flex:1"><div style="background:#3fb950;height:100px;border-radius:4px 4px 0 0;border:2px solid #3fb950"></div><div style="font-size:0.8rem;color:#3fb950;margin-top:4px;font-weight:700">5 ←пик</div></div>
+          <div style="text-align:center;flex:1"><div style="background:#1f6feb;height:80px;border-radius:4px 4px 0 0"></div><div style="font-size:0.8rem;color:#8b949e;margin-top:4px">4</div></div>
+          <div style="text-align:center;flex:1"><div style="background:#1f6feb;height:40px;border-radius:4px 4px 0 0"></div><div style="font-size:0.8rem;color:#8b949e;margin-top:4px">2</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">n = int(input())
+h = list(map(int, input().split()))
+
+for i in range(1, n - 1):
+    # Проверяем: строго возрастает слева
+    left_ok = all(h[j] < h[j + 1]
+                  for j in range(i))
+    # Проверяем: строго убывает справа
+    right_ok = all(h[j] > h[j + 1]
+                   for j in range(i, n - 1))
+
+    if left_ok and right_ok:
+        print(i + 1)  # 1-индексация!
+        break</code></pre>
+      <div class="card" style="margin-top:10px">
+        <h3 style="margin-top:0">Почему i + 1?</h3>
+        <p style="font-size:0.85rem;color:#8b949e">В Python индексы с нуля, но задача просит позицию с единицы (1-indexed). Поэтому прибавляем 1 к найденному индексу.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 10: Task V3_B -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Задача V3</div>
+  <h2>Задача: Найти корень полинома</h2>
+  <div class="two-col">
+    <div>
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;font-size:0.87rem;line-height:1.7;">
+        <div style="font-weight:700;color:#f0f6fc;font-size:0.95rem;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #30363d;">B. Линейный поиск по линейке</div>
+        <p style="color:#c9d1d9;margin-bottom:6px;">На линейке выгравирована формула для числа гвоздей Q в зависимости от длины ракеты x:</p>
+        <p style="color:#c9d1d9;margin-bottom:8px;font-family:monospace;font-size:0.9rem;">Q = a₀ + a₁·x + a₂·x² + a₃·x³ + a₄·x⁴ + a₅·x⁵</p>
+        <p style="color:#c9d1d9;margin-bottom:8px;">По известному Q найдите длину x (индекс деления, 0 <= x <= 99).</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3fb950;margin-bottom:4px;">Формат ввода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Число Q (|Q| &lt; 4·10²⁰), затем 6 коэффициентов aᵢ (|aᵢ| <= 10).</p>
+          </div>
+          <div style="background:#1c2128;border-radius:6px;padding:8px 12px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3fb950;margin-bottom:4px;">Формат вывода</div>
+            <p style="color:#8b949e;margin-bottom:0;font-size:0.82rem;">Значение x (0 <= x <= 99) или −1, если ответа нет.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод 1</div><div style="color:#3fb950;font-weight:700;">6<br>6 5 4 3 2 1</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод 1</div><div style="color:#3fb950;font-weight:700;">0</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Ввод 2</div><div style="color:#3fb950;font-weight:700;">95971372997<br>5 6 7 8 9 10</div></div>
+          <div style="background:#1c2128;border-radius:6px;padding:6px 12px;font-family:monospace;"><div style="color:#8b949e;font-size:0.7rem;margin-bottom:2px;">Вывод 2</div><div style="color:#3fb950;font-weight:700;">99</div></div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:14px">
+        <strong>Идея:</strong> Перебираем x от 0 до 99 (линейный поиск). Вычисляем значение полинома a₀ + a₁x + ... + a₅x⁵. Если равно Q — вывести x и остановиться.
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">Q = int(input())
+# Коэффициенты: a0, a1, ..., a5
+coeffs = list(map(int, input().split()))
+
+for x in range(100):
+    # Вычисляем полином через генератор
+    value = sum(coeffs[i] * (x ** i)
+                for i in range(6))
+    if value == Q:
+        print(x)
+        break   # нашли — выходим
+else:
+    print(-1)   # ни один x не подошёл</code></pre>
+      <div class="card" style="margin-top:10px">
+        <h3 style="margin-top:0">Это линейный поиск!</h3>
+        <p style="font-size:0.85rem;color:#8b949e">Мы перебираем все x от 0 до 99. Для каждого проверяем условие. Как только нашли подходящий — выходим. Если ни один не подошёл — <code class="inline">else</code> выводит -1.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 11: Summary -->
+<div class="slide" id="s11">
+  <div class="slide-tag">Итоги</div>
+  <h2>Что мы изучили?</h2>
+  <div class="three-col">
+    <div class="card">
+      <h3 style="margin-top:0">sorted(key=)</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.85rem;color:#8b949e">
+        <li>key — функция от элемента</li>
+        <li>lambda x: выражение</li>
+        <li>Кортеж = два критерия</li>
+        <li>Минус = убывание</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Линейный поиск</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.85rem;color:#8b949e">
+        <li>Перебор всех элементов</li>
+        <li>Для маленьких / несортированных</li>
+        <li>Остановка при нахождении</li>
+        <li>all() и any()</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">for-else</h3>
+      <ul style="line-height:2;margin-left:16px;font-size:0.85rem;color:#8b949e">
+        <li>else = цикл прошёл до конца</li>
+        <li>break = else не выполняется</li>
+        <li>Элегантная замена флага</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top:20px">
+    <strong>Главный инсайт:</strong> <code class="inline">sorted(key=lambda ...)</code> + кортеж с минусом решает почти любую задачу на сортировку по нескольким критериям. Выучи этот паттерн!
+  </div>
+</div>
+
+</div>
+
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 11</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+
+<script>
+  hljs.highlightAll();
+  let cur = 1;
+  const total = 11;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s' + prev).classList.remove('active');
+    document.getElementById('s' + cur).classList.add('active');
+    document.getElementById('counter').textContent = cur + ' / ' + total;
+    document.getElementById('prevBtn').disabled = cur === 1;
+    document.getElementById('nextBtn').disabled = cur === total;
+    document.getElementById('progress').style.width = ((cur / total) * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+    if (e.key === 'ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = ((1 / total) * 100) + '%';
+</script>
+</body>
+</html>

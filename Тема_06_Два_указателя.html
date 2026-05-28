@@ -1,0 +1,878 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Два указателя — Two Pointers</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #3fb950, #58a6ff); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 40px 60px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #3fb950; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.75rem; font-weight: 700; color: #f0f6fc; margin-bottom: 16px; }
+  h3 { font-size: 1.05rem; font-weight: 600; color: #3fb950; margin-bottom: 8px; margin-top: 14px; }
+  p { line-height: 1.8; margin-bottom: 10px; color: #c9d1d9; font-size: 0.95rem; }
+  strong { color: #f0f6fc; }
+  em { color: #ffa657; font-style: normal; }
+  .subtitle { font-size: 1.1rem; color: #8b949e; margin-bottom: 28px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #3fb950; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+  .highlight-box.blue { border-left-color: #58a6ff; }
+  .highlight-box.yellow { border-left-color: #d29922; }
+  .highlight-box.red { border-left-color: #f78166; }
+  .highlight-box.orange { border-left-color: #ffa657; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88em; color: #79c0ff; }
+  pre { margin: 10px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 0.85rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.88rem; }
+  .trace-table th { background: #1c2128; color: #3fb950; padding: 7px 12px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 6px 12px; text-align: center; border: 1px solid #21262d; color: #c9d1d9; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .trace-table tr.found td { background: #1c3a1c; color: #3fb950; }
+  .trace-table tr.bad td { background: #3a1c1c; color: #f78166; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 7px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #3fb950; color: #3fb950; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 20px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; color: #8b949e; }
+  .ptr-vis { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 14px 0; }
+  .ptr-row { display: flex; gap: 4px; align-items: center; }
+  .ptr-cell { width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-weight: 700; font-size: 1rem; border: 1px solid #30363d; background: #1c2128; color: #c9d1d9; }
+  .ptr-cell.left  { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .ptr-cell.right { background: #1c2a3a; border-color: #58a6ff; color: #58a6ff; }
+  .ptr-cell.match { background: #2a1c3a; border-color: #ffa657; color: #ffa657; }
+  .ptr-cell.elim  { background: #21262d; border-color: #21262d; color: #444; }
+  .ptr-cell.found { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .ptr-labels { display: flex; gap: 4px; }
+  .ptr-label { width: 38px; text-align: center; font-size: 0.65rem; color: #8b949e; font-family: monospace; }
+  .ptr-label.lbl-l { color: #3fb950; }
+  .ptr-label.lbl-r { color: #58a6ff; }
+  .step-card { display: flex; gap: 12px; align-items: flex-start; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 10px 14px; margin-bottom: 7px; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: #1c2a3a; border: 1px solid #58a6ff; color: #58a6ff; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-body { flex: 1; font-size: 0.9rem; line-height: 1.6; color: #c9d1d9; }
+  .pattern-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600; margin-bottom: 12px; }
+  .pb-green  { background: rgba(63,185,80,.15);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+  .pb-blue   { background: rgba(88,166,255,.15); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
+  .pb-orange { background: rgba(255,166,87,.15); color: #ffa657; border: 1px solid rgba(255,166,87,.3); }
+  .complex-row { display: flex; gap: 10px; margin: 10px 0; }
+  .complex-badge { background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 8px 14px; }
+  .complex-badge .lbl { font-size: 0.72rem; color: #8b949e; }
+  .complex-badge .val { font-size: 1rem; color: #ffa657; font-weight: 700; font-family: monospace; }
+  .lc-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600; margin-right: 8px; }
+  .lc-easy   { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+  .lc-medium { background: rgba(210,153,34,.12); color: #d29922; border: 1px solid rgba(210,153,34,.3); }
+  .hw-item { display: flex; align-items: flex-start; gap: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 11px 15px; margin-bottom: 7px; }
+  .hw-item a { color: #58a6ff; font-weight: 600; font-size: 0.92rem; text-decoration: none; }
+  .hw-item a:hover { text-decoration: underline; }
+  .hw-desc { font-size: 0.82rem; color: #8b949e; margin-top: 2px; }
+  ul { padding-left: 18px; }
+  li { line-height: 1.8; color: #c9d1d9; font-size: 0.9rem; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- 1 — Титул -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">👆👆</div>
+  <div class="slide-tag">Тема 6</div>
+  <h1>Два указателя</h1>
+  <p class="subtitle">Как заменить вложенный цикл O(n²) на один проход O(n)<br>и три паттерна, которые решают десятки задач</p>
+  <div class="topic-chips">
+    <span class="chip">Two Pointers</span>
+    <span class="chip">Встречный ход</span>
+    <span class="chip">Скользящее окно</span>
+    <span class="chip">Префикс/Суффикс</span>
+    <span class="chip">O(n)</span>
+  </div>
+</div>
+
+<!-- 2 — Что такое два указателя -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Теория</div>
+  <h2>Что такое два указателя?</h2>
+  <p>Два указателя — это просто <strong>две переменные-индекса</strong>. Вместо двух вложенных циклов мы двигаем их умно и решаем задачу за один проход.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#f78166">❌ Наивный подход — O(n²)</h3>
+<pre><code class="language-python">for i in range(n):
+    for j in range(i+1, n):
+        # проверяем пару (i, j)
+        ...</code></pre>
+        <p style="font-size:0.85rem;color:#8b949e">Для n=10 000 → 50 000 000 итераций 😱</p>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#3fb950">✅ Два указателя — O(n)</h3>
+<pre><code class="language-python">left = 0
+right = n - 1
+while left < right:
+    # смотрим на два элемента
+    # двигаем один из указателей
+    ...</code></pre>
+        <p style="font-size:0.85rem;color:#8b949e">Для n=10 000 → максимум 10 000 итераций 🚀</p>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box blue">
+    💡 <strong>Когда применять:</strong> массив или строка + нужно сравнивать элементы с разных позиций + данные отсортированы или есть симметрия (палиндром, сумма).
+  </div>
+</div>
+
+<!-- 3 — Три паттерна -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Паттерны</div>
+  <h2>Три основных паттерна</h2>
+  <div class="three-col" style="align-items:start">
+    <div class="card">
+      <span class="pattern-badge pb-green">Паттерн 1</span>
+      <h3 style="margin-top:4px">Встречный ход</h3>
+      <p style="font-size:0.88rem">Left стартует с начала, Right — с конца. Сходятся к центру.</p>
+      <div class="ptr-vis">
+        <div class="ptr-row">
+          <div class="ptr-cell left">a</div>
+          <div class="ptr-cell">b</div>
+          <div class="ptr-cell">c</div>
+          <div class="ptr-cell">b</div>
+          <div class="ptr-cell right">a</div>
+        </div>
+        <div class="ptr-labels">
+          <div class="ptr-label lbl-l">L</div>
+          <div class="ptr-label"></div><div class="ptr-label"></div><div class="ptr-label"></div>
+          <div class="ptr-label lbl-r">R</div>
+        </div>
+      </div>
+      <p style="font-size:0.82rem;color:#8b949e">Палиндром, two sum, reverse</p>
+    </div>
+    <div class="card">
+      <span class="pattern-badge pb-blue">Паттерн 2</span>
+      <h3 style="margin-top:4px">Скользящее окно</h3>
+      <p style="font-size:0.88rem">Оба указателя идут вправо. Окно расширяется и сужается.</p>
+      <div class="ptr-vis">
+        <div class="ptr-row">
+          <div class="ptr-cell elim">a</div>
+          <div class="ptr-cell left">b</div>
+          <div class="ptr-cell match">c</div>
+          <div class="ptr-cell match">d</div>
+          <div class="ptr-cell right">e</div>
+        </div>
+        <div class="ptr-labels">
+          <div class="ptr-label"></div>
+          <div class="ptr-label lbl-l">L</div>
+          <div class="ptr-label"></div><div class="ptr-label"></div>
+          <div class="ptr-label lbl-r">R</div>
+        </div>
+      </div>
+      <p style="font-size:0.82rem;color:#8b949e">Подстроки, подмассивы</p>
+    </div>
+    <div class="card">
+      <span class="pattern-badge pb-orange">Паттерн 3</span>
+      <h3 style="margin-top:4px">Префикс / Суффикс</h3>
+      <p style="font-size:0.88rem">Удаляем одинаковые блоки с двух концов, двигаясь внутрь.</p>
+      <div class="ptr-vis">
+        <div class="ptr-row">
+          <div class="ptr-cell elim">z</div>
+          <div class="ptr-cell left">a</div>
+          <div class="ptr-cell">b</div>
+          <div class="ptr-cell right">a</div>
+          <div class="ptr-cell elim">z</div>
+        </div>
+        <div class="ptr-labels">
+          <div class="ptr-label"></div>
+          <div class="ptr-label lbl-l">L</div>
+          <div class="ptr-label"></div>
+          <div class="ptr-label lbl-r">R</div>
+          <div class="ptr-label"></div>
+        </div>
+      </div>
+      <p style="font-size:0.82rem;color:#8b949e">Удаление блоков, строки</p>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — Паттерн 1 шаблон -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Паттерн 1 — Встречный ход</div>
+  <h2>Паттерн 1: Встречный ход</h2>
+  <span class="pattern-badge pb-green">Left с начала, Right с конца — сходятся к центру</span>
+  <div class="two-col" style="margin-top:8px">
+    <div>
+      <p>Шаблон кода:</p>
+<pre><code class="language-python">left = 0
+right = len(arr) - 1
+
+while left < right:
+    if условие_выполнено:
+        return результат
+    elif нужно_увеличить_сумму:
+        left += 1
+    else:
+        right -= 1</code></pre>
+      <div class="highlight-box">
+        <strong>Цикл:</strong> <code class="inline">while left &lt; right</code><br>
+        <strong>Шаг:</strong> двигаем либо left, либо right<br>
+        <strong>Оба сразу</strong> — только при совпадении (палиндром)
+      </div>
+      <div class="highlight-box blue">
+        💡 Работает на <strong>отсортированных</strong> данных или там, где есть симметрия — тогда движение указателя предсказуемо меняет результат.
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Пример: Reverse String (#344)</h3>
+<pre><code class="language-python">def reverse(s):
+    left, right = 0, len(s) - 1
+    while left < right:
+        s[left], s[right] = s[right], s[left]
+        left += 1
+        right -= 1</code></pre>
+        <div class="ptr-vis" style="margin-top:10px">
+          <div class="ptr-row">
+            <div class="ptr-cell left">h</div>
+            <div class="ptr-cell">e</div>
+            <div class="ptr-cell">l</div>
+            <div class="ptr-cell">l</div>
+            <div class="ptr-cell right">o</div>
+          </div>
+          <div class="ptr-labels">
+            <div class="ptr-label lbl-l">L</div>
+            <div class="ptr-label"></div><div class="ptr-label"></div><div class="ptr-label"></div>
+            <div class="ptr-label lbl-r">R</div>
+          </div>
+        </div>
+        <p style="font-size:0.82rem;color:#8b949e;margin-top:18px">Меняем местами, двигаем оба. Результат: <code class="inline">olleh</code></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — #125 Valid Palindrome -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Паттерн 1 — Разбор задачи</div>
+  <span class="lc-badge lc-easy">#125 · Easy</span>
+  <h2>Valid Palindrome</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.9rem">Строка является палиндромом, если после удаления не-буквенно-цифровых символов и приведения к нижнему регистру она читается одинаково с обеих сторон.</p>
+        <div class="highlight-box"><code class="inline">"A man, a plan, a canal: Panama"</code> → <strong>True</strong></div>
+        <div class="highlight-box red"><code class="inline">"race a car"</code> → <strong>False</strong></div>
+        <h3>Алгоритм</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Ставим left=0, right=len-1</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Пропускаем не-буквенно-цифровые с обеих сторон (<code class="inline">isalnum()</code>)</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">Сравниваем <code class="inline">s[left].lower()</code> и <code class="inline">s[right].lower()</code></div></div>
+        <div class="step-card"><div class="step-num">4</div><div class="step-body">Не совпали → False. Иначе двигаем оба внутрь.</div></div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def isPalindrome(s: str) -> bool:
+    left = 0
+    right = len(s) - 1
+
+    while left < right:
+        # пропускаем не-буквенно-цифровые
+        while left < right and not s[left].isalnum():
+            left += 1
+        while left < right and not s[right].isalnum():
+            right -= 1
+
+        if s[left].lower() != s[right].lower():
+            return False
+
+        left += 1
+        right -= 1
+
+    return True</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(1)</div></div>
+      </div>
+      <div class="highlight-box blue">
+        <code class="inline">isalnum()</code> → True если буква или цифра<br>
+        <code class="inline">lower()</code> → нижний регистр
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 — Трассировка #125 -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Паттерн 1 — Трассировка</div>
+  <h2>Трассировка Valid Palindrome</h2>
+  <p style="margin-bottom:6px">Строка: <code class="inline">"racecar"</code></p>
+  <div style="overflow-x:auto;margin-bottom:18px">
+    <table class="trace-table">
+      <thead><tr><th>Шаг</th><th>left</th><th>right</th><th>s[left]</th><th>s[right]</th><th>Совпадают?</th><th>Действие</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>0</td><td>6</td><td>r</td><td>r</td><td style="color:#3fb950">✓</td><td>left=1, right=5</td></tr>
+        <tr><td>2</td><td>1</td><td>5</td><td>a</td><td>a</td><td style="color:#3fb950">✓</td><td>left=2, right=4</td></tr>
+        <tr><td>3</td><td>2</td><td>4</td><td>c</td><td>c</td><td style="color:#3fb950">✓</td><td>left=3, right=3</td></tr>
+        <tr class="found"><td>4</td><td>3</td><td>3</td><td colspan="4">left == right → выход → return <strong>True</strong> ✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="margin-bottom:6px">Строка: <code class="inline">"abca"</code></p>
+  <div style="overflow-x:auto">
+    <table class="trace-table">
+      <thead><tr><th>Шаг</th><th>left</th><th>right</th><th>s[left]</th><th>s[right]</th><th>Совпадают?</th><th>Действие</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>0</td><td>3</td><td>a</td><td>a</td><td style="color:#3fb950">✓</td><td>left=1, right=2</td></tr>
+        <tr class="bad"><td>2</td><td>1</td><td>2</td><td>b</td><td>c</td><td style="color:#f78166">✗</td><td>return <strong>False</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="highlight-box" style="margin-top:14px">
+    <strong>Важно:</strong> при совпадении двигаем <em>оба</em> указателя. При несовпадении — сразу возвращаем False, дальше проверять нет смысла.
+  </div>
+</div>
+
+<!-- 7 — Паттерн 2: Скользящее окно -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Паттерн 2 — Скользящее окно</div>
+  <h2>Паттерн 2: Скользящее окно</h2>
+  <span class="pattern-badge pb-blue">Оба указателя идут вправо — окно расширяется и сужается</span>
+  <div class="two-col" style="margin-top:8px">
+    <div>
+<pre><code class="language-python">left = 0
+result = 0
+
+for right in range(len(arr)):
+    # расширяем окно — добавляем arr[right]
+    window.add(arr[right])
+
+    # сужаем пока окно невалидно
+    while не_валидное_окно:
+        window.remove(arr[left])
+        left += 1
+
+    # обновляем ответ
+    result = max(result, right - left + 1)
+
+return result</code></pre>
+      <div class="highlight-box blue">
+        <strong>Размер окна</strong> = <code class="inline">right - left + 1</code><br>
+        Right всегда движется вправо (в for-цикле).<br>
+        Left — только когда окно стало невалидным.
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Пример: максимальная сумма подмассива длины k</h3>
+<pre><code class="language-python">def maxSum(nums, k):
+    window_sum = sum(nums[:k])
+    result = window_sum
+
+    for i in range(k, len(nums)):
+        # скользим: добавляем справа,
+        # убираем слева
+        window_sum += nums[i] - nums[i - k]
+        result = max(result, window_sum)
+
+    return result
+
+# [2,3,4,1,5], k=3
+# окна: [2,3,4]=9, [3,4,1]=8, [4,1,5]=10
+# ответ: 10</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 — Паттерн 3: Префикс/Суффикс -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Паттерн 3 — Префикс / Суффикс</div>
+  <h2>Паттерн 3: Префикс / Суффикс</h2>
+  <span class="pattern-badge pb-orange">Удаляем блоки с двух концов, пока крайние символы совпадают</span>
+  <div class="two-col" style="margin-top:8px">
+    <div>
+<pre><code class="language-python">left = 0
+right = len(s) - 1
+
+while left < right and s[left] == s[right]:
+    c = s[left]
+    # сдвигаем left через весь блок c
+    while left <= right and s[left] == c:
+        left += 1
+    # сдвигаем right через весь блок c
+    while left <= right and s[right] == c:
+        right -= 1
+
+return max(0, right - left + 1)</code></pre>
+      <div class="highlight-box orange">
+        ⚠️ Двигаем <em>блоками</em>, не по одному символу! Например в <code class="inline">"aabba"</code> крайние символы — <code class="inline">a</code> и <code class="inline">a</code>. Нужно убрать весь префикс <code class="inline">aa</code> и суффикс <code class="inline">a</code> за один шаг.
+      </div>
+    </div>
+    <div>
+      <p style="font-size:0.9rem;font-weight:600;color:#f0f6fc;margin-bottom:4px">Визуализация строки <code class="inline">"abxba"</code>:</p>
+      <div class="ptr-vis">
+        <div class="ptr-row">
+          <div class="ptr-cell left">a</div><div class="ptr-cell">b</div><div class="ptr-cell">x</div><div class="ptr-cell">b</div><div class="ptr-cell right">a</div>
+        </div>
+        <div class="ptr-labels">
+          <div class="ptr-label lbl-l">L</div><div class="ptr-label"></div><div class="ptr-label"></div><div class="ptr-label"></div><div class="ptr-label lbl-r">R</div>
+        </div>
+      </div>
+      <p style="font-size:0.8rem;color:#8b949e;text-align:center">s[L]='a' == s[R]='a' → удаляем блоки 'a'</p>
+      <div class="ptr-vis" style="margin-top:6px">
+        <div class="ptr-row">
+          <div class="ptr-cell elim">a</div><div class="ptr-cell left">b</div><div class="ptr-cell">x</div><div class="ptr-cell right">b</div><div class="ptr-cell elim">a</div>
+        </div>
+        <div class="ptr-labels">
+          <div class="ptr-label"></div><div class="ptr-label lbl-l">L</div><div class="ptr-label"></div><div class="ptr-label lbl-r">R</div><div class="ptr-label"></div>
+        </div>
+      </div>
+      <p style="font-size:0.8rem;color:#8b949e;text-align:center">s[L]='b' == s[R]='b' → удаляем блоки 'b'</p>
+      <div class="ptr-vis" style="margin-top:6px">
+        <div class="ptr-row">
+          <div class="ptr-cell elim">a</div><div class="ptr-cell elim">b</div><div class="ptr-cell found">x</div><div class="ptr-cell elim">b</div><div class="ptr-cell elim">a</div>
+        </div>
+      </div>
+      <p style="font-size:0.8rem;color:#3fb950;text-align:center;margin-top:16px">Остаток: "x", длина = <strong>1</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- 9 — Разбор: Удали строку -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Паттерн 3 — Задача</div>
+  <h2>D. Удали строку — разбор решения</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Напомним задачу</h3>
+        <p style="font-size:0.88rem">За операцию: выбрать непустой <strong>префикс</strong> и <strong>суффикс</strong> из одинаковых букв (не пересекаясь) и удалить. Найти минимальную длину строки.</p>
+        <div class="highlight-box"><code class="inline">abba</code> → удаляем a/a → bb → удаляем b/b → <strong>0</strong></div>
+        <div class="highlight-box"><code class="inline">aboba</code> → удаляем a/a → bob → удаляем b/b → <strong>o = 1</strong></div>
+        <h3>Почему жадно — правильно?</h3>
+        <p style="font-size:0.88rem">Если <code class="inline">s[left] == s[right]</code> — <em>всегда</em> выгодно удалить. Удаление не может навредить: оно только уменьшает строку и открывает возможности для следующего шага.</p>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">s = input().strip()
+left = 0
+right = len(s) - 1
+
+while left < right and s[left] == s[right]:
+    # запоминаем символ для удаления
+    c = s[left]
+
+    # сдвигаем left вправо через блок c
+    while left <= right and s[left] == c:
+        left += 1
+
+    # сдвигаем right влево через блок c
+    while left <= right and s[right] == c:
+        right -= 1
+
+print(max(0, right - left + 1))</code></pre>
+      <div class="highlight-box orange">
+        ⚠️ Решение не проходит все тесты! Для строки <code class="inline">zzzaabxxxcazz</code> даёт неверный ответ — нужно ДП. Но для большинства случаев правильно.
+      </div>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(1)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 — Трассировка Удали строку -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Паттерн 3 — Трассировка</div>
+  <h2>Трассировка «Удали строку»</h2>
+  <p style="margin-bottom:6px">Строка: <code class="inline">"aboba"</code></p>
+  <div style="overflow-x:auto;margin-bottom:18px">
+    <table class="trace-table">
+      <thead><tr><th>Шаг</th><th>left</th><th>right</th><th>s[L]</th><th>s[R]</th><th>c</th><th>Действие</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>0</td><td>4</td><td>a</td><td>a</td><td>a</td><td style="color:#ffa657">сдвигаем через блок 'a' → L=1, R=3</td></tr>
+        <tr><td>2</td><td>1</td><td>3</td><td>b</td><td>b</td><td>b</td><td style="color:#ffa657">сдвигаем через блок 'b' → L=2, R=2</td></tr>
+        <tr class="found"><td>3</td><td>2</td><td>2</td><td colspan="4">left == right → выход → max(0, 2-2+1) = <strong>1</strong> ✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="margin-bottom:6px">Строка: <code class="inline">"abba"</code></p>
+  <div style="overflow-x:auto">
+    <table class="trace-table">
+      <thead><tr><th>Шаг</th><th>left</th><th>right</th><th>s[L]</th><th>s[R]</th><th>c</th><th>Действие</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>0</td><td>3</td><td>a</td><td>a</td><td>a</td><td style="color:#ffa657">сдвигаем через 'a' → L=1, R=2</td></tr>
+        <tr><td>2</td><td>1</td><td>2</td><td>b</td><td>b</td><td>b</td><td style="color:#ffa657">сдвигаем через 'b' → L=2, R=1</td></tr>
+        <tr class="found"><td>3</td><td>2</td><td>1</td><td colspan="4">left > right → выход → max(0, 1-2+1) = <strong>0</strong> ✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 11 — Разминка -->
+<div class="slide" id="s11">
+  <div class="slide-tag">Разминка</div>
+  <h2>🔥 Разминка — задачи для разогрева</h2>
+  <p style="margin-bottom:12px">Попробуй ответить устно или на бумаге до просмотра решения.</p>
+  <div class="three-col" style="align-items:start">
+    <div class="card">
+      <h3 style="margin-top:0;color:#ffa657">Задача 1</h3>
+      <p style="font-size:0.88rem">Дан массив <code class="inline">[1,2,3,4,5]</code>. Перевернуть через два указателя.</p>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;font-size:0.83rem;color:#3fb950">💡 Решение</summary>
+        <pre style="margin-top:8px"><code class="language-python">l, r = 0, 4
+while l < r:
+    a[l],a[r] = a[r],a[l]
+    l+=1; r-=1
+# → [5,4,3,2,1]</code></pre>
+      </details>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;color:#ffa657">Задача 2</h3>
+      <p style="font-size:0.88rem">Является ли <code class="inline">"level"</code> палиндромом? Написать проверку.</p>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;font-size:0.83rem;color:#3fb950">💡 Решение</summary>
+        <pre style="margin-top:8px"><code class="language-python">s = "level"
+l, r = 0, len(s)-1
+while l < r:
+    if s[l] != s[r]:
+        print(False); break
+    l+=1; r-=1
+else:
+    print(True)  # True ✓</code></pre>
+      </details>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;color:#ffa657">Задача 3</h3>
+      <p style="font-size:0.88rem">Массив <code class="inline">[1,3,5,7,9]</code>, target=8. Есть ли пара с такой суммой?</p>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;font-size:0.83rem;color:#3fb950">💡 Решение</summary>
+        <pre style="margin-top:8px"><code class="language-python">l, r = 0, 4
+while l < r:
+    s = a[l]+a[r]
+    if s==8: print(True); break
+    elif s<8: l+=1
+    else: r-=1
+# 1+7=8 → True ✓</code></pre>
+      </details>
+    </div>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <h3 style="margin-top:0;color:#ffa657">Задача 4 — скользящее окно</h3>
+    <p style="font-size:0.88rem">Массив <code class="inline">[2,1,5,1,3,2]</code>, k=3. Найти максимальную сумму подмассива длины k.</p>
+    <details>
+      <summary style="cursor:pointer;font-size:0.83rem;color:#3fb950">💡 Решение</summary>
+      <pre style="margin-top:8px"><code class="language-python">k = 3
+window = sum(a[:k])  # 2+1+5=8
+best = window
+for i in range(k, len(a)):
+    window += a[i] - a[i-k]
+    best = max(best, window)
+print(best)  # 9 → [5,1,3]</code></pre>
+    </details>
+  </div>
+</div>
+
+<!-- 12 — Two Sum II -->
+<div class="slide" id="s12">
+  <div class="slide-tag">Паттерн 1 — Two Sum</div>
+  <span class="lc-badge lc-easy">#167 · Easy</span>
+  <h2>Two Sum II — встречный ход на отсортированном</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">Отсортированный массив <code class="inline">numbers</code>, найти два числа с суммой <code class="inline">target</code>. Вернуть индексы (нумерация с 1).</p>
+        <div class="highlight-box"><code class="inline">[2,7,11,15]</code>, target=9 → <strong>[1,2]</strong></div>
+        <h3>Почему работает?</h3>
+        <ul style="font-size:0.88rem">
+          <li>Массив отсортирован → движение указателей предсказуемо</li>
+          <li>Сумма мала → двигаем left (берём большее)</li>
+          <li>Сумма велика → двигаем right (берём меньшее)</li>
+        </ul>
+      </div>
+      <div class="highlight-box blue" style="margin-top:0">
+        Трассировка [2,7,11,15], target=9:<br>
+        L=0(2), R=3(15): 17&gt;9 → R=2<br>
+        L=0(2), R=2(11): 13&gt;9 → R=1<br>
+        L=0(2), R=1(7): 9==9 → <strong>[1,2] ✓</strong>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def twoSum(numbers, target):
+    left = 0
+    right = len(numbers) - 1
+
+    while left < right:
+        s = numbers[left] + numbers[right]
+
+        if s == target:
+            return [left + 1, right + 1]
+        elif s < target:
+            left += 1    # нужна большая сумма
+        else:
+            right -= 1   # нужна меньшая сумма
+
+    return []</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(1)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 — Longest Substring -->
+<div class="slide" id="s13">
+  <div class="slide-tag">Паттерн 2 — Скользящее окно</div>
+  <span class="lc-badge lc-medium">#3 · Medium</span>
+  <h2>Longest Substring Without Repeating Characters</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">Найти длину самой длинной подстроки без повторяющихся символов.</p>
+        <div class="highlight-box"><code class="inline">"abcabcbb"</code> → <strong>3</strong> ("abc")</div>
+        <div class="highlight-box"><code class="inline">"pwwkew"</code> → <strong>3</strong> ("wke")</div>
+        <h3>Алгоритм</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Расширяем окно вправо (добавляем <code class="inline">s[right]</code>)</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Если новый символ уже в окне — сжимаем слева</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">Обновляем максимальную длину</div></div>
+      </div>
+      <div class="highlight-box blue">
+        Трассировка "abca":<br>
+        R=0: seen={a}<br>R=1: seen={a,b}<br>R=2: seen={a,b,c}<br>
+        R=3: 'a' в seen → убираем 'a' → L=1<br>
+        seen={b,c,a}, max=<strong>3</strong>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def lengthOfLongestSubstring(s):
+    left = 0
+    seen = set()
+    result = 0
+
+    for right in range(len(s)):
+        # сжимаем пока s[right] в окне
+        while s[right] in seen:
+            seen.remove(s[left])
+            left += 1
+
+        seen.add(s[right])
+        result = max(result, right - left + 1)
+
+    return result</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(k)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14 — 3Sum -->
+<div class="slide" id="s14">
+  <div class="slide-tag">Паттерн 1 — Расширение</div>
+  <span class="lc-badge lc-medium">#15 · Medium</span>
+  <h2>3Sum — два указателя внутри цикла</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">Найти все тройки <code class="inline">[a,b,c]</code> такие что <code class="inline">a+b+c=0</code>, без дубликатов.</p>
+        <div class="highlight-box"><code class="inline">[-1,0,1,2,-1,-4]</code> → <strong>[[-1,-1,2],[-1,0,1]]</strong></div>
+        <h3>Идея</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Сортируем массив</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Фиксируем первый элемент <code class="inline">nums[i]</code></div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">На остатке запускаем встречный ход: ищем пару с суммой <code class="inline">-nums[i]</code></div></div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">def threeSum(nums):
+    nums.sort()
+    result = []
+
+    for i in range(len(nums) - 2):
+        if i > 0 and nums[i] == nums[i-1]:
+            continue  # пропускаем дубли
+
+        left = i + 1
+        right = len(nums) - 1
+
+        while left < right:
+            s = nums[i] + nums[left] + nums[right]
+            if s == 0:
+                result.append(
+                    [nums[i], nums[left], nums[right]])
+                left += 1; right -= 1
+                # пропускаем дубли
+                while left < right and nums[left] == nums[left-1]:
+                    left += 1
+            elif s < 0:
+                left += 1
+            else:
+                right -= 1
+
+    return result</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n²)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(1)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 15 — Итог -->
+<div class="slide" id="s15">
+  <div class="slide-tag">Итог</div>
+  <h2>Что запомнить</h2>
+  <div class="three-col" style="align-items:start">
+    <div class="card">
+      <span class="pattern-badge pb-green">Паттерн 1</span>
+      <h3 style="margin-top:6px">Встречный ход</h3>
+      <ul style="font-size:0.85rem">
+        <li><code class="inline">left=0, right=n-1</code></li>
+        <li>Цикл: <code class="inline">while left &lt; right</code></li>
+        <li>Двигаем один из указателей</li>
+        <li>Оба — только при совпадении</li>
+      </ul>
+      <div class="highlight-box" style="margin-top:8px;font-size:0.82rem">
+        #125 Palindrome ✓<br>#167 Two Sum II ✓<br>#15 3Sum ✓<br>#344 Reverse String ✓
+      </div>
+    </div>
+    <div class="card">
+      <span class="pattern-badge pb-blue">Паттерн 2</span>
+      <h3 style="margin-top:6px">Скользящее окно</h3>
+      <ul style="font-size:0.85rem">
+        <li><code class="inline">left=0</code>, right в for-цикле</li>
+        <li>Расширяем: добавляем <code class="inline">s[right]</code></li>
+        <li>Сужаем while-ом от left</li>
+        <li>Размер: <code class="inline">right-left+1</code></li>
+      </ul>
+      <div class="highlight-box blue" style="margin-top:8px;font-size:0.82rem">
+        #643 Max Average ✓<br>#3 Longest Substring ✓<br>#424 Char Replacement ✓<br>D. Наибольшая подстрока ✓
+      </div>
+    </div>
+    <div class="card">
+      <span class="pattern-badge pb-orange">Паттерн 3</span>
+      <h3 style="margin-top:6px">Префикс / Суффикс</h3>
+      <ul style="font-size:0.85rem">
+        <li><code class="inline">left=0, right=n-1</code></li>
+        <li>Пока <code class="inline">s[l]==s[r]</code> — удаляем</li>
+        <li>Двигаем блоками, не по одному</li>
+        <li>Ответ: <code class="inline">max(0, right-left+1)</code></li>
+      </ul>
+      <div class="highlight-box orange" style="margin-top:8px;font-size:0.82rem">
+        #680 Valid Palindrome II ✓<br>D. Удали строку (частично) ✓
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box blue" style="margin-top:12px">
+    🎯 <strong>Как распознать задачу на два указателя:</strong> массив или строка + сравниваем элементы + вложенный цикл слишком медленный.
+  </div>
+</div>
+
+<!-- 16 — Домашнее задание -->
+<div class="slide" id="s16">
+  <div class="slide-tag">Домашнее задание</div>
+  <h2>🏠 Задачи для самостоятельной практики</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <p style="font-size:0.88rem;color:#3fb950;font-weight:600;margin-bottom:8px">🟢 Лёгкие — начни с них</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#125</span>
+        <div><a href="https://leetcode.com/problems/valid-palindrome/" target="_blank">Valid Palindrome</a>
+        <div class="hw-desc">Два указателя сходятся к центру — идеальная первая задача.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#344</span>
+        <div><a href="https://leetcode.com/problems/reverse-string/" target="_blank">Reverse String</a>
+        <div class="hw-desc">Перевернуть строку на месте. Два указателя меняем местами.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#167</span>
+        <div><a href="https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/" target="_blank">Two Sum II</a>
+        <div class="hw-desc">Найти пару в отсортированном массиве. Классика встречного хода.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#643</span>
+        <div><a href="https://leetcode.com/problems/maximum-average-subarray-i/" target="_blank">Maximum Average Subarray I</a>
+        <div class="hw-desc">Максимальная средняя подмассива длины k. Простейшее скользящее окно.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#680</span>
+        <div><a href="https://leetcode.com/problems/valid-palindrome-ii/" target="_blank">Valid Palindrome II</a>
+        <div class="hw-desc">Можно удалить один символ — останется ли палиндром? Близко к «Удали строку».</div></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:0.88rem;color:#d29922;font-weight:600;margin-bottom:8px">🟡 Следующий уровень</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium" style="white-space:nowrap">#3</span>
+        <div><a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/" target="_blank">Longest Substring Without Repeating Characters</a>
+        <div class="hw-desc">Прямой предшественник задачи «Наибольшая подстрока» из базы.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium" style="white-space:nowrap">#15</span>
+        <div><a href="https://leetcode.com/problems/3sum/" target="_blank">3Sum</a>
+        <div class="hw-desc">Тройки с суммой 0. Фиксируем одно число, два указателя на остальных.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium" style="white-space:nowrap">#424</span>
+        <div><a href="https://leetcode.com/problems/longest-repeating-character-replacement/" target="_blank">Longest Repeating Character Replacement</a>
+        <div class="hw-desc">Тот же паттерн окна, но сложнее. Хорошая тренировка после #3.</div></div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:12px">
+        💡 <strong>Порядок:</strong> #344 → #125 → #167 → #643 → #680 → #3 → #15 → #424<br><br>
+        После #680 вернись к <strong>«D. Удали строку»</strong> и реши сам!
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 16</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+<script>
+  hljs.highlightAll();
+  let cur = 1, total = 16;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s'+prev).classList.remove('active');
+    document.getElementById('s'+cur).classList.add('active');
+    document.getElementById('counter').textContent = cur+' / '+total;
+    document.getElementById('prevBtn').disabled = cur===1;
+    document.getElementById('nextBtn').disabled = cur===total;
+    document.getElementById('progress').style.width = (cur/total*100)+'%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key===' ') navigate(1);
+    if (e.key==='ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = (1/total*100)+'%';
+</script>
+</body>
+</html>

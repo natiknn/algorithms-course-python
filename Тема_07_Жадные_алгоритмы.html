@@ -1,0 +1,722 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Жадные алгоритмы — Greedy</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #ffa657, #f78166); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 40px 60px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #ffa657; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.15; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.75rem; font-weight: 700; color: #f0f6fc; margin-bottom: 16px; }
+  h3 { font-size: 1.05rem; font-weight: 600; color: #ffa657; margin-bottom: 8px; margin-top: 14px; }
+  p { line-height: 1.8; margin-bottom: 10px; color: #c9d1d9; font-size: 0.95rem; }
+  strong { color: #f0f6fc; }
+  em { color: #ffa657; font-style: normal; }
+  .subtitle { font-size: 1.1rem; color: #8b949e; margin-bottom: 28px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #ffa657; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; line-height: 1.7; }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.blue  { border-left-color: #58a6ff; }
+  .highlight-box.red   { border-left-color: #f78166; }
+  .highlight-box.purple{ border-left-color: #bc8cff; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88em; color: #79c0ff; }
+  pre { margin: 10px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 0.85rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.88rem; }
+  .trace-table th { background: #1c2128; color: #ffa657; padding: 7px 12px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 6px 12px; text-align: center; border: 1px solid #21262d; color: #c9d1d9; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .trace-table tr.ok td { background: #1c3a1c; color: #3fb950; }
+  .trace-table tr.bad td { background: #3a1c1c; color: #f78166; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 7px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #ffa657; color: #ffa657; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 20px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; color: #8b949e; }
+  .step-card { display: flex; gap: 12px; align-items: flex-start; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 10px 14px; margin-bottom: 7px; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: #3a2a1c; border: 1px solid #ffa657; color: #ffa657; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-body { flex: 1; font-size: 0.9rem; line-height: 1.6; color: #c9d1d9; }
+  .coin { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; font-weight: 700; font-size: 0.85rem; font-family: monospace; border: 2px solid; margin: 3px; }
+  .coin-gold   { background: #3a2a1c; border-color: #ffa657; color: #ffa657; }
+  .coin-silver { background: #1c2a3a; border-color: #58a6ff; color: #58a6ff; }
+  .coin-bronze { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .coin-used   { background: #2a1c3a; border-color: #bc8cff; color: #bc8cff; }
+  .coin-grey   { background: #21262d; border-color: #30363d; color: #444; }
+  .pattern-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600; margin-bottom: 10px; }
+  .pb-orange { background: rgba(255,166,87,.15); color: #ffa657; border: 1px solid rgba(255,166,87,.3); }
+  .pb-green  { background: rgba(63,185,80,.15);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+  .pb-blue   { background: rgba(88,166,255,.15); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
+  .pb-purple { background: rgba(188,140,255,.15);color: #bc8cff; border: 1px solid rgba(188,140,255,.3); }
+  .complex-row { display: flex; gap: 10px; margin: 10px 0; }
+  .complex-badge { background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 8px 14px; }
+  .complex-badge .lbl { font-size: 0.72rem; color: #8b949e; }
+  .complex-badge .val { font-size: 1rem; color: #ffa657; font-weight: 700; font-family: monospace; }
+  .lc-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600; margin-right: 6px; }
+  .lc-easy   { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+  .lc-medium { background: rgba(210,153,34,.12); color: #d29922; border: 1px solid rgba(210,153,34,.3); }
+  .quiz-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+  .quiz-q { font-weight: 600; color: #f0f6fc; margin-bottom: 10px; font-size: 0.95rem; }
+  .quiz-options { display: flex; flex-direction: column; gap: 6px; }
+  .quiz-opt { padding: 8px 14px; border-radius: 8px; border: 1px solid #30363d; font-size: 0.88rem; cursor: pointer; transition: all .15s; background: none; color: #c9d1d9; text-align: left; }
+  .quiz-opt:hover { border-color: #ffa657; color: #ffa657; background: rgba(255,166,87,.07); }
+  .quiz-opt.correct { border-color: #3fb950; color: #3fb950; background: rgba(63,185,80,.1); pointer-events: none; }
+  .quiz-opt.wrong   { border-color: #f78166; color: #f78166; background: rgba(247,129,102,.1); }
+  .quiz-result { font-size: 0.85rem; margin-top: 8px; display: none; }
+  .hw-item { display: flex; align-items: flex-start; gap: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 11px 15px; margin-bottom: 7px; }
+  .hw-item a { color: #58a6ff; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+  .hw-item a:hover { text-decoration: underline; }
+  .hw-desc { font-size: 0.82rem; color: #8b949e; margin-top: 2px; }
+  ul { padding-left: 18px; }
+  li { line-height: 1.8; color: #c9d1d9; font-size: 0.9rem; margin-bottom: 2px; }
+  details summary { cursor: pointer; font-size: 0.83rem; color: #3fb950; padding: 4px 0; }
+  details[open] summary { margin-bottom: 6px; }
+  h3 a { color: #ffa657; text-decoration: none; }
+  h3 a:hover { text-decoration: underline; opacity: 0.85; }
+  h2 a { color: #ffa657; text-decoration: none; }
+  h2 a:hover { text-decoration: underline; opacity: 0.85; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- 1 — Титул -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">🤑</div>
+  <div class="slide-tag">Тема 7</div>
+  <h1>Жадные алгоритмы</h1>
+  <p class="subtitle">Берём лучшее прямо сейчас — и это работает!<br>Три ключевых паттерна</p>
+  <div class="topic-chips">
+    <span class="chip">Greedy</span>
+    <span class="chip">Задача о монетах</span>
+    <span class="chip">Сортировка + выбор</span>
+    <span class="chip">Локальный оптимум</span>
+    <span class="chip">Интервалы</span>
+    <span class="chip">Завоевание</span>
+  </div>
+</div>
+
+<!-- 2 — Что такое жадный алгоритм -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Теория</div>
+  <h2>Что такое жадный алгоритм?</h2>
+  <p>Жадный алгоритм — это стратегия, при которой на каждом шаге мы выбираем <strong>наилучший вариант прямо сейчас</strong>, не думая о последствиях. Надеемся, что серия локально оптимальных решений приведёт к глобально оптимальному результату.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Аналогия из жизни</h3>
+        <p style="font-size:0.92rem">Представь, что ты выбираешь маршрут в горах. Жадная стратегия — всегда идти вверх по самому крутому склону. Иногда это приведёт на вершину, но иногда — на промежуточный холм.</p>
+        <div class="highlight-box green">
+          ✅ <strong>Жадный работает</strong>, когда локальный оптимум <em>гарантированно</em> ведёт к глобальному. Например: задача о монетах с номиналами 1, 5, 10, 25.
+        </div>
+        <div class="highlight-box red">
+          ❌ <strong>Жадный не работает</strong>, когда нужно «пожертвовать» сейчас ради лучшего результата позже. Тогда нужно ДП.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Шаблон жадного алгоритма</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body"><strong>Отсортировать</strong> данные по нужному критерию</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body"><strong>Жадно выбирать</strong> лучший доступный вариант</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body"><strong>Обновить состояние</strong> (уменьшить остаток, добавить в ответ)</div></div>
+        <div class="step-card"><div class="step-num">4</div><div class="step-body"><strong>Повторять</strong> пока задача не решена</div></div>
+        <div class="highlight-box" style="margin-top:8px">
+          💡 Ключевой вопрос: <em>«Можно ли всегда брать лучшее прямо сейчас?»</em>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 — Задача о монетах -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Классический пример</div>
+  <h2>Задача о монетах — объясняем жадность</h2>
+  <p>Нужно набрать сумму <em>41 рубль</em> монетами номиналов <strong>25, 10, 5, 1</strong>. Используй как можно <strong>меньше монет</strong>.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Жадная стратегия</h3>
+        <p style="font-size:0.9rem">Всегда берём <strong>максимальный номинал</strong>, который не превышает остаток.</p>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Остаток 41. Берём <strong>25</strong>. Остаток: 16.</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Остаток 16. Берём <strong>10</strong>. Остаток: 6.</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">Остаток 6. Берём <strong>5</strong>. Остаток: 1.</div></div>
+        <div class="step-card"><div class="step-num">4</div><div class="step-body">Остаток 1. Берём <strong>1</strong>. Остаток: 0. Готово!</div></div>
+        <div class="highlight-box green">
+          Итого: <strong>4 монеты</strong> — это оптимум!<br>25 + 10 + 5 + 1 = 41 ✓
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px">
+        <div class="coin coin-gold">25</div>
+        <div class="coin coin-silver">10</div>
+        <div class="coin coin-bronze">5</div>
+        <div class="coin coin-used">1</div>
+      </div>
+      <pre><code class="language-python">def min_coins(amount, coins):
+    coins.sort(reverse=True)  # по убыванию
+    count = 0
+    result = []
+
+    for coin in coins:
+        while amount >= coin:
+            amount -= coin
+            result.append(coin)
+            count += 1
+
+    return count, result
+
+# min_coins(41, [1, 5, 10, 25])
+# → (4, [25, 10, 5, 1])</code></pre>
+      <div class="highlight-box red" style="margin-top:8px">
+        ⚠️ <strong>Ловушка!</strong> С номиналами 1, 3, 4 и суммой 6 жадный даёт 4+1+1 = 3 монеты, хотя оптимум 3+3 = 2 монеты. Жадный не всегда работает!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — Устные задачи (разминка) -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Разминка — устные задачи</div>
+  <h2>🗣️ Ответь устно — не смотри сразу!</h2>
+  <div class="three-col" style="align-items:start">
+    <div class="quiz-card">
+      <div class="quiz-q">1. Монеты 1, 5, 10, 25. Набрать 30. Сколько минимум монет?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkQ(this,false)">4 монеты (10+10+5+5)</button>
+        <button class="quiz-opt" onclick="checkQ(this,true)">2 монеты (25+5)</button>
+        <button class="quiz-opt" onclick="checkQ(this,false)">3 монеты (10+10+10)</button>
+      </div>
+      <div class="quiz-result"></div>
+    </div>
+    <div class="quiz-card">
+      <div class="quiz-q">2. Монеты 1, 3, 4. Набрать 6. Жадный даёт: 4+1+1=3 монеты. Можно ли лучше?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkQ(this,false)">Нет, 3 монеты — оптимум</button>
+        <button class="quiz-opt" onclick="checkQ(this,true)">Да! 3+3 = 2 монеты</button>
+        <button class="quiz-opt" onclick="checkQ(this,false)">Нет, жадный всегда оптимален</button>
+      </div>
+      <div class="quiz-result"></div>
+    </div>
+    <div class="quiz-card">
+      <div class="quiz-q">3. Что делает жадный алгоритм на каждом шаге?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkQ(this,false)">Перебирает все варианты</button>
+        <button class="quiz-opt" onclick="checkQ(this,false)">Смотрит на k шагов вперёд</button>
+        <button class="quiz-opt" onclick="checkQ(this,true)">Выбирает локально лучший вариант</button>
+      </div>
+      <div class="quiz-result"></div>
+    </div>
+  </div>
+  <div class="two-col" style="margin-top:12px; align-items:start">
+    <div class="quiz-card">
+      <div class="quiz-q">4. Есть задание: купить продукты с бюджетом 100₽. Цены: 80₽, 60₽, 30₽, 25₽. Жадный берёт дорогое первым. Что возьмёт?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkQ(this,false)">80 + 60 = 140₽ (не влезает)</button>
+        <button class="quiz-opt" onclick="checkQ(this,true)">80 (остаток 20) → 80₽ итого</button>
+        <button class="quiz-opt" onclick="checkQ(this,false)">60 + 30 + 25 = 115₽</button>
+      </div>
+      <div class="quiz-result"></div>
+    </div>
+    <div class="quiz-card">
+      <div class="quiz-q">5. В чём разница жадного и ДП?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkQ(this,false)">Жадный медленнее ДП</button>
+        <button class="quiz-opt" onclick="checkQ(this,true)">Жадный не рассматривает прошлые решения, ДП — рассматривает все подзадачи</button>
+        <button class="quiz-opt" onclick="checkQ(this,false)">Они решают разные классы задач и никогда не пересекаются</button>
+      </div>
+      <div class="quiz-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — Паттерн 1: Сортировка + жадный выбор -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Паттерн 1</div>
+  <span class="pattern-badge pb-orange">Сортировка + жадный выбор</span>
+  <h2>Паттерн 1: Сортируем и берём лучшее</h2>
+  <p>Самый частый паттерн. Сначала сортируем элементы по нужному параметру, затем жадно выбираем по одному.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0"><a href="https://leetcode.com/problems/assign-cookies/" target="_blank" style="color:#ffa657;text-decoration:none;">#455 Assign Cookies ↗</a></h3>
+        <p style="font-size:0.88rem">Детям нужны печенья. Ребёнок i доволен если размер печенья >= g[i]. Максимизировать количество довольных детей.</p>
+        <p style="font-size:0.88rem"><strong>Идея:</strong> сортируем детей и печенья. Наименее жадному ребёнку даём наименьшее подходящее печенье.</p>
+        <div class="highlight-box green">
+          g=[1,2,3], s=[1,1] → 1 ребёнок<br>
+          g=[1,2], s=[1,2,3] → 2 ребёнка
+        </div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python"># #455 Assign Cookies
+def findContentChildren(g, s):
+    g.sort()   # дети по жадности
+    s.sort()   # печенья по размеру
+    child = 0
+    cookie = 0
+
+    while child < len(g) and cookie < len(s):
+        if s[cookie] >= g[child]:
+            child += 1   # ребёнок доволен
+        cookie += 1      # печенье использовано
+
+    return child</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n log n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(1)</div></div>
+      </div>
+      <div class="highlight-box blue">
+        💡 <strong>Почему работает:</strong> если наименьший cookie не подходит наименее жадному ребёнку — он не подойдёт никому. Смело выбрасываем.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 — Трассировка паттерна 1 -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Паттерн 1 — Трассировка</div>
+  <h2>Трассировка: <a href="https://leetcode.com/problems/assign-cookies/" target="_blank" style="color:#ffa657;text-decoration:none;">#455 Assign Cookies ↗</a></h2>
+  <p>g = [1, 2, 3], s = [1, 1, 2] (отсортированы)</p>
+  <div style="overflow-x:auto; margin-bottom:16px">
+    <table class="trace-table">
+      <thead><tr><th>Шаг</th><th>child</th><th>cookie</th><th>g[child]</th><th>s[cookie]</th><th>s>=g?</th><th>Действие</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td style="color:#3fb950">✓</td><td>child=1, cookie=1 (ребёнок доволен)</td></tr>
+        <tr><td>2</td><td>1</td><td>1</td><td>2</td><td>1</td><td style="color:#f78166">✗</td><td>cookie=2 (печенье слишком мало)</td></tr>
+        <tr><td>3</td><td>1</td><td>2</td><td>2</td><td>2</td><td style="color:#3fb950">✓</td><td>child=2, cookie=3</td></tr>
+        <tr class="bad"><td>4</td><td>2</td><td>3</td><td>3</td><td>—</td><td>—</td><td>cookie вышел за границу → стоп</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="highlight-box green">Ответ: <strong>2 довольных ребёнка</strong> ✓</div>
+
+  <div class="highlight-box blue" style="margin-top:16px">
+    💡 <strong>Ключевой момент:</strong> если наименьшее печенье не подходит наименее жадному ребёнку — оно не подойдёт никому. Поэтому выбрасываем его и двигаемся дальше. Это и есть жадный аргумент.
+  </div>
+</div>
+
+<!-- 7 — Паттерн 2: Отслеживание локального оптимума -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Паттерн 2</div>
+  <span class="pattern-badge pb-green">Локальный оптимум на массиве</span>
+  <h2>Паттерн 2: Обновляем максимум/минимум на ходу</h2>
+  <p>Идём по массиву и на каждом шаге жадно обновляем один параметр — лучшую цену, максимальный охват, текущую сумму.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0"><a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock/" target="_blank" style="color:#ffa657;text-decoration:none;">#121 Best Time to Buy and Sell Stock ↗</a></h3>
+        <p style="font-size:0.88rem">Купить акцию в один день, продать в другой. Максимизировать прибыль.</p>
+        <p style="font-size:0.88rem"><strong>Жадная идея:</strong> на каждый день запоминаем минимальную цену покупки слева и считаем прибыль если продаём сегодня.</p>
+        <div class="highlight-box green">prices=[7,1,5,3,6,4] → прибыль <strong>5</strong> (купить за 1, продать за 6)</div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <h3 style="margin-top:0"><a href="https://leetcode.com/problems/jump-game/" target="_blank" style="color:#ffa657;text-decoration:none;">#55 Jump Game ↗</a></h3>
+        <p style="font-size:0.88rem">Массив прыжков. Можно ли добраться до конца?</p>
+        <p style="font-size:0.88rem"><strong>Идея:</strong> отслеживаем максимально достижимый индекс <code class="inline">max_reach</code>. Если текущий индекс > max_reach — застряли.</p>
+        <div class="highlight-box green">[2,3,1,1,4] → <strong>True</strong> (можно добраться)</div>
+        <div class="highlight-box red">[3,2,1,0,4] → <strong>False</strong> (застреваем)</div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python"># leetcode.com/problems/best-time-to-buy-and-sell-stock/
+def maxProfit(prices):
+    min_price = float('inf')
+    max_profit = 0
+
+    for price in prices:
+        min_price = min(min_price, price)
+        profit = price - min_price
+        max_profit = max(max_profit, profit)
+
+    return max_profit</code></pre>
+<pre style="margin-top:10px"><code class="language-python"># leetcode.com/problems/jump-game/
+def canJump(nums):
+    max_reach = 0
+
+    for i in range(len(nums)):
+        if i > max_reach:
+            return False   # недостижимая позиция
+        max_reach = max(max_reach, i + nums[i])
+
+    return True</code></pre>
+      <div class="highlight-box blue" style="margin-top:8px">
+        💡 Оба решения — один проход O(n). Ключ: <strong>один параметр</strong>, который обновляем жадно на каждом шаге.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 — Трассировка паттерна 2 -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Паттерн 2 — Трассировка</div>
+  <h2>Трассировка: <a href="https://leetcode.com/problems/jump-game/" target="_blank" style="color:#ffa657;text-decoration:none;">#55 Jump Game ↗</a></h2>
+  <p>nums = [2, 3, 1, 1, 4]</p>
+  <div style="overflow-x:auto;margin-bottom:16px">
+    <table class="trace-table">
+      <thead><tr><th>i</th><th>nums[i]</th><th>i &gt; max_reach?</th><th>max_reach</th><th>Действие</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>2</td><td style="color:#3fb950">Нет (0<=0)</td><td style="color:#ffa657">max(0, 0+2)=2</td><td>продолжаем</td></tr>
+        <tr><td>1</td><td>3</td><td style="color:#3fb950">Нет (1<=2)</td><td style="color:#ffa657">max(2, 1+3)=4</td><td>продолжаем</td></tr>
+        <tr><td>2</td><td>1</td><td style="color:#3fb950">Нет (2<=4)</td><td style="color:#ffa657">max(4, 2+1)=4</td><td>продолжаем</td></tr>
+        <tr><td>3</td><td>1</td><td style="color:#3fb950">Нет (3<=4)</td><td style="color:#ffa657">max(4, 3+1)=4</td><td>продолжаем</td></tr>
+        <tr class="ok"><td>4</td><td>4</td><td style="color:#3fb950">Нет (4<=4)</td><td>max(4,8)=8</td><td>return <strong>True</strong> ✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>nums = [3, 2, 1, 0, 4]</p>
+  <div style="overflow-x:auto">
+    <table class="trace-table">
+      <thead><tr><th>i</th><th>nums[i]</th><th>i &gt; max_reach?</th><th>max_reach</th><th>Действие</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>3</td><td style="color:#3fb950">Нет</td><td style="color:#ffa657">3</td><td>продолжаем</td></tr>
+        <tr><td>1</td><td>2</td><td style="color:#3fb950">Нет (1<=3)</td><td style="color:#ffa657">max(3,3)=3</td><td>продолжаем</td></tr>
+        <tr><td>2</td><td>1</td><td style="color:#3fb950">Нет (2<=3)</td><td style="color:#ffa657">max(3,3)=3</td><td>продолжаем</td></tr>
+        <tr><td>3</td><td>0</td><td style="color:#3fb950">Нет (3<=3)</td><td style="color:#ffa657">max(3,3)=3</td><td>продолжаем</td></tr>
+        <tr class="bad"><td>4</td><td>4</td><td style="color:#f78166">Да! (4&gt;3)</td><td>—</td><td>return <strong>False</strong> ✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 9 — Паттерн 3: Интервалы -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Паттерн 3</div>
+  <span class="pattern-badge pb-purple">Интервалы — сортировка по концу</span>
+  <h2>Паттерн 3: Задачи на интервалы</h2>
+  <p>Есть набор отрезков (start, end). Нужно выбрать максимальное количество непересекающихся или удалить минимальное для устранения пересечений.</p>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Ключевая идея: сортируй по концу</h3>
+        <p style="font-size:0.88rem">Жадный выбор: <strong>всегда берём интервал с наименьшим концом</strong> — он освобождает место для максимального числа следующих.</p>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Сортируем интервалы по времени окончания</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Берём первый интервал, запоминаем его конец</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">Следующий берём только если start >= предыдущий end</div></div>
+        <div class="highlight-box">
+          <strong>Пример:</strong> митинги [9-10], [9-12], [10-11], [11-12]<br>
+          Сортируем по концу: [9-10], [10-11], [11-12], [9-12]<br>
+          Берём [9-10], [10-11], [11-12] → <strong>3 митинга</strong>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0"><a href="https://leetcode.com/problems/non-overlapping-intervals/" target="_blank" style="color:#ffa657;text-decoration:none;">#435 Non-overlapping Intervals ↗</a></h3>
+        <p style="font-size:0.88rem">Удалить минимальное количество интервалов, чтобы не было пересечений.</p>
+<pre><code class="language-python">def eraseOverlapIntervals(intervals):
+    if not intervals:
+        return 0
+
+    # сортируем по концу
+    intervals.sort(key=lambda x: x[1])
+
+    count = 0          # удалённых
+    end = intervals[0][1]  # конец последнего взятого
+
+    for i in range(1, len(intervals)):
+        if intervals[i][0] < end:
+            # пересекается → удаляем текущий
+            count += 1
+        else:
+            # не пересекается → берём
+            end = intervals[i][1]
+
+    return count</code></pre>
+        <div class="complex-row">
+          <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n log n)</div></div>
+          <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(1)</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 — Трассировка паттерна 3 -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Паттерн 3 — Трассировка</div>
+  <h2>Трассировка: <a href="https://leetcode.com/problems/non-overlapping-intervals/" target="_blank" style="color:#ffa657;text-decoration:none;">#435 Non-overlapping Intervals ↗</a></h2>
+  <p>intervals = [[1,2],[2,3],[3,4],[1,3]] — после сортировки по концу: [[1,2],[2,3],[1,3],[3,4]]</p>
+  <div style="overflow-x:auto;margin-bottom:14px">
+    <table class="trace-table">
+      <thead><tr><th>i</th><th>интервал</th><th>start >= end?</th><th>end</th><th>count</th><th>Действие</th></tr></thead>
+      <tbody>
+        <tr><td>—</td><td>[1,2]</td><td>—</td><td style="color:#ffa657">2</td><td>0</td><td>берём первый, end=2</td></tr>
+        <tr class="ok"><td>1</td><td>[2,3]</td><td style="color:#3fb950">2>=2 ✓</td><td style="color:#ffa657">3</td><td>0</td><td>не пересекается → берём, end=3</td></tr>
+        <tr class="bad"><td>2</td><td>[1,3]</td><td style="color:#f78166">1&lt;3 ✗</td><td>3</td><td>1</td><td>пересекается → удаляем</td></tr>
+        <tr class="ok"><td>3</td><td>[3,4]</td><td style="color:#3fb950">3>=3 ✓</td><td style="color:#ffa657">4</td><td>1</td><td>не пересекается → берём, end=4</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="highlight-box green">Ответ: удалить <strong>1 интервал</strong> ([1,3]) ✓</div>
+  <div class="two-col" style="margin-top:16px">
+    <div class="highlight-box blue">
+      💡 <strong>Почему сортируем по концу, а не началу?</strong><br>
+      Интервал с ранним концом освобождает максимум пространства для следующих — это и есть жадный аргумент.
+    </div>
+    <div class="highlight-box">
+      ⚡ <strong>Ключевая тема:</strong> тема «Жадный алгоритм (применение для отсортированных последовательностей, определение параметра сортировки)» — именно про это!
+    </div>
+  </div>
+</div>
+
+<!-- 11 — Когда жадный работает, а когда нет -->
+<div class="slide" id="s11">
+  <div class="slide-tag">Теория</div>
+  <h2>Когда жадный работает, а когда нет?</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0; color:#3fb950">✅ Жадный работает</h3>
+        <ul style="font-size:0.88rem">
+          <li>Задача о монетах с «хорошими» номиналами (1, 5, 10, 25)</li>
+          <li>Assign Cookies — раздача печенья</li>
+          <li>Jump Game — можно ли добраться</li>
+          <li>Выбор непересекающихся интервалов</li>
+          <li>Best Time to Buy and Sell Stock</li>
+          <li>«Завоевание»</li>
+        </ul>
+        <div class="highlight-box green" style="margin-top:10px">
+          Признак: <strong>локальный оптимум не закрывает путь к глобальному</strong>. Можно доказать, что жадный выбор не хуже любого другого.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0; color:#f78166">❌ Жадный не работает</h3>
+        <ul style="font-size:0.88rem">
+          <li>Задача о монетах с произвольными номиналами (1, 3, 4)</li>
+          <li>Задача о рюкзаке (0/1 Knapsack)</li>
+          <li>Поиск длиннейшей общей подпоследовательности (НОП)</li>
+          <li>Задача коммивояжёра</li>
+        </ul>
+        <div class="highlight-box red" style="margin-top:10px">
+          Признак: <strong>нужно «пожертвовать» сейчас ради лучшего результата потом</strong>. Локальный оптимум != глобальный.
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:10px">
+        💡 <strong>Эмпирическое правило:</strong> если в задаче есть слова «максимум», «минимум», «оптимально» — попробуй жадный. Если не работает — ДП.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 — Устные задачи по паттернам -->
+<div class="slide" id="s12">
+  <div class="slide-tag">Самопроверка</div>
+  <h2>🧠 Самопроверка — определи паттерн</h2>
+  <p style="margin-bottom:14px">Для каждой задачи скажи: <em>какой паттерн жадного алгоритма здесь нужен?</em></p>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">1. Дан массив цен на акцию. Найти максимальную прибыль от одной покупки-продажи. (#121)</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkQ(this,false)">Интервалы — сортируй по концу</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Локальный оптимум — отслеживай минимум</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Сортировка + жадный выбор</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">2. Расписание встреч [(9,11),(10,12),(11,13)]. Провести максимум встреч без пересечений.</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkQ(this,false)">Локальный оптимум — отслеживай максимум</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Сортировка по началу</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Интервалы — сортируй по концу</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">3. Дети с предпочтениями [1,2,3] и печенья [3,3]. Максимум довольных детей?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkQ(this,true)">Сортировка + жадный выбор (даём наименьшее подходящее)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Интервалы</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Динамическое программирование</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">4. Массив [2,3,1,1,4]. Можно ли прыгнуть до конца? (#55)</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkQ(this,false)">Сортировка по значению</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Локальный оптимум — отслеживай max_reach</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Рекурсия</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">5. Монеты 1,5,10,25. Набрать 67. Ответ: ?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkQ(this,false)">4 монеты (25+25+10+7)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">4 монеты (25+25+10+5+1+1 = нет), правильно: 25+25+10+5+1+1 = 6 монет</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">3 монеты</button>
+        </div>
+        <div class="quiz-result" style="color:#8b949e">67 = 25+25+10+5+1+1 = 6 монет. А если 25+25+17? 17=10+5+1+1 → 25+25+10+5+1+1 = 6.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 — Итог: три паттерна -->
+<div class="slide" id="s13">
+  <div class="slide-tag">Итог</div>
+  <h2>Три паттерна — шпаргалка</h2>
+  <div class="three-col" style="align-items:start">
+    <div class="card">
+      <span class="pattern-badge pb-orange">Паттерн 1</span>
+      <h3 style="margin-top:6px">Сортировка + выбор</h3>
+      <ul style="font-size:0.85rem">
+        <li>Сортируем по нужному критерию</li>
+        <li>Жадно берём лучшее</li>
+        <li>Два указателя или один цикл</li>
+      </ul>
+      <div class="highlight-box" style="margin-top:10px;font-size:0.82rem">
+        Задача о монетах ✓<br>
+        #455 Assign Cookies ✓<br>
+        #1710 Max Units ✓
+      </div>
+    </div>
+    <div class="card">
+      <span class="pattern-badge pb-green">Паттерн 2</span>
+      <h3 style="margin-top:6px">Локальный оптимум</h3>
+      <ul style="font-size:0.85rem">
+        <li>Один проход по массиву</li>
+        <li>Отслеживаем min/max/reach</li>
+        <li>Обновляем ответ на каждом шаге</li>
+      </ul>
+      <div class="highlight-box green" style="margin-top:10px;font-size:0.82rem">
+        #121 Buy & Sell Stock ✓<br>
+        #55 Jump Game ✓<br>
+        #45 Jump Game II ✓
+      </div>
+    </div>
+    <div class="card">
+      <span class="pattern-badge pb-purple">Паттерн 3</span>
+      <h3 style="margin-top:6px">Интервалы</h3>
+      <ul style="font-size:0.85rem">
+        <li>Сортируем по <em>концу</em> интервала</li>
+        <li>Берём если start >= предыдущий end</li>
+        <li>Иначе удаляем (считаем конфликты)</li>
+      </ul>
+      <div class="highlight-box purple" style="margin-top:10px;font-size:0.82rem">
+        #435 Non-overlapping Intervals ✓<br>
+        Activity Selection ✓
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box blue" style="margin-top:14px">
+    🎯 <strong>Как распознать жадную задачу:</strong> ищи слова «максимум», «минимум», «наименьшее количество», «наибольшее количество» + данные можно отсортировать + локальный выбор не ломает глобальный результат.
+  </div>
+</div>
+
+<!-- 14 — Домашнее задание -->
+<div class="slide" id="s14">
+  <div class="slide-tag">Домашнее задание</div>
+  <h2>🏠 Задачи для самостоятельной практики</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <p style="font-size:0.88rem;color:#3fb950;font-weight:600;margin-bottom:8px">🟢 Лёгкие — начни с них</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#455</span>
+        <div><a href="https://leetcode.com/problems/assign-cookies/" target="_blank">Assign Cookies</a>
+        <div class="hw-desc">Раздать печенья. Сортируем и жадно раздаём. Та же идея, что в «Завоевании».</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#121</span>
+        <div><a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock/" target="_blank">Best Time to Buy and Sell Stock</a>
+        <div class="hw-desc">Максимальная прибыль от одной сделки. Отслеживаем минимум на ходу.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#1710</span>
+        <div><a href="https://leetcode.com/problems/maximum-units-on-a-truck/" target="_blank">Maximum Units on a Truck</a>
+        <div class="hw-desc">Загрузить грузовик максимально. Сортируем по плотности, берём жадно.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy" style="white-space:nowrap">#55</span>
+        <div><a href="https://leetcode.com/problems/jump-game/" target="_blank">Jump Game</a>
+        <div class="hw-desc">Можно ли добраться до конца? Отслеживаем max_reach.</div></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:0.88rem;color:#d29922;font-weight:600;margin-bottom:8px">🟡 Следующий уровень</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium" style="white-space:nowrap">#45</span>
+        <div><a href="https://leetcode.com/problems/jump-game-ii/" target="_blank">Jump Game II</a>
+        <div class="hw-desc">Минимальное количество прыжков. Жадно выбираем прыжок с максимальным охватом.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium" style="white-space:nowrap">#435</span>
+        <div><a href="https://leetcode.com/problems/non-overlapping-intervals/" target="_blank">Non-overlapping Intervals</a>
+        <div class="hw-desc">Удалить минимум интервалов. Сортировка по концу + жадный выбор.</div></div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:14px">
+        💡 <strong>Рекомендуемый порядок:</strong><br>
+        #455 → #121 → #1710 → #55 → #45 → #435
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slide-area -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 14</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+<script>
+  hljs.highlightAll();
+  let cur = 1, total = 14;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s'+prev).classList.remove('active');
+    document.getElementById('s'+cur).classList.add('active');
+    document.getElementById('counter').textContent = cur+' / '+total;
+    document.getElementById('prevBtn').disabled = cur===1;
+    document.getElementById('nextBtn').disabled = cur===total;
+    document.getElementById('progress').style.width = (cur/total*100)+'%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key===' ') navigate(1);
+    if (e.key==='ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = (1/total*100)+'%';
+
+  function checkQ(el, correct) {
+    const opts = el.parentElement.querySelectorAll('.quiz-opt');
+    opts.forEach(o => o.style.pointerEvents = 'none');
+    el.classList.add(correct ? 'correct' : 'wrong');
+    const res = el.closest('.quiz-card').querySelector('.quiz-result');
+    res.style.display = 'block';
+    res.style.color = correct ? '#3fb950' : '#f78166';
+    if (!res.textContent) res.textContent = correct ? '✅ Верно!' : '❌ Неверно — попробуй ещё раз.';
+  }
+</script>
+</body>
+</html>

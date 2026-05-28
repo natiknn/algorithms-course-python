@@ -1,0 +1,1085 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сбалансированные деревья поиска — Python</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .progress-bar { height: 3px; background: #21262d; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #bc8cff, #58a6ff); transition: width 0.4s ease; }
+  .slide-area { flex: 1; overflow: hidden; position: relative; }
+  .slide { position: absolute; inset: 0; padding: 40px 60px; display: none; flex-direction: column; overflow-y: auto; }
+  .slide.active { display: flex; }
+  .slide-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #bc8cff; margin-bottom: 12px; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.15; color: #f0f6fc; margin-bottom: 16px; }
+  h2 { font-size: 1.75rem; font-weight: 700; color: #f0f6fc; margin-bottom: 16px; }
+  h3 { font-size: 1.05rem; font-weight: 600; color: #bc8cff; margin-bottom: 8px; margin-top: 14px; }
+  p { line-height: 1.8; margin-bottom: 10px; color: #c9d1d9; font-size: 0.95rem; }
+  strong { color: #f0f6fc; }
+  em { color: #bc8cff; font-style: normal; }
+  .subtitle { font-size: 1.1rem; color: #8b949e; margin-bottom: 28px; line-height: 1.6; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .highlight-box { background: #1c2128; border-left: 3px solid #bc8cff; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; line-height: 1.7; }
+  .highlight-box.green { border-left-color: #3fb950; }
+  .highlight-box.blue  { border-left-color: #58a6ff; }
+  .highlight-box.red   { border-left-color: #f78166; }
+  .highlight-box.orange{ border-left-color: #ffa657; }
+  code.inline { background: #1c2128; border: 1px solid #30363d; border-radius: 4px; padding: 2px 7px; font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.88em; color: #79c0ff; }
+  pre { margin: 10px 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+  pre code { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 0.85rem; line-height: 1.7; }
+  .trace-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.88rem; }
+  .trace-table th { background: #1c2128; color: #bc8cff; padding: 7px 12px; text-align: center; border: 1px solid #30363d; }
+  .trace-table td { padding: 6px 12px; text-align: center; border: 1px solid #21262d; color: #c9d1d9; }
+  .trace-table tr:nth-child(even) { background: #161b22; }
+  .trace-table tr.ok td { background: #1c3a1c; color: #3fb950; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .nav-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 7px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #30363d; border-color: #bc8cff; color: #bc8cff; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { color: #8b949e; font-size: 0.9rem; min-width: 80px; text-align: center; }
+  .key-hint { color: #444; font-size: 0.75rem; margin-top: 4px; }
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-icon { font-size: 4rem; margin-bottom: 20px; }
+  .topic-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+  .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; color: #8b949e; }
+  .step-card { display: flex; gap: 12px; align-items: flex-start; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 10px 14px; margin-bottom: 7px; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: #2a1c3a; border: 1px solid #bc8cff; color: #bc8cff; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-body { flex: 1; font-size: 0.9rem; line-height: 1.6; color: #c9d1d9; }
+  .complex-row { display: flex; gap: 10px; margin: 10px 0; }
+  .complex-badge { background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 8px 14px; }
+  .complex-badge .lbl { font-size: 0.72rem; color: #8b949e; }
+  .complex-badge .val { font-size: 1rem; color: #bc8cff; font-weight: 700; font-family: monospace; }
+  .lc-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 12px; font-size: 0.8rem; font-weight: 600; margin-right: 6px; }
+  .lc-easy   { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+  .lc-medium { background: rgba(210,153,34,.12); color: #d29922; border: 1px solid rgba(210,153,34,.3); }
+  .lc-hard   { background: rgba(247,129,102,.12); color: #f78166; border: 1px solid rgba(247,129,102,.3); }
+  .arr-vis { display: flex; gap: 4px; align-items: flex-end; flex-wrap: wrap; margin: 12px 0; }
+  .arr-cell { min-width: 40px; height: 40px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; font-weight: 700; font-size: 0.95rem; border: 1px solid #30363d; background: #1c2128; color: #c9d1d9; position: relative; }
+  .arr-cell.hl  { background: #2a1c3a; border-color: #bc8cff; color: #bc8cff; }
+  .arr-cell.grn { background: #1c3a1c; border-color: #3fb950; color: #3fb950; }
+  .arr-cell.org { background: #3a2a1c; border-color: #ffa657; color: #ffa657; }
+  .arr-cell.blue { background: #1c2a3a; border-color: #58a6ff; color: #58a6ff; }
+  .tree-node { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; font-family: monospace; font-weight: 700; font-size: 0.95rem; border: 2px solid; }
+  .tree-node.root { border-color: #bc8cff; background: #2a1c3a; color: #bc8cff; }
+  .tree-node.left { border-color: #58a6ff; background: #1c2a3a; color: #58a6ff; }
+  .tree-node.right { border-color: #ffa657; background: #3a2a1c; color: #ffa657; }
+  .tree-node.leaf { border-color: #3fb950; background: #1c3a1c; color: #3fb950; }
+  .quiz-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+  .quiz-q { font-weight: 600; color: #f0f6fc; margin-bottom: 10px; font-size: 0.95rem; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 6px; }
+  .quiz-opt { padding: 8px 14px; border-radius: 8px; border: 1px solid #30363d; font-size: 0.88rem; cursor: pointer; transition: all .15s; background: none; color: #c9d1d9; text-align: left; }
+  .quiz-opt:hover { border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,.07); }
+  .quiz-opt.correct { border-color: #3fb950; color: #3fb950; background: rgba(63,185,80,.1); pointer-events: none; }
+  .quiz-opt.wrong   { border-color: #f78166; color: #f78166; background: rgba(247,129,102,.1); }
+  .quiz-result { font-size: 0.85rem; margin-top: 8px; display: none; }
+  .hw-item { display: flex; align-items: flex-start; gap: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 11px 15px; margin-bottom: 7px; }
+  .hw-item a { color: #58a6ff; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+  .hw-item a:hover { text-decoration: underline; }
+  .hw-desc { font-size: 0.82rem; color: #8b949e; margin-top: 2px; }
+  ul { padding-left: 18px; }
+  li { line-height: 1.8; color: #c9d1d9; font-size: 0.9rem; margin-bottom: 2px; }
+  details summary { cursor: pointer; font-size: 0.83rem; color: #3fb950; padding: 4px 0; list-style: none; }
+  details[open] summary { margin-bottom: 6px; }
+  .formula { font-family: 'Cascadia Code','Fira Code',monospace; background: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 12px 18px; font-size: 1rem; color: #bc8cff; margin: 12px 0; text-align: center; }
+  /* Отключаем лигатуры шрифта — чтобы != != ≠, <= != ⩽ и т.д. */
+  pre, pre code, code, code.inline, code.i { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="slide-area">
+
+<!-- 1 — Титул -->
+<div class="slide title-slide active" id="s1">
+  <div class="title-icon">🌳</div>
+  <div class="slide-tag">Тема 10</div>
+  <h1>Сбалансированные деревья поиска</h1>
+  <p class="subtitle">BST, AVL, Red-Black и SortedList в Python<br>— как поддерживать отсортированную коллекцию с O(log n) операциями</p>
+  <div class="topic-chips">
+    <span class="chip">BST</span>
+    <span class="chip">AVL-дерево</span>
+    <span class="chip">Red-Black Tree</span>
+    <span class="chip">SortedList</span>
+    <span class="chip">O(log n)</span>
+    <span class="chip">sortedcontainers</span>
+  </div>
+</div>
+
+<!-- 2 — Что такое BST -->
+<div class="slide" id="s2">
+  <div class="slide-tag">Теория — BST</div>
+  <h2>Дерево двоичного поиска (BST)</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Свойство BST</h3>
+        <p style="font-size:0.88rem">Для каждого узла: <strong>все значения в левом поддереве &lt; узел &lt; все значения в правом поддереве.</strong></p>
+        <div style="text-align:center;margin:16px 0">
+          <div style="margin-bottom:8px"><span class="tree-node root">8</span></div>
+          <div style="display:flex;justify-content:center;gap:60px;margin-bottom:8px">
+            <span class="tree-node left">3</span>
+            <span class="tree-node right">10</span>
+          </div>
+          <div style="display:flex;justify-content:center;gap:14px">
+            <span class="tree-node leaf">1</span>
+            <span class="tree-node leaf">6</span>
+            <span style="width:44px"></span>
+            <span class="tree-node leaf">14</span>
+          </div>
+        </div>
+        <p style="font-size:0.82rem;text-align:center;color:#8b949e">Дерево: 1 &lt; 3 &lt; 6 &lt; 8 &lt; 10 &lt; 14</p>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Операции BST</h3>
+<pre><code class="language-python">class BSTNode:
+    def __init__(self, val):
+        self.val = val
+        self.left = None
+        self.right = None
+
+def bst_search(root, target):
+    if root is None or root.val == target:
+        return root
+    if target < root.val:
+        return bst_search(root.left, target)
+    return bst_search(root.right, target)
+
+def bst_insert(root, val):
+    if root is None:
+        return BSTNode(val)
+    if val < root.val:
+        root.left = bst_insert(root.left, val)
+    else:
+        root.right = bst_insert(root.right, val)
+    return root</code></pre>
+      </div>
+      <div class="highlight-box green">
+        ✅ Inorder-обход BST даёт <strong>отсортированную</strong> последовательность!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 — Зачем баланс -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Теория — Проблема несбалансированности</div>
+  <h2>Зачем нужен баланс?</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#f78166">❌ Несбалансированное BST — O(n)</h3>
+        <p style="font-size:0.88rem">Вставляем числа 1, 2, 3, 4, 5 по порядку:</p>
+        <div style="font-family:monospace;font-size:0.88rem;line-height:2;margin:8px 0">
+          <div><span class="tree-node root" style="width:32px;height:32px;font-size:0.8rem">1</span></div>
+          <div style="padding-left:20px"><span style="color:#8b949e">└──</span> <span class="tree-node right" style="width:32px;height:32px;font-size:0.8rem">2</span></div>
+          <div style="padding-left:40px"><span style="color:#8b949e">└──</span> <span class="tree-node right" style="width:32px;height:32px;font-size:0.8rem">3</span></div>
+          <div style="padding-left:60px"><span style="color:#8b949e">└──</span> <span class="tree-node right" style="width:32px;height:32px;font-size:0.8rem">4</span></div>
+          <div style="padding-left:80px"><span style="color:#8b949e">└──</span> <span class="tree-node right" style="width:32px;height:32px;font-size:0.8rem">5</span></div>
+        </div>
+        <div class="highlight-box red">
+          Дерево превращается в <strong>связный список</strong>! Высота = n. Поиск = O(n).
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#3fb950">✅ Сбалансированное BST — O(log n)</h3>
+        <p style="font-size:0.88rem">Те же числа 1, 2, 3, 4, 5 в сбалансированном дереве:</p>
+        <div style="text-align:center;margin:10px 0">
+          <div style="margin-bottom:6px"><span class="tree-node root">3</span></div>
+          <div style="display:flex;justify-content:center;gap:50px;margin-bottom:6px">
+            <span class="tree-node left">1</span>
+            <span class="tree-node right">4</span>
+          </div>
+          <div style="display:flex;justify-content:center;gap:14px">
+            <span style="width:44px"></span>
+            <span class="tree-node leaf">2</span>
+            <span style="width:44px"></span>
+            <span class="tree-node leaf">5</span>
+          </div>
+        </div>
+        <div class="highlight-box green">
+          Высота = log₂(n). Поиск, вставка, удаление = <strong>O(log n)</strong>.
+        </div>
+      </div>
+      <div class="highlight-box blue">
+        💡 <strong>Сравнение сложностей:</strong><br>
+        Несбал.: поиск O(n), вставка O(n)<br>
+        Сбал.: поиск O(log n), вставка O(log n)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — AVL дерево -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Теория — AVL-дерево</div>
+  <h2>AVL-дерево: автоматический баланс</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Инвариант AVL</h3>
+        <p style="font-size:0.88rem">Для каждого узла: |высота(левого) - высота(правого)| <= 1.</p>
+        <p style="font-size:0.88rem"><strong>Коэффициент баланса (bf)</strong> = высота(right) - высота(left)</p>
+        <ul style="font-size:0.85rem">
+          <li>bf = -1, 0, 1 — узел сбалансирован</li>
+          <li>bf = -2 — перевес влево → вращение вправо</li>
+          <li>bf = +2 — перевес вправо → вращение влево</li>
+        </ul>
+        <h3>Типы вращений</h3>
+        <div class="step-card"><div class="step-num">L</div><div class="step-body"><strong>Левое вращение</strong> — при bf = +2</div></div>
+        <div class="step-card"><div class="step-num">R</div><div class="step-body"><strong>Правое вращение</strong> — при bf = -2</div></div>
+        <div class="step-card"><div class="step-num">LR</div><div class="step-body"><strong>Лево-правое</strong> — при bf = -2, bf(left) = +1</div></div>
+        <div class="step-card"><div class="step-num">RL</div><div class="step-body"><strong>Право-левое</strong> — при bf = +2, bf(right) = -1</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Пример: правое вращение</h3>
+        <p style="font-size:0.82rem;color:#8b949e">Вставили 5, 3, 1 — дерево разбалансировано (bf=-2 у корня 5):</p>
+        <div style="font-family:monospace;font-size:0.9rem;margin:8px 0">
+          <div style="color:#f78166">5 (bf=-2) ← несбалансировано!</div>
+          <div style="padding-left:16px">└── 3 (bf=-1)</div>
+          <div style="padding-left:32px">└── 1</div>
+        </div>
+        <p style="font-size:0.82rem;color:#8b949e;margin-top:8px">После правого вращения (новый корень = 3):</p>
+        <div style="text-align:center;margin:10px 0">
+          <div style="margin-bottom:6px"><span class="tree-node root" style="border-color:#3fb950;background:#1c3a1c;color:#3fb950">3</span></div>
+          <div style="display:flex;justify-content:center;gap:50px">
+            <span class="tree-node leaf">1</span>
+            <span class="tree-node leaf">5</span>
+          </div>
+        </div>
+        <div class="highlight-box green">
+          ✅ Баланс восстановлен! bf у всех узлов = 0.
+        </div>
+      </div>
+      <div class="highlight-box blue">
+        💡 <strong>AVL</strong> используется в C++ STL (map, set). Строго сбалансирован — поиск чуть быстрее, вставка чуть медленнее, чем у Red-Black.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4b — Что такое высота узла -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Теория — AVL-дерево</div>
+  <h2>Что такое <em>высота</em> узла?</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Определение</h3>
+        <p style="font-size:0.88rem">Высота узла — это количество рёбер на <strong>самом длинном пути</strong> от этого узла вниз до листа.</p>
+        <div class="step-card"><div class="step-num" style="background:#2a1c3a;border-color:#bc8cff;color:#bc8cff">∅</div><div class="step-body">Пустой узел (<code class="inline">None</code>) → высота = <strong>−1</strong></div></div>
+        <div class="step-card"><div class="step-num" style="background:#1c3a1c;border-color:#3fb950;color:#3fb950">0</div><div class="step-body">Лист (нет детей) → высота = <strong>0</strong></div></div>
+        <div class="step-card"><div class="step-num" style="background:#1c2a3a;border-color:#58a6ff;color:#58a6ff">+1</div><div class="step-body">Каждый уровень выше добавляет <strong>+1</strong></div></div>
+        <div class="highlight-box blue" style="margin-top:10px">
+          💡 Почему <code class="inline">None</code> = −1, а не 0? Чтобы формула bf работала правильно: лист имеет bf = (−1) − (−1) = 0.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Пример вычисления высот</h3>
+        <div style="font-family:monospace;font-size:0.9rem;line-height:2.2;margin:8px 0">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="tree-node root">5</span>
+            <span style="color:#8b949e;font-size:0.82rem">← высота <strong style="color:#bc8cff">2</strong></span>
+          </div>
+          <div style="padding-left:14px;display:flex;align-items:center;gap:8px">
+            <span style="color:#8b949e">└──</span>
+            <span class="tree-node left">3</span>
+            <span style="color:#8b949e;font-size:0.82rem">← высота <strong style="color:#58a6ff">1</strong></span>
+          </div>
+          <div style="padding-left:36px;display:flex;gap:16px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="color:#8b949e">├──</span>
+              <span class="tree-node leaf">1</span>
+              <span style="color:#8b949e;font-size:0.82rem">← высота <strong style="color:#3fb950">0</strong></span>
+            </div>
+          </div>
+          <div style="padding-left:36px;display:flex;gap:16px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="color:#8b949e">└──</span>
+              <span class="tree-node leaf">4</span>
+              <span style="color:#8b949e;font-size:0.82rem">← высота <strong style="color:#3fb950">0</strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="highlight-box" style="margin-top:8px">
+          Узел <strong>3</strong>: путь до листа = 1 ребро → высота = 1<br>
+          Узел <strong>5</strong>: путь до листа = 2 ребра → высота = 2
+        </div>
+        <h3>Как считается bf у узла 5?</h3>
+        <div class="formula">bf = высота(right) − высота(left) = −1 − 1 = −2</div>
+        <p style="font-size:0.82rem;color:#8b949e">Правого поддерева нет (None → −1), левое = высота 1. bf = −2 → несбалансировано!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4c — Правое и левое вращение -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Теория — AVL-дерево</div>
+  <h2>Правое и левое <em>вращение</em></h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#3fb950">Правое вращение (bf = −2, перевес влево)</h3>
+        <p style="font-size:0.82rem;color:#8b949e">Дерево "падает влево" — поднимаем левого ребёнка вверх:</p>
+        <div style="display:flex;align-items:center;gap:20px;margin:12px 0;font-family:monospace;font-size:0.88rem">
+          <div style="line-height:2.2">
+            <div style="display:flex;align-items:center;gap:8px"><span class="tree-node root" style="border-color:#f78166;background:#3a1c1c;color:#f78166">5</span><span style="color:#8b949e;font-size:0.75rem">bf=−2</span></div>
+            <div style="padding-left:14px;display:flex;align-items:center;gap:6px"><span style="color:#8b949e">└──</span><span class="tree-node left">3</span></div>
+            <div style="padding-left:32px;display:flex;align-items:center;gap:6px"><span style="color:#8b949e">└──</span><span class="tree-node leaf">1</span></div>
+          </div>
+          <div style="font-size:1.4rem;color:#f5c842">→</div>
+          <div style="line-height:2.2">
+            <div style="display:flex;align-items:center;gap:8px"><span class="tree-node root" style="border-color:#3fb950;background:#1c3a1c;color:#3fb950">3</span><span style="color:#8b949e;font-size:0.75rem">новый корень</span></div>
+            <div style="display:flex;gap:16px;padding-left:4px">
+              <div style="display:flex;align-items:center;gap:6px"><span style="color:#8b949e">├──</span><span class="tree-node leaf">1</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span style="color:#8b949e">└──</span><span class="tree-node leaf" style="border-color:#ffa657;background:#3a2a1c;color:#ffa657">5</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="highlight-box green">
+          ✅ Узел <strong>3 поднялся</strong>, узел <strong>5 опустился вправо</strong>. Порядок 1 &lt; 3 &lt; 5 сохранился!
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;color:#58a6ff">Левое вращение (bf = +2, перевес вправо)</h3>
+        <p style="font-size:0.82rem;color:#8b949e">Зеркальная ситуация — поднимаем правого ребёнка:</p>
+        <div style="display:flex;align-items:center;gap:20px;margin:12px 0;font-family:monospace;font-size:0.88rem">
+          <div style="line-height:2.2">
+            <div style="display:flex;align-items:center;gap:8px"><span class="tree-node root" style="border-color:#f78166;background:#3a1c1c;color:#f78166">1</span><span style="color:#8b949e;font-size:0.75rem">bf=+2</span></div>
+            <div style="padding-left:14px;display:flex;align-items:center;gap:6px"><span style="color:#8b949e">└──</span><span class="tree-node right">3</span></div>
+            <div style="padding-left:32px;display:flex;align-items:center;gap:6px"><span style="color:#8b949e">└──</span><span class="tree-node leaf">5</span></div>
+          </div>
+          <div style="font-size:1.4rem;color:#f5c842">→</div>
+          <div style="line-height:2.2">
+            <div style="display:flex;align-items:center;gap:8px"><span class="tree-node root" style="border-color:#3fb950;background:#1c3a1c;color:#3fb950">3</span><span style="color:#8b949e;font-size:0.75rem">новый корень</span></div>
+            <div style="display:flex;gap:16px;padding-left:4px">
+              <div style="display:flex;align-items:center;gap:6px"><span style="color:#8b949e">├──</span><span class="tree-node leaf" style="border-color:#ffa657;background:#3a2a1c;color:#ffa657">1</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span style="color:#8b949e">└──</span><span class="tree-node leaf">5</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="highlight-box blue">
+          ✅ Узел <strong>3 поднялся</strong>, узел <strong>1 опустился влево</strong>. Порядок 1 &lt; 3 &lt; 5 сохранился!
+        </div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:10px;border-left-color:#f5c842">
+        🔑 <strong>Главное правило:</strong><br>
+        Перевес <em>влево</em> (bf=−2) → вращаем <strong>вправо</strong> (поднимаем левого ребёнка)<br>
+        Перевес <em>вправо</em> (bf=+2) → вращаем <strong>влево</strong> (поднимаем правого ребёнка)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — Red-Black дерево -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Теория — Red-Black Tree</div>
+  <h2>Красно-чёрное дерево (Red-Black)</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Свойства Red-Black дерева</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Каждый узел — <span style="color:#f78166">красный</span> или <strong>чёрный</strong></div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Корень всегда <strong>чёрный</strong></div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">Красный узел не может иметь красного потомка (<em>нет двух красных подряд</em>)</div></div>
+        <div class="step-card"><div class="step-num">4</div><div class="step-body">От любого узла до листа (null) одинаковое количество <strong>чёрных</strong> узлов</div></div>
+        <div class="highlight-box blue">
+          💡 Эти свойства гарантируют: высота <= 2·log₂(n+1), то есть O(log n).
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">AVL vs Red-Black: когда что использовать</h3>
+        <div style="overflow-x:auto">
+          <table class="trace-table" style="font-size:0.82rem">
+            <thead><tr><th>Свойство</th><th>AVL</th><th>Red-Black</th></tr></thead>
+            <tbody>
+              <tr><td>Баланс</td><td>Строгий</td><td>Нестрогий</td></tr>
+              <tr><td>Высота</td><td>~1.44·log n</td><td>~2·log n</td></tr>
+              <tr><td>Поиск</td><td>Чуть быстрее</td><td>Чуть медленнее</td></tr>
+              <tr><td>Вставка/удаление</td><td>Медленнее</td><td>Быстрее</td></tr>
+              <tr class="ok"><td>Применение</td><td>Много чтений</td><td>Много записей</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Применение в реальных системах</h3>
+        <ul style="font-size:0.85rem">
+          <li><strong>Java</strong>: TreeMap, TreeSet — Red-Black</li>
+          <li><strong>C++ STL</strong>: map, set — Red-Black</li>
+          <li><strong>Linux kernel</strong>: планировщик задач — Red-Black</li>
+          <li><strong>Python</strong>: нет встроенного BST! Используем <code class="inline">sortedcontainers</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5b — Зачем два цвета и как работают правила -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Теория — Red-Black Tree</div>
+  <h2>Красно-чёрное дерево: <em>как это работает</em></h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Зачем вообще два цвета?</h3>
+        <p style="font-size:0.88rem">Цвет — это просто <strong>метка</strong> (один бит: красный/чёрный). Сами по себе цвета ничего не значат. Но <em>правила</em> для этих цветов косвенно не дают дереву стать слишком высоким.</p>
+        <div class="highlight-box blue" style="margin-top:8px">
+          💡 AVL следит за <strong>высотой</strong> напрямую.<br>
+          Red-Black следит за <strong>цветами</strong> — и это косвенно контролирует высоту. Меньше работы при вставке.
+        </div>
+        <h3>Как правило №4 гарантирует баланс?</h3>
+        <p style="font-size:0.88rem">Правило: от любого узла до листа <strong>одинаковое количество чёрных узлов</strong> (чёрная высота).</p>
+        <p style="font-size:0.88rem">Допустим, чёрная высота = 2:</p>
+        <div class="step-card">
+          <div class="step-num" style="background:#1c3a1c;border-color:#3fb950;color:#3fb950">↓</div>
+          <div class="step-body"><strong>Кратчайший путь</strong>: чёрный → чёрный = <strong>2 узла</strong></div>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="background:#3a1c1c;border-color:#f78166;color:#f78166">↓</div>
+          <div class="step-body"><strong>Длиннейший путь</strong>: чёрный → <span style="color:#f78166">красный</span> → чёрный → <span style="color:#f78166">красный</span> = <strong>4 узла</strong></div>
+        </div>
+        <div class="highlight-box green" style="margin-top:8px">
+          ✅ Длиннейшая ветка максимум <strong>вдвое длиннее</strong> кратчайшей.<br>
+          Поэтому высота <= 2·log₂(n+1) → поиск O(log n) гарантирован.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Пример валидного Red-Black дерева</h3>
+        <p style="font-size:0.82rem;color:#8b949e">Числа 1, 2, 3, 4, 5 в Red-Black дереве:</p>
+        <div style="font-family:monospace;font-size:0.88rem;line-height:2.4;margin:10px 0">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:2px solid #c9d1d9;background:#21262d;color:#c9d1d9;font-weight:700">2</span>
+            <span style="font-size:0.75rem;color:#8b949e">← чёрный (корень)</span>
+          </div>
+          <div style="padding-left:20px;display:flex;gap:60px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:2px solid #c9d1d9;background:#21262d;color:#c9d1d9;font-weight:700">1</span>
+              <span style="font-size:0.72rem;color:#8b949e">чёрный</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:2px solid #f78166;background:#3a1c1c;color:#f78166;font-weight:700">4</span>
+              <span style="font-size:0.72rem;color:#8b949e">красный</span>
+            </div>
+          </div>
+          <div style="padding-left:80px;display:flex;gap:20px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:2px solid #c9d1d9;background:#21262d;color:#c9d1d9;font-weight:700">3</span>
+              <span style="font-size:0.72rem;color:#8b949e">чёрный</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:2px solid #c9d1d9;background:#21262d;color:#c9d1d9;font-weight:700">5</span>
+              <span style="font-size:0.72rem;color:#8b949e">чёрный</span>
+            </div>
+          </div>
+        </div>
+        <div class="highlight-box" style="font-size:0.82rem">
+          Проверка правила №4: от корня (2) до любого листа — ровно <strong>2 чёрных узла</strong>.<br>
+          Правило №3: красный (4) → дети чёрные (3 и 5). ✅
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5c — Red-Black vs AVL итог -->
+<div class="slide" id="s9">
+  <div class="slide-tag">Теория — Red-Black Tree</div>
+  <h2>Red-Black vs AVL: <em>что выбрать?</em></h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Главное отличие в подходе</h3>
+        <div class="step-card">
+          <div class="step-num" style="background:#2a1c3a;border-color:#bc8cff;color:#bc8cff">AVL</div>
+          <div class="step-body"><strong>Строгий баланс</strong> — разница высот <= 1. После каждой вставки может потребоваться несколько вращений, чтобы восстановить баланс.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="background:#3a1c1c;border-color:#f78166;color:#f78166">R-B</div>
+          <div class="step-body"><strong>Нестрогий баланс</strong> — дерево может быть чуть выше, но вставка требует максимум <strong>2 вращения</strong>. Остальное — перекраска узлов.</div>
+        </div>
+        <div class="highlight-box orange" style="margin-top:10px">
+          🔑 Перекраска = просто изменить бит в памяти. Это <strong>намного быстрее</strong> вращения (перестановки указателей).
+        </div>
+        <h3>Аналогия</h3>
+        <p style="font-size:0.88rem">AVL — перфекционист: после каждого изменения выравнивает всё идеально.<br>
+        Red-Black — прагматик: делает минимум работы, лишь бы не стать совсем кривым.</p>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Когда что использовать</h3>
+        <div style="overflow-x:auto">
+          <table class="trace-table" style="font-size:0.83rem">
+            <thead><tr><th>Ситуация</th><th>Выбор</th><th>Почему</th></tr></thead>
+            <tbody>
+              <tr><td>Много чтений, мало записей</td><td style="color:#bc8cff">AVL</td><td>Дерево ниже → поиск быстрее</td></tr>
+              <tr><td>Много вставок/удалений</td><td style="color:#f78166">Red-Black</td><td>Меньше вращений при изменении</td></tr>
+              <tr class="ok"><td>Общий случай (базы, ОС)</td><td style="color:#f78166">Red-Black</td><td>Лучший баланс скоростей</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Где используется в реальном мире</h3>
+        <div class="step-card"><div class="step-num" style="font-size:0.7rem;background:#1c2a3a;border-color:#58a6ff;color:#58a6ff">Java</div><div class="step-body"><code class="inline">TreeMap</code>, <code class="inline">TreeSet</code> — Red-Black</div></div>
+        <div class="step-card"><div class="step-num" style="font-size:0.7rem;background:#1c2a3a;border-color:#58a6ff;color:#58a6ff">C++</div><div class="step-body"><code class="inline">std::map</code>, <code class="inline">std::set</code> — Red-Black</div></div>
+        <div class="step-card"><div class="step-num" style="font-size:0.7rem;background:#1c2a3a;border-color:#58a6ff;color:#58a6ff">Linux</div><div class="step-body">Планировщик задач CFS — Red-Black</div></div>
+        <div class="highlight-box green" style="margin-top:8px">
+          ✅ В реальных системах вставок и удалений <strong>больше</strong>, чем чистых поисков — поэтому Red-Black победил.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 — SortedList в Python -->
+<div class="slide" id="s10">
+  <div class="slide-tag">Python — sortedcontainers</div>
+  <h2>SortedList: сбалансированное дерево в Python</h2>
+  <p>В стандартной библиотеке Python нет BST. Но есть <strong>sortedcontainers</strong> — эффективная реализация на чистом Python.</p>
+  <div class="two-col">
+    <div>
+<pre><code class="language-python">from sortedcontainers import SortedList
+
+sl = SortedList()
+
+# Добавление — O(log n)
+sl.add(5)
+sl.add(1)
+sl.add(3)
+sl.add(7)
+sl.add(2)
+# sl = SortedList([1, 2, 3, 5, 7])
+
+# Удаление — O(log n)
+sl.remove(3)       # удалить 3
+sl.discard(99)     # ничего если нет
+
+# Поиск — O(log n) через bisect
+sl.bisect_left(5)  # → 2  (индекс вставки)
+sl.bisect_right(5) # → 3
+
+# Доступ по индексу — O(log n)
+sl[0]   # → 1 (минимум)
+sl[-1]  # → 7 (максимум)
+sl[1]   # → 2</code></pre>
+    </div>
+    <div>
+<pre><code class="language-python"># Проверка принадлежности — O(log n)
+5 in sl   # True
+4 in sl   # False
+
+# Количество элементов в диапазоне — O(log n)
+sl.count(5)             # 1
+sl.irange(2, 6)         # итератор [2, 5]
+# список элементов от 2 до 6 включительно
+
+# k-й элемент по порядку — O(log n)
+sl[2]   # 3-й наименьший
+
+# SortedList с дубликатами
+sl2 = SortedList([3, 1, 4, 1, 5, 9, 2, 6])
+# SortedList([1, 1, 2, 3, 4, 5, 6, 9])
+sl2.count(1)   # 2</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">add/remove</div><div class="val">O(log n)</div></div>
+        <div class="complex-badge"><div class="lbl">bisect</div><div class="val">O(log n)</div></div>
+        <div class="complex-badge"><div class="lbl">индекс</div><div class="val">O(log n)</div></div>
+      </div>
+      <div class="highlight-box orange">
+        ⚠️ Установка: <code class="inline">pip install sortedcontainers</code><br>
+        На соревнованиях (Codeforces и др.) доступна по умолчанию.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 — Применение SortedList -->
+<div class="slide" id="s11">
+  <div class="slide-tag">Применение</div>
+  <h2>Применение SortedList в задачах</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">1. k-й наименьший в потоке данных</h3>
+<pre><code class="language-python">from sortedcontainers import SortedList
+
+class KthSmallest:
+    def __init__(self):
+        self.sl = SortedList()
+
+    def add(self, num):
+        self.sl.add(num)
+
+    def kth(self, k):
+        return self.sl[k - 1]  # O(log n)
+
+# vs heapq: heapq нужно хранить k элементов
+# SortedList хранит все, доступ по индексу</code></pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">2. Количество элементов в диапазоне</h3>
+<pre><code class="language-python">sl = SortedList([1, 3, 5, 7, 9, 11])
+
+# Сколько чисел от 3 до 9?
+lo = sl.bisect_left(3)   # 1
+hi = sl.bisect_right(9)  # 5
+count = hi - lo          # 4  ← [3,5,7,9]
+
+# Или через irange
+len(list(sl.irange(3, 9)))  # 4</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">3. Медиана в скользящем окне размером k</h3>
+<pre><code class="language-python">from sortedcontainers import SortedList
+
+def medianSlidingWindow(nums, k):
+    window = SortedList(nums[:k])
+    result = []
+
+    def get_median():
+        if k % 2 == 1:
+            return float(window[k // 2])
+        return (window[k//2 - 1] + window[k//2]) / 2
+
+    result.append(get_median())
+
+    for i in range(k, len(nums)):
+        window.add(nums[i])          # O(log k)
+        window.remove(nums[i - k])   # O(log k)
+        result.append(get_median())  # O(log k)
+
+    return result</code></pre>
+        <div class="complex-row">
+          <div class="complex-badge"><div class="lbl">Всего</div><div class="val">O(n log k)</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 — Задача: Count of Smaller Numbers -->
+<div class="slide" id="s12">
+  <div class="slide-tag">LeetCode — Hard</div>
+  <span class="lc-badge lc-hard">#315 · Hard</span>
+  <h2>Count of Smaller Numbers After Self</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие</h3>
+        <p style="font-size:0.88rem">Для каждого элемента nums[i] найти количество чисел <strong>правее</strong> него, которые меньше nums[i].</p>
+        <div class="highlight-box green">
+          <strong>Вход:</strong> [5, 2, 6, 1]<br>
+          <strong>Выход:</strong> [2, 1, 1, 0]<br>
+          <em>5: правее меньше 5 → {2,1} → 2</em><br>
+          <em>2: правее меньше 2 → {1} → 1</em>
+        </div>
+        <h3>Алгоритм через SortedList</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body">Обходим массив <strong>справа налево</strong></div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body">Добавляем каждый элемент в SortedList</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body"><code class="inline">bisect_left(nums[i])</code> = количество элементов в SortedList, которые строго меньше nums[i]</div></div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">from sortedcontainers import SortedList
+
+def countSmaller(nums):
+    sl = SortedList()
+    result = []
+
+    for num in reversed(nums):
+        # bisect_left = индекс вставки = кол-во меньших
+        smaller_count = sl.bisect_left(num)
+        result.append(smaller_count)
+        sl.add(num)
+
+    return result[::-1]  # реверс т.к. обходили справа
+
+# Трассировка: [5, 2, 6, 1]
+# num=1: sl=[], bisect_left(1)=0 → [0]; sl=[1]
+# num=6: sl=[1], bisect_left(6)=1 → [0,1]; sl=[1,6]
+# num=2: sl=[1,6], bisect_left(2)=1 → [0,1,1]; sl=[1,2,6]
+# num=5: sl=[1,2,6], bisect_left(5)=2 → [0,1,1,2]
+# Реверс → [2, 1, 1, 0] ✓</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(n log n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(n)</div></div>
+      </div>
+      <div class="highlight-box blue">
+        💡 <code class="inline">bisect_left(x)</code> — это и есть «сколько элементов &lt; x» в отсортированной структуре. Это ключевое свойство деревьев поиска!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 — Квиз -->
+<div class="slide" id="s13">
+  <div class="slide-tag">Проверь себя</div>
+  <h2>🗣️ Квиз по деревьям поиска</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">1. Какова высота идеально сбалансированного BST из n узлов?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">O(log n)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">O(n²)</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">2. Что такое инвариант AVL-дерева?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">Все листья на одном уровне</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Разность высот поддеревьев каждого узла <= 1</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Корень всегда чёрный</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">3. Что возвращает <code class="inline">sl.bisect_left(x)</code>?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">Значение x в списке</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Индекс, куда вставить x (= кол-во элементов &lt; x)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">True если x в списке</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+    <div>
+      <div class="quiz-card">
+        <div class="quiz-q">4. Если вставлять числа 1,2,3,...,n в обычный BST по порядку, что получится?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">Идеально сбалансированное дерево</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Вырожденное в связный список (O(n) поиск)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Red-Black дерево</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">5. Что быстрее при многих вставках: AVL или Red-Black?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">AVL (строже сбалансировано)</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">Red-Black (меньше вращений)</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">Одинаково</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-q">6. Как получить минимальный элемент из SortedList?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkQ(this,false)">sl.min()</button>
+          <button class="quiz-opt" onclick="checkQ(this,true)">sl[0]</button>
+          <button class="quiz-opt" onclick="checkQ(this,false)">min(sl) — O(n)</button>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 — Итог -->
+<div class="slide" id="s14">
+  <div class="slide-tag">Итог</div>
+  <h2>Что запомнить</h2>
+  <div class="three-col" style="align-items:start">
+    <div class="card">
+      <h3 style="margin-top:0">🌳 BST и баланс</h3>
+      <ul style="font-size:0.85rem">
+        <li>BST: левое &lt; узел &lt; правое</li>
+        <li>Несбалан. → O(n) при плохих данных</li>
+        <li>Сбалан. (AVL/RB) → O(log n) гарантировано</li>
+        <li>Inorder BST = отсортированный массив</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🐍 Python: SortedList</h3>
+      <ul style="font-size:0.85rem">
+        <li><code class="inline">sl.add(x)</code> — O(log n)</li>
+        <li><code class="inline">sl.remove(x)</code> — O(log n)</li>
+        <li><code class="inline">sl[i]</code> — O(log n)</li>
+        <li><code class="inline">sl.bisect_left(x)</code> — O(log n)</li>
+        <li><code class="inline">sl.irange(lo, hi)</code> — O(log n + k)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🎯 Когда использовать</h3>
+      <ul style="font-size:0.85rem">
+        <li>Поддерживать отсортированный порядок при вставках/удалениях</li>
+        <li>k-й элемент онлайн</li>
+        <li>Кол-во элементов в диапазоне</li>
+        <li>Медиана скользящего окна</li>
+        <li>Count Smaller (bisect_left)</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box blue" style="margin-top:12px">
+    🎯 <strong>На экзамене:</strong> если нужна отсортированная структура с быстрой вставкой/удалением и доступом по индексу — <code class="inline">from sortedcontainers import SortedList</code>. Это замена BST в Python!
+  </div>
+</div>
+
+<!-- 11 — Домашнее задание -->
+<div class="slide" id="s15">
+  <div class="slide-tag">Домашнее задание</div>
+  <h2>🏠 Задачи для самостоятельной практики</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <p style="font-size:0.88rem;color:#3fb950;font-weight:600;margin-bottom:8px">🟢 Лёгкие — начни с них</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">#700</span>
+        <div><a href="https://leetcode.com/problems/search-in-a-binary-search-tree/" target="_blank">Search in a Binary Search Tree</a>
+        <div class="hw-desc">Реализовать поиск в BST. Понять свойство BST.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-easy">#701</span>
+        <div><a href="https://leetcode.com/problems/insert-into-a-binary-search-tree/" target="_blank">Insert into a Binary Search Tree</a>
+        <div class="hw-desc">Вставка в BST рекурсивно.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">#220</span>
+        <div><a href="https://leetcode.com/problems/contains-duplicate-iii/" target="_blank">Contains Duplicate III</a>
+        <div class="hw-desc">SortedList + bisect_left — типичная задача на BST.</div></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:0.88rem;color:#d29922;font-weight:600;margin-bottom:8px">🟡 Следующий уровень</p>
+      <div class="hw-item">
+        <span class="lc-badge lc-medium">#230</span>
+        <div><a href="https://leetcode.com/problems/kth-smallest-element-in-a-bst/" target="_blank">Kth Smallest Element in a BST</a>
+        <div class="hw-desc">Inorder обход BST = отсортированный массив.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-hard">#315</span>
+        <div><a href="https://leetcode.com/problems/count-of-smaller-numbers-after-self/" target="_blank">Count of Smaller Numbers After Self</a>
+        <div class="hw-desc">SortedList + bisect_left справа налево. Разбор — слайд 8.</div></div>
+      </div>
+      <div class="hw-item">
+        <span class="lc-badge lc-hard">#480</span>
+        <div><a href="https://leetcode.com/problems/sliding-window-median/" target="_blank">Sliding Window Median</a>
+        <div class="hw-desc">SortedList для медианы скользящего окна. Разбор — слайд 7.</div></div>
+      </div>
+      <div class="highlight-box orange" style="margin-top:14px">
+        💡 Порядок: #700 → #701 → #230 → #220 → #315 → #480
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 — Разбор: E. Тупики -->
+<div class="slide" id="s16">
+  <div class="slide-tag">Разбор — Тренировочный вариант 3</div>
+  <h2>E. Тупики — SortedList для минимального свободного слота</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие (кратко)</h3>
+        <p style="font-size:0.88rem">На вокзале K тупиков (1..K). Прибывают N электричек (отсортированы по времени прибытия). Каждую электричку ставят в <strong>свободный тупик с минимальным номером</strong>. Если тупик освободился в момент X (отправление), электричка, прибывающая в тот же момент X, использовать его не может.</p>
+        <div class="highlight-box green">
+          <strong>Вход:</strong> K=2, N=3<br>
+          пары (прибытие, отправление): (1,5), (2,4), (6,10)<br>
+          <strong>Выход:</strong> 1, 2, 1
+        </div>
+        <h3>Алгоритм — два инструмента</h3>
+        <div class="step-card"><div class="step-num">1</div><div class="step-body"><code class="inline">SortedList(1..K)</code> — множество свободных тупиков. <code class="inline">sl[0]</code> = минимальный.</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-body"><code class="inline">heapq</code> — занятые тупики: <code class="inline">(время_отправления, номер)</code>. Вершина = ближайшее освобождение.</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-body">Для каждой прибывающей электрички (время <code class="inline">a</code>): сначала освободить все тупики с отправлением <strong>строго меньше</strong> <code class="inline">a</code>, затем взять <code class="inline">sl[0]</code>.</div></div>
+        <div class="highlight-box blue">
+          💡 Условие «строго меньше»: если отправление = X и прибытие = X, тупик ещё занят. Прибытие X+1 — уже свободен.
+        </div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">import heapq
+from sortedcontainers import SortedList
+
+K, N = map(int, input().split())
+
+free = SortedList(range(1, K + 1))  # свободные тупики
+occupied = []   # min-heap (время_отпр, тупик)
+result = []
+failed = -1
+
+for i in range(N):
+    a, d = map(int, input().split())
+
+    # Освободить тупики с отправлением строго < a
+    while occupied and occupied[0][0] < a:
+        dep_time, track = heapq.heappop(occupied)
+        free.add(track)          # O(log K)
+
+    if not free:
+        failed = i + 1           # 1-based номер электрички
+        break
+
+    track = free[0]              # минимальный свободный
+    free.remove(track)           # O(log K)
+    heapq.heappush(occupied, (d, track))
+    result.append(track)
+
+if failed != -1:
+    print(0, failed)
+else:
+    for r in result:
+        print(r)</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Время</div><div class="val">O(N log K)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(K + N)</div></div>
+      </div>
+      <div style="overflow-x:auto;margin-top:10px">
+        <table class="trace-table" style="font-size:0.82rem">
+          <thead><tr><th>Электричка</th><th>Прибытие</th><th>Отправление</th><th>Освободили</th><th>free</th><th>Тупик</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>1</td><td>5</td><td>—</td><td>{1,2}</td><td style="color:#bc8cff">1</td></tr>
+            <tr><td>2</td><td>2</td><td>4</td><td>—</td><td>{2}</td><td style="color:#bc8cff">2</td></tr>
+            <tr class="ok"><td>3</td><td>6</td><td>10</td><td>тупик 2 (d=4&lt;6), тупик 1 (d=5&lt;6)</td><td>{1,2}</td><td style="color:#3fb950">1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 — Разбор: E. Менеджер памяти -->
+<div class="slide" id="s17">
+  <div class="slide-tag">Разбор — Демо-вариант 03.2025</div>
+  <h2>E. Менеджер памяти — интервалы на SortedList</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Условие (кратко)</h3>
+        <p style="font-size:0.88rem">Память — отрезки 1..N. K запросов двух типов:</p>
+        <ul style="font-size:0.85rem">
+          <li><strong>1 l r</strong> — объединить отрезки l..r в группу, если ни один из них уже не в группе. Вывести 1 (успех) или 0 (занято).</li>
+          <li><strong>2 d</strong> — удалить группу, содержащую отрезок d. Вывести первый и последний отрезок группы, или «0 0» если d не в группе.</li>
+        </ul>
+        <div class="highlight-box green">
+          <strong>Пример:</strong> 5 отрезков, 6 запросов:<br>
+          1 1 2 → 1 (сгруппировали [1,2])<br>
+          1 4 5 → 1 (сгруппировали [4,5])<br>
+          1 2 4 → 0 (отрезок 2 занят!)<br>
+          2 5   → 4 5 (удалили группу [4,5])<br>
+          1 2   → 1 2 (удалили группу [1,2])<br>
+          2 4   → 0 0 (отрезок 4 не в группе)
+        </div>
+        <div class="highlight-box blue">
+          💡 Ключевая операция: проверить, пересекается ли новый интервал [l,r] с уже существующими группами. <strong>bisect_right(r)</strong> даёт позицию для поиска ближайшего кандидата справа.
+        </div>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-python">from sortedcontainers import SortedList
+
+N, K = map(int, input().split())
+
+# Храним начала групп в SortedList
+starts = SortedList()
+# starts[i] → конец группы
+ends = {}   # start → end
+
+def has_overlap(l, r):
+    """Проверить, пересекается ли [l,r] с любой группой"""
+    # Ближайшая группа, начинающаяся <= r
+    idx = starts.bisect_right(r) - 1
+    if idx >= 0:
+        gs = starts[idx]
+        ge = ends[gs]
+        if ge >= l:   # конец группы >= l → пересечение
+            return True
+    return False
+
+for _ in range(K):
+    q = list(map(int, input().split()))
+    if q[0] == 1:
+        l, r = q[1], q[2]
+        if has_overlap(l, r):
+            print(0)
+        else:
+            starts.add(l)    # O(log n)
+            ends[l] = r
+            print(1)
+    else:
+        d = q[1]
+        # Найти группу, содержащую d
+        idx = starts.bisect_right(d) - 1
+        if idx >= 0:
+            gs = starts[idx]
+            ge = ends[gs]
+            if gs <= d <= ge:
+                print(gs, ge)
+                starts.remove(gs)   # O(log n)
+                del ends[gs]
+                continue
+        print(0, 0)</code></pre>
+      <div class="complex-row">
+        <div class="complex-badge"><div class="lbl">Запрос</div><div class="val">O(log n)</div></div>
+        <div class="complex-badge"><div class="lbl">Память</div><div class="val">O(n)</div></div>
+      </div>
+      <div class="highlight-box green" style="margin-top:6px">
+        ✅ <strong>bisect_right(r) - 1</strong> находит группу с началом <= r. Если её конец >= l — пересечение! Иначе безопасно добавлять [l,r].
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slide-area -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Назад</button>
+  <div>
+    <div class="nav-counter" id="counter">1 / 17</div>
+    <div class="key-hint">← → для навигации</div>
+  </div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Вперёд →</button>
+</div>
+<script>
+  hljs.highlightAll();
+  let cur = 1, total = 17;
+  function navigate(dir) {
+    const prev = cur;
+    cur = Math.max(1, Math.min(total, cur + dir));
+    if (cur === prev) return;
+    document.getElementById('s'+prev).classList.remove('active');
+    document.getElementById('s'+cur).classList.add('active');
+    document.getElementById('counter').textContent = cur+' / '+total;
+    document.getElementById('prevBtn').disabled = cur===1;
+    document.getElementById('nextBtn').disabled = cur===total;
+    document.getElementById('progress').style.width = (cur/total*100)+'%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key===' ') navigate(1);
+    if (e.key==='ArrowLeft') navigate(-1);
+  });
+  document.getElementById('progress').style.width = (1/total*100)+'%';
+
+  function checkQ(el, correct) {
+    const opts = el.parentElement.querySelectorAll('.quiz-opt');
+    opts.forEach(o => o.style.pointerEvents = 'none');
+    el.classList.add(correct ? 'correct' : 'wrong');
+    const res = el.closest('.quiz-card').querySelector('.quiz-result');
+    res.style.display = 'block';
+    res.style.color = correct ? '#3fb950' : '#f78166';
+    if (!res.textContent.trim()) res.textContent = correct ? '✅ Верно!' : '❌ Неверно — попробуй ещё раз.';
+  }
+</script>
+</body>
+</html>
