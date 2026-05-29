@@ -102,10 +102,15 @@ p, li { font-size: clamp(1rem, 0.95rem + 0.3vw, 1.2rem); }
 .nav-btn { padding: clamp(10px, 0.7rem + 0.3vw, 13px) clamp(18px, 1rem + 1vw, 28px); font-size: clamp(0.9rem, 0.85rem + 0.2vw, 1.05rem); }
 .nav-counter { font-size: clamp(0.9rem, 0.85rem + 0.2vw, 1.05rem); }
 /* Двухколоночные блоки уверенно складываются в столбец на узких экранах */
-.two-col > *, .two-col.wide > *, .two-col.code-right > *, .three-col > * { min-width: 0; }
+.two-col > *, .three-col > *, .two > *, .three > *, .card-row > *, .compare-box > *, .cols > *, .step-cards > *, .reflex-cards > * { min-width: 0; }
 .slide pre { overflow-x: auto; max-width: 100%; }
 @media (max-width: 920px) {
-  .two-col, .two-col.wide, .two-col.code-right, .three-col, .three-col.three { grid-template-columns: 1fr !important; }
+  .two-col, .two-col.wide, .two-col.code-right, .three-col, .three-col.three,
+  .two, .three, .card-row, .compare-box, .cols, .cols.wide, .cols.code-right, .cols.three,
+  .step-cards, .reflex-cards,
+  [style*="grid-template-columns:1fr 1fr"], [style*="grid-template-columns: 1fr 1fr"],
+  [style*="grid-template-columns:1fr auto 1fr"] { grid-template-columns: 1fr !important; }
+  .compare-box .vs-badge { transform: rotate(90deg); }
 }
 </style>
 </head>
