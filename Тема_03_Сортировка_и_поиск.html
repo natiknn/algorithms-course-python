@@ -97,6 +97,12 @@ p, li { font-size: clamp(1rem, 0.95rem + 0.3vw, 1.2rem); }
 .nav { padding: clamp(10px, 1.4vw, 16px); gap: clamp(12px, 2vw, 24px); }
 .nav-btn { padding: clamp(10px, 0.7rem + 0.3vw, 13px) clamp(18px, 1rem + 1vw, 28px); font-size: clamp(0.9rem, 0.85rem + 0.2vw, 1.05rem); }
 .nav-counter { font-size: clamp(0.9rem, 0.85rem + 0.2vw, 1.05rem); }
+/* Двухколоночные блоки уверенно складываются в столбец на узких экранах */
+.two-col > *, .two-col.wide > *, .two-col.code-right > *, .three-col > * { min-width: 0; }
+.slide pre { overflow-x: auto; max-width: 100%; }
+@media (max-width: 920px) {
+  .two-col, .two-col.wide, .two-col.code-right, .three-col, .three-col.three { grid-template-columns: 1fr !important; }
+}
 </style>
 </head>
 <body>
